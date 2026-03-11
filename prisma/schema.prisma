@@ -1,0 +1,124 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Parent {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  pinHash      String
+  createdAt    DateTime @default(now())
+
+  student Student?
+  tasks  Task[]
+  rewards Reward[]
+}
+
+model Student {
+  id           String    @id @default(cuid())
+  nickname     String
+  totalPoints  Int       @default(0)
+  balance      Int       @default(0)
+  frozenPoints Int       @default(0)
+  streakDays   Int       @default(0)
+  lastActiveAt DateTime?
+  createdAt    DateTime  @default(now())
+
+  parentId   String   @unique
+  parent     Parent   @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  taskLogs   TaskLog[]
+  exchanges  Exchange[]
+  pointsLogs PointsLog[]
+}
+
+model Task {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  type        TaskType
+  points      Int
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  parentId  String
+  parent    Parent    @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  taskLogs  TaskLog[]
+}
+
+enum TaskType {
+  DAILY
+  WEEKLY
+}
+
+model TaskLog {
+  id             String   @id @default(cuid())
+  completedAt    DateTime @default(now())
+  pointsAwarded Int
+
+  taskId   String
+  task     Task    @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  studentId String
+  student  Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([taskId, studentId])
+}
+
+model Reward {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  imageUrl    String?   // 奖励图片链接，支持任意可访问的图片 URL
+  points      Int
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  parentId   String
+  parent     Parent     @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  exchanges  Exchange[]
+}
+
+enum ExchangeStatus {
+  PENDING
+  CONFIRMED
+  REJECTED
+}
+
+model Exchange {
+  id          String          @id @default(cuid())
+  status      ExchangeStatus  @default(PENDING)
+  pointsCost  Int
+  rejectReason String?
+  createdAt   DateTime        @default(now())
+  confirmedAt DateTime?
+
+  rewardId   String
+  reward     Reward  @relation(fields: [rewardId], references: [id], onDelete: Cascade)
+  studentId  String
+  student    Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+}
+
+model PointsLog {
+  id          String         @id @default(cuid())
+  amount      Int
+  type        PointsLogType
+  description String
+  createdAt   DateTime       @default(now())
+
+  studentId   String
+  student     Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([studentId])
+}
+
+enum PointsLogType {
+  TASK_REWARD
+  EXCHANGE_COST
+  EXCHANGE_REFUND
+}

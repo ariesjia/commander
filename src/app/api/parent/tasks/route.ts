@@ -1,0 +1,95 @@
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/db";
+import { requireParent, getStudentId } from "@/lib/api-auth";
+import { getTodayStr, getWeekStartStr } from "@/lib/utils";
+import { TaskType } from "@prisma/client";
+
+export async function GET(request: Request) {
+  const auth = await requireParent();
+  if (!auth.ok) return auth.response;
+
+  const studentId = await getStudentId(auth.parentId);
+  if (!studentId) {
+    return NextResponse.json({ error: "未找到学生" }, { status: 404 });
+  }
+
+  const tasks = await prisma.task.findMany({
+    where: { parentId: auth.parentId },
+    orderBy: { createdAt: "desc" },
+  });
+
+  const taskLogs = await prisma.taskLog.findMany({
+    where: { studentId },
+  });
+
+  const todayStr = getTodayStr();
+  const weekStr = getWeekStartStr();
+
+  const tasksWithStatus = tasks.map((t) => {
+    const periodKey = t.type === "DAILY" ? todayStr : weekStr;
+    const log = taskLogs.find(
+      (l) =>
+        l.taskId === t.id &&
+        (t.type === "DAILY"
+          ? l.completedAt.toISOString().startsWith(todayStr)
+          : l.completedAt >= new Date(weekStr))
+    );
+    return {
+      id: t.id,
+      name: t.name,
+      description: t.description,
+      type: t.type,
+      points: t.points,
+      isActive: t.isActive,
+      createdAt: t.createdAt.toISOString(),
+      status: log ? "completed" : "pending",
+      completedAt: log?.completedAt.toISOString(),
+    };
+  });
+
+  return NextResponse.json(tasksWithStatus);
+}
+
+export async function POST(request: Request) {
+  const auth = await requireParent();
+  if (!auth.ok) return auth.response;
+
+  try {
+    const body = await request.json();
+    const { name, description, type, points, isActive } = body;
+
+    if (!name || !type || points == null) {
+      return NextResponse.json(
+        { error: "请填写任务名称、类型和积分" },
+        { status: 400 }
+      );
+    }
+
+    const taskType = type === "WEEKLY" ? ("WEEKLY" as TaskType) : ("DAILY" as TaskType);
+    const pts = Math.max(0, parseInt(String(points), 10) || 0);
+
+    const task = await prisma.task.create({
+      data: {
+        parentId: auth.parentId,
+        name: String(name).trim(),
+        description: description ? String(description).trim() : null,
+        type: taskType,
+        points: pts,
+        isActive: isActive !== false,
+      },
+    });
+
+    return NextResponse.json({
+      id: task.id,
+      name: task.name,
+      description: task.description,
+      type: task.type,
+      points: task.points,
+      isActive: task.isActive,
+      createdAt: task.createdAt.toISOString(),
+    });
+  } catch (e) {
+    console.error("Create task error:", e);
+    return NextResponse.json({ error: "创建失败" }, { status: 500 });
+  }
+}

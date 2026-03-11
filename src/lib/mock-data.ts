@@ -1,0 +1,92 @@
+import { Task, Reward } from "@/types";
+
+export const DEFAULT_TASKS: Task[] = [
+  {
+    id: "t1",
+    name: "完成数学作业",
+    description: "按时完成当天的数学练习",
+    type: "DAILY",
+    points: 10,
+    isActive: true,
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: "t2",
+    name: "阅读30分钟",
+    description: "课外阅读至少30分钟",
+    type: "DAILY",
+    points: 5,
+    isActive: true,
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: "t3",
+    name: "练琴30分钟",
+    description: "",
+    type: "DAILY",
+    points: 8,
+    isActive: true,
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: "t4",
+    name: "整理房间",
+    description: "每周大扫除一次",
+    type: "WEEKLY",
+    points: 15,
+    isActive: true,
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: "t5",
+    name: "完成一篇周记",
+    description: "每周写作练习",
+    type: "WEEKLY",
+    points: 20,
+    isActive: true,
+    createdAt: new Date().toISOString(),
+  },
+];
+
+export const DEFAULT_REWARDS: Reward[] = [
+  {
+    id: "r1",
+    name: "看一集动画片",
+    description: "可以看一集喜欢的动画",
+    points: 30,
+    isActive: true,
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: "r2",
+    name: "多玩30分钟游戏",
+    description: "额外的游戏时间",
+    points: 50,
+    isActive: true,
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: "r3",
+    name: "自选一本想看的书",
+    description: "可以挑一本喜欢的书",
+    points: 80,
+    isActive: true,
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: "r4",
+    name: "选一个玩具（100元内）",
+    description: "实物奖励",
+    points: 200,
+    isActive: true,
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: "r5",
+    name: "周末去游乐园",
+    description: "全家去游乐园玩一天",
+    points: 500,
+    isActive: true,
+    createdAt: new Date().toISOString(),
+  },
+];
