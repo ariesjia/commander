@@ -82,7 +82,9 @@ export default function StudentHome() {
             <Lock size={14} />
           </button>
         </div>
-        <AdoptionFlow onComplete={refetch} />
+        <div className="mt-10 md:mt-14">
+          <AdoptionFlow onComplete={refetch} />
+        </div>
         <PinDialog open={pinOpen} onClose={() => setPinOpen(false)} onSuccess={handlePinSuccess} verifyPin={verifyPin} />
       </div>
     );
