@@ -189,7 +189,12 @@ body {
   color: var(--color-p-text-secondary);
 }
 
-/* 机甲详情弹窗：有拼音时故事段落行间距加大 */
+/* 机甲详情弹窗：有拼音时故事段落行间距加大，文字换行防止横向滚动 */
+.mecha-detail-modal .mecha-detail-story {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
 .mecha-detail-modal .mecha-detail-story .text-with-pinyin {
   line-height: 3.2;
 }

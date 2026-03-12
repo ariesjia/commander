@@ -45,11 +45,11 @@ export default function StudentHome() {
   };
   const verifyPin = async (pin: string) => switchToParent(pin);
 
-  // 加载中：显示 loading
+  // 加载中：logo 固定顶部，loading 居中
   if (isLoading) {
     return (
-      <div className="flex flex-col min-h-[70vh] items-center justify-center gap-4">
-        <div className="relative flex justify-center pt-4 w-full">
+      <div className="flex flex-col min-h-[70vh]">
+        <div className="relative flex justify-center pt-4 w-full shrink-0">
           <Image src="/logo.svg" alt="" width={40} height={40} className="opacity-90" />
           <button
             onClick={() => setPinOpen(true)}
@@ -59,7 +59,7 @@ export default function StudentHome() {
             <Lock size={14} />
           </button>
         </div>
-        <div className="flex flex-col items-center gap-3">
+        <div className="flex flex-1 flex-col items-center justify-center gap-3">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-s-primary border-t-transparent" />
           <p className="text-sm text-s-text-secondary">加载中...</p>
         </div>

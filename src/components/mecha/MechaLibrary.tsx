@@ -109,21 +109,24 @@ function MechaDetailModal({
     >
       <div className="absolute inset-0 bg-black/70" />
       <motion.div
-        className="mecha-detail-modal relative flex flex-col rounded-2xl bg-[#0c1222] border border-s-primary/20 p-6 w-full max-w-md max-h-[calc(100vh-6rem)] overflow-y-auto shadow-xl"
+        className="mecha-detail-modal relative flex flex-col rounded-2xl bg-[#0c1222] border border-s-primary/20 w-full max-w-md max-h-[80vh] md:max-h-[calc(100vh-6rem)] shadow-xl overflow-hidden"
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
         onClick={(e) => e.stopPropagation()}
       >
-        <button
-          onClick={onClose}
-          className="absolute right-3 top-3 z-10 rounded-lg p-1.5 text-s-text-secondary hover:bg-white/10 transition-colors"
-          aria-label="关闭"
-        >
-          <X size={20} />
-        </button>
+        {/* 固定顶部：关闭按钮 */}
+        <div className="absolute right-3 top-3 z-20 shrink-0">
+          <button
+            onClick={onClose}
+            className="rounded-lg p-1.5 text-s-text-secondary hover:bg-white/10 transition-colors"
+            aria-label="关闭"
+          >
+            <X size={20} />
+          </button>
+        </div>
 
-        <div className="mecha-detail-content flex flex-col">
+        <div className="mecha-detail-content flex flex-col overflow-y-auto overflow-x-hidden flex-1 min-h-0 p-6 pt-12">
           {/* 图片区域 */}
           <div className="mecha-detail-image flex justify-center shrink-0">
             {mecha && levelInfo ? (
@@ -150,8 +153,8 @@ function MechaDetailModal({
                 <TextWithPinyin text={levelInfo.name} showPinyin={!!showPinyin} />
               </p>
               {(mecha.intro ?? mecha.description) && (
-                <div className="mt-3">
-                  <p className="mecha-detail-story text-s-text text-sm md:text-base text-left">
+                <div className="mt-3 min-w-0">
+                  <p className="mecha-detail-story text-s-text text-sm md:text-base text-left break-words">
                     <TextWithPinyin
                       text={mecha.intro ?? mecha.description ?? ""}
                       showPinyin={!!showPinyin}
