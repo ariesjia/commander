@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useMode } from "@/contexts/ModeContext";
 import { useRouter } from "next/navigation";
 import { DashboardStats } from "@/components/parent/DashboardStats";
+import { SpriteAnimation } from "@/components/ui/SpriteAnimation";
 import { Bot, ChevronRight } from "lucide-react";
 import { MECHA_STAGES } from "@/lib/mecha-config";
 
@@ -30,13 +31,15 @@ export default function ParentDashboard() {
   return (
     <div className="flex flex-col gap-6">
       {/* Welcome */}
-      <div>
-        <h1 className="text-xl font-semibold text-p-text">
-          你好，{user?.childNickname ?? "家长"}的家长
-        </h1>
-        <p className="text-sm text-p-text-secondary mt-1">
-          今天也要加油哦
-        </p>
+      <div className="flex items-center gap-4">
+        <div>
+          <h1 className="text-xl font-semibold text-p-text">
+            你好，{user?.childNickname ?? "家长"}的家长
+          </h1>
+          <p className="text-sm text-p-text-secondary mt-1">
+            今天也要加油哦
+          </p>
+        </div>
       </div>
 
       {/* Stats */}

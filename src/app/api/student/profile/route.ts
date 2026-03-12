@@ -22,6 +22,7 @@ export async function GET(request: Request) {
 
   return NextResponse.json({
     nickname: student.nickname,
+    adoptedMechaIds: student.adoptedMechaIds ?? [],
     totalPoints: student.totalPoints,
     balance: student.balance,
     frozenPoints: student.frozenPoints,

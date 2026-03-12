@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireStudent, getStudentId } from "@/lib/api-auth";
 
-export async function GET(request: Request) {
+export async function GET(_request: Request) {
   const auth = await requireStudent();
   if (!auth.ok) return auth.response;
 

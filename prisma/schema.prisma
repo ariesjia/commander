@@ -20,14 +20,15 @@ model Parent {
 }
 
 model Student {
-  id           String    @id @default(cuid())
-  nickname     String
-  totalPoints  Int       @default(0)
-  balance      Int       @default(0)
-  frozenPoints Int       @default(0)
-  streakDays   Int       @default(0)
-  lastActiveAt DateTime?
-  createdAt    DateTime  @default(now())
+  id             String    @id @default(cuid())
+  nickname       String
+  totalPoints    Int       @default(0)
+  balance        Int       @default(0)
+  frozenPoints   Int       @default(0)
+  streakDays     Int       @default(0)
+  adoptedMechaIds String[]  @default([]) // 领养的机甲 id 列表
+  lastActiveAt   DateTime?
+  createdAt      DateTime  @default(now())
 
   parentId   String   @unique
   parent     Parent   @relation(fields: [parentId], references: [id], onDelete: Cascade)
@@ -119,6 +120,7 @@ model PointsLog {
 
 enum PointsLogType {
   TASK_REWARD
+  TASK_REWARD_UNDO
   EXCHANGE_COST
   EXCHANGE_REFUND
 }

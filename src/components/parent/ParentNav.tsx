@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { LayoutDashboard, ListChecks, Gift, ScrollText, Settings, Bot } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -33,7 +34,10 @@ export function ParentNav() {
     <>
       {/* Top bar */}
       <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-p-border bg-white/80 px-4 backdrop-blur-md sm:px-6">
-        <span className="text-base font-semibold text-p-text">机甲指挥官</span>
+        <div className="flex items-center gap-2">
+          <Image src="/logo.svg" alt="" width={28} height={28} className="shrink-0" />
+          <span className="text-base font-semibold text-p-text">机甲指挥官</span>
+        </div>
         <button
           onClick={handleSwitch}
           className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-500 px-3 py-1.5 text-sm font-medium text-white shadow-sm transition-all hover:shadow-md cursor-pointer"

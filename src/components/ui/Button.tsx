@@ -2,12 +2,14 @@
 
 import { cn } from "@/lib/utils";
 import { ButtonHTMLAttributes, forwardRef } from "react";
+import { Loader2 } from "lucide-react";
 
 type Variant = "primary" | "secondary" | "danger" | "ghost" | "neon" | "neon-orange";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant;
   size?: "sm" | "md" | "lg";
+  loading?: boolean;
 }
 
 const base =
@@ -35,12 +37,22 @@ const sizes: Record<"sm" | "md" | "lg", string> = {
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ variant = "primary", size = "md", className, ...props }, ref) => (
+  ({ variant = "primary", size = "md", loading, className, children, disabled, ...props }, ref) => (
     <button
       ref={ref}
       className={cn(base, variants[variant], sizes[size], className)}
+      disabled={disabled || loading}
       {...props}
-    />
+    >
+      {loading ? (
+        <>
+          <Loader2 size={size === "sm" ? 14 : 18} className="animate-spin shrink-0" />
+          {children && <span className="ml-2">{children}</span>}
+        </>
+      ) : (
+        children
+      )}
+    </button>
   ),
 );
 Button.displayName = "Button";

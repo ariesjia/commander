@@ -2,17 +2,19 @@
 
 import { useState } from "react";
 import { useData } from "@/contexts/DataContext";
+import { useToast } from "@/contexts/ToastContext";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { Plus, Check, Pencil, Trash2, CalendarDays, CalendarRange } from "lucide-react";
+import { Plus, Check, Pencil, Trash2, Undo2, CalendarDays, CalendarRange } from "lucide-react";
 import { Task, TaskType } from "@/types";
 import { cn } from "@/lib/utils";
 
 export default function TasksPage() {
-  const { tasks, addTask, updateTask, deleteTask, confirmTask, getTasksWithStatus } = useData();
+  const { tasks, addTask, updateTask, deleteTask, confirmTask, undoTask, getTasksWithStatus } = useData();
+  const { toast } = useToast();
   const tasksWithStatus = getTasksWithStatus();
 
   const [tab, setTab] = useState<"all" | "DAILY" | "WEEKLY">("all");
@@ -20,6 +22,12 @@ export default function TasksPage() {
   const [editing, setEditing] = useState<Task | null>(null);
 
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [confirmTaskId, setConfirmTaskId] = useState<string | null>(null);
+  const [undoTaskId, setUndoTaskId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const [undoing, setUndoing] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [type, setType] = useState<TaskType>("DAILY");
@@ -50,25 +58,63 @@ export default function TasksPage() {
     const pts = parseInt(points) || 0;
     if (pts <= 0) return;
 
+    setSaving(true);
     try {
       if (editing) {
         await updateTask(editing.id, { name: name.trim(), description: description.trim() || undefined, type, points: pts });
+        toast("任务已更新");
       } else {
         await addTask({ name: name.trim(), description: description.trim() || undefined, type, points: pts, isActive: true });
+        toast("任务创建成功");
       }
       setModalOpen(false);
     } catch {
       // ignore
+    } finally {
+      setSaving(false);
     }
   };
 
   const handleDeleteConfirm = async () => {
     if (deleteId) {
+      setDeleting(true);
       try {
         await deleteTask(deleteId);
         setDeleteId(null);
       } catch {
         // ignore
+      } finally {
+        setDeleting(false);
+      }
+    }
+  };
+
+  const handleConfirmTask = async () => {
+    if (confirmTaskId) {
+      setConfirming(true);
+      try {
+        await confirmTask(confirmTaskId);
+        toast("任务已确认完成");
+        setConfirmTaskId(null);
+      } catch {
+        // ignore
+      } finally {
+        setConfirming(false);
+      }
+    }
+  };
+
+  const handleUndoTask = async () => {
+    if (undoTaskId) {
+      setUndoing(true);
+      try {
+        await undoTask(undoTaskId);
+        toast("已撤销完成");
+        setUndoTaskId(null);
+      } catch {
+        // ignore
+      } finally {
+        setUndoing(false);
       }
     }
   };
@@ -127,9 +173,15 @@ export default function TasksPage() {
 
             <div className="flex items-center gap-1.5 shrink-0">
               {task.status === "pending" && (
-                <Button size="sm" onClick={async () => { try { await confirmTask(task.id); } catch { /* ignore */ } }}>
+                <Button size="sm" onClick={() => setConfirmTaskId(task.id)}>
                   <Check size={14} className="mr-1" />
                   确认
+                </Button>
+              )}
+              {task.status === "completed" && (
+                <Button size="sm" variant="secondary" onClick={() => setUndoTaskId(task.id)}>
+                  <Undo2 size={14} className="mr-1" />
+                  撤销
                 </Button>
               )}
               <button
@@ -150,7 +202,7 @@ export default function TasksPage() {
       </div>
 
       {/* Create/Edit modal */}
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? "编辑任务" : "新建任务"}>
+      <Modal open={modalOpen} onClose={saving ? () => {} : () => setModalOpen(false)} title={editing ? "编辑任务" : "新建任务"}>
         <div className="flex flex-col gap-4">
           <Input label="任务名称" placeholder="例如：完成数学作业" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
           <Input label="描述（可选）" placeholder="补充说明" value={description} onChange={(e) => setDescription(e.target.value)} />
@@ -193,15 +245,39 @@ export default function TasksPage() {
           />
 
           <div className="flex gap-3 mt-2">
-            <Button variant="secondary" onClick={() => setModalOpen(false)} className="flex-1">
+            <Button variant="secondary" onClick={() => setModalOpen(false)} className="flex-1" disabled={saving}>
               取消
             </Button>
-            <Button onClick={handleSave} className="flex-1">
+            <Button onClick={handleSave} className="flex-1" loading={saving}>
               {editing ? "保存" : "创建"}
             </Button>
           </div>
         </div>
       </Modal>
+
+      {/* Confirm task dialog */}
+      <ConfirmDialog
+        open={!!confirmTaskId}
+        onClose={() => setConfirmTaskId(null)}
+        onConfirm={handleConfirmTask}
+        title="确认任务完成"
+        message={confirmTaskId ? `确定要确认「${tasksWithStatus.find((t) => t.id === confirmTaskId)?.name}」已完成吗？将发放对应积分。` : ""}
+        confirmLabel="确认完成"
+        variant="default"
+        loading={confirming}
+      />
+
+      {/* Undo task dialog */}
+      <ConfirmDialog
+        open={!!undoTaskId}
+        onClose={() => setUndoTaskId(null)}
+        onConfirm={handleUndoTask}
+        title="撤销任务完成"
+        message={undoTaskId ? `确定要撤销「${tasksWithStatus.find((t) => t.id === undoTaskId)?.name}」的完成状态吗？已发放的积分将被收回。` : ""}
+        confirmLabel="确认撤销"
+        variant="danger"
+        loading={undoing}
+      />
 
       {/* Delete confirm */}
       <ConfirmDialog
@@ -210,6 +286,7 @@ export default function TasksPage() {
         onConfirm={handleDeleteConfirm}
         title="删除任务"
         message="删除后不可恢复，确定要删除这个任务吗？"
+        loading={deleting}
       />
     </div>
   );

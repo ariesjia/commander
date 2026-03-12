@@ -20,12 +20,14 @@ interface DataState {
   pointsLogs: PointsLog[];
   student: StudentData;
   mechaStage: number;
+  adoptedMechaIds: string[];
   evolutionLevel: number;
 
   addTask: (t: Omit<Task, "id" | "createdAt">) => Promise<void>;
   updateTask: (id: string, t: Partial<Task>) => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
   confirmTask: (taskId: string) => Promise<void>;
+  undoTask: (taskId: string) => Promise<void>;
 
   addReward: (r: Omit<Reward, "id" | "createdAt">) => Promise<void>;
   updateReward: (id: string, r: Partial<Reward>) => Promise<void>;
@@ -66,6 +68,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const [weeklyTotalCount, setWeeklyTotalCount] = useState(0);
   const [mechaStage, setMechaStage] = useState(0);
   const [evolutionLevel, setEvolutionLevel] = useState(0);
+  const [adoptedMechaIds, setAdoptedMechaIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const refetch = useCallback(async () => {
@@ -126,6 +129,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         setPendingExchanges(exchangesRes.filter((e) => e.status === "PENDING"));
         setMechaStage(profile.mechaStage);
         setEvolutionLevel(profile.evolutionLevel);
+        setAdoptedMechaIds(profile.adoptedMechaIds ?? []);
         setWeeklyCompletedCount(0);
         setWeeklyTotalCount(0);
       } catch {
@@ -159,6 +163,11 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
   const confirmTask = useCallback(async (taskId: string) => {
     await api.post(`/api/parent/tasks/${taskId}/confirm`);
+    await refetch();
+  }, [refetch]);
+
+  const undoTask = useCallback(async (taskId: string) => {
+    await api.post(`/api/parent/tasks/${taskId}/undo`);
     await refetch();
   }, [refetch]);
 
@@ -206,11 +215,13 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         pointsLogs,
         student,
         mechaStage,
+        adoptedMechaIds,
         evolutionLevel,
         addTask,
         updateTask,
         deleteTask,
         confirmTask,
+        undoTask,
         addReward,
         updateReward,
         deleteReward,

@@ -39,10 +39,9 @@ function getSecret(): Uint8Array {
 }
 
 export async function createSessionToken(payload: Omit<SessionPayload, "exp">): Promise<string> {
-  const exp = Math.floor(Date.now() / 1000) + SESSION_MAX_AGE;
-  const token = await new SignJWT({ ...payload, exp })
+  const token = await new SignJWT({ ...payload })
     .setProtectedHeader({ alg: "HS256" })
-    .setExpirationTime(SESSION_MAX_AGE)
+    .setExpirationTime("7d")
     .setIssuedAt()
     .sign(getSecret());
   return token;

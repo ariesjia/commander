@@ -30,6 +30,10 @@ export default function RewardsPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [rejectId, setRejectId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [rejecting, setRejecting] = useState(false);
+  const [confirmingExchangeId, setConfirmingExchangeId] = useState<string | null>(null);
 
   const openCreate = () => {
     setEditing(null);
@@ -55,6 +59,7 @@ export default function RewardsPage() {
     if (pts <= 0) return;
 
     const trimmedImage = imageUrl.trim() || undefined;
+    setSaving(true);
     try {
       if (editing) {
         await updateReward(editing.id, { name: name.trim(), description: description.trim() || undefined, imageUrl: trimmedImage, points: pts });
@@ -64,29 +69,48 @@ export default function RewardsPage() {
       setModalOpen(false);
     } catch {
       // ignore
+    } finally {
+      setSaving(false);
     }
   };
 
   const handleDeleteConfirm = async () => {
     if (deleteId) {
+      setDeleting(true);
       try {
         await deleteReward(deleteId);
         setDeleteId(null);
       } catch {
         // ignore
+      } finally {
+        setDeleting(false);
       }
     }
   };
 
   const handleReject = async () => {
     if (rejectId) {
+      setRejecting(true);
       try {
         await rejectExchange(rejectId, rejectReason.trim() || undefined);
         setRejectId(null);
         setRejectReason("");
       } catch {
         // ignore
+      } finally {
+        setRejecting(false);
       }
+    }
+  };
+
+  const handleConfirmExchange = async (exchangeId: string) => {
+    setConfirmingExchangeId(exchangeId);
+    try {
+      await confirmExchange(exchangeId);
+    } catch {
+      // ignore
+    } finally {
+      setConfirmingExchangeId(null);
     }
   };
 
@@ -120,7 +144,7 @@ export default function RewardsPage() {
                   </p>
                 </div>
                 <div className="flex gap-1.5">
-                  <Button size="sm" onClick={async () => { try { await confirmExchange(ex.id); } catch { /* ignore */ } }}>
+                  <Button size="sm" onClick={() => handleConfirmExchange(ex.id)} loading={confirmingExchangeId === ex.id}>
                     <Check size={14} className="mr-1" />
                     确认
                   </Button>
@@ -185,7 +209,7 @@ export default function RewardsPage() {
       </div>
 
       {/* Create/Edit modal */}
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? "编辑奖励" : "新建奖励"}>
+      <Modal open={modalOpen} onClose={saving ? () => {} : () => setModalOpen(false)} title={editing ? "编辑奖励" : "新建奖励"}>
         <div className="flex flex-col gap-4">
           <Input label="奖励名称" placeholder="例如：看一集动画片" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
           <Input label="描述（可选）" placeholder="补充说明" value={description} onChange={(e) => setDescription(e.target.value)} />
@@ -203,10 +227,10 @@ export default function RewardsPage() {
           )}
           <Input label="所需积分" type="number" min={1} placeholder="30" value={points} onChange={(e) => setPoints(e.target.value)} />
           <div className="flex gap-3 mt-2">
-            <Button variant="secondary" onClick={() => setModalOpen(false)} className="flex-1">
+            <Button variant="secondary" onClick={() => setModalOpen(false)} className="flex-1" disabled={saving}>
               取消
             </Button>
-            <Button onClick={handleSave} className="flex-1">
+            <Button onClick={handleSave} className="flex-1" loading={saving}>
               {editing ? "保存" : "创建"}
             </Button>
           </div>
@@ -220,10 +244,11 @@ export default function RewardsPage() {
         onConfirm={handleDeleteConfirm}
         title="删除奖励"
         message="删除后不可恢复，确定要删除这个奖励吗？"
+        loading={deleting}
       />
 
       {/* Reject reason modal */}
-      <Modal open={!!rejectId} onClose={() => setRejectId(null)} title="拒绝原因">
+      <Modal open={!!rejectId} onClose={rejecting ? () => {} : () => setRejectId(null)} title="拒绝原因">
         <div className="flex flex-col gap-4">
           <Input
             label="拒绝原因（可选）"
@@ -232,10 +257,10 @@ export default function RewardsPage() {
             onChange={(e) => setRejectReason(e.target.value)}
           />
           <div className="flex gap-3">
-            <Button variant="secondary" onClick={() => setRejectId(null)} className="flex-1">
+            <Button variant="secondary" onClick={() => setRejectId(null)} className="flex-1" disabled={rejecting}>
               取消
             </Button>
-            <Button variant="danger" onClick={handleReject} className="flex-1">
+            <Button variant="danger" onClick={handleReject} className="flex-1" loading={rejecting}>
               确认拒绝
             </Button>
           </div>

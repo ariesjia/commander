@@ -4,13 +4,13 @@ import { useData } from "@/contexts/DataContext";
 import { formatDate } from "@/lib/utils";
 import { TrendingUp, TrendingDown, RotateCcw, Coins } from "lucide-react";
 
-const typeIcons = {
+const typeIcons: Record<string, typeof TrendingUp> = {
   TASK_REWARD: TrendingUp,
   EXCHANGE_COST: TrendingDown,
   EXCHANGE_REFUND: RotateCcw,
 };
 
-const typeColors = {
+const typeColors: Record<string, string> = {
   TASK_REWARD: "text-green-600 bg-green-50",
   EXCHANGE_COST: "text-red-500 bg-red-50",
   EXCHANGE_REFUND: "text-blue-500 bg-blue-50",
@@ -39,8 +39,8 @@ export default function ParentPointsLogPage() {
 
       <div className="flex flex-col gap-1.5">
         {sorted.map((log) => {
-          const Icon = typeIcons[log.type];
-          const color = typeColors[log.type];
+          const Icon = typeIcons[log.type] ?? TrendingUp;
+          const color = typeColors[log.type] ?? "text-gray-600 bg-gray-50";
           return (
             <div
               key={log.id}
