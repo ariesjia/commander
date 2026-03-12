@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useData } from "@/contexts/DataContext";
 import { Button } from "@/components/ui/Button";
 import { TextWithPinyin } from "@/components/ui/TextWithPinyin";
@@ -13,18 +13,18 @@ export default function StudentRewardsPage() {
   const { rewards, student, requestExchange, showPinyin, isLoading } = useData();
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [successId, setSuccessId] = useState<string | null>(null);
+  const [previewImage, setPreviewImage] = useState<{ url: string; name: string } | null>(null);
 
   const activeRewards = rewards.filter((r) => r.isActive).sort((a, b) => a.points - b.points);
 
-  if (isLoading) {
-    return (
-      <div className="flex flex-col min-h-[40vh] items-center justify-center gap-4 pt-2">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-s-primary border-t-transparent" />
-        <p className="text-sm text-s-text-secondary">加载中...</p>
-      </div>
-    );
-  }
-  const available = student.balance - student.frozenPoints;
+  useEffect(() => {
+    if (!previewImage) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setPreviewImage(null);
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [previewImage]);
 
   const handleExchange = async (rewardId: string) => {
     const ok = await requestExchange(rewardId);
@@ -34,6 +34,17 @@ export default function StudentRewardsPage() {
       setTimeout(() => setSuccessId(null), 2000);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col min-h-[40vh] items-center justify-center gap-4 pt-2">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-s-primary border-t-transparent" />
+        <p className="text-sm text-s-text-secondary">加载中...</p>
+      </div>
+    );
+  }
+
+  const available = student.balance - student.frozenPoints;
 
   return (
     <div className="flex flex-col gap-4 pt-2">
@@ -77,11 +88,17 @@ export default function StudentRewardsPage() {
             >
               <div className="flex items-start gap-3 md:gap-4">
                 {reward.imageUrl ? (
-                  <img
-                    src={reward.imageUrl}
-                    alt={reward.name}
-                    className="h-12 w-12 md:h-14 md:w-14 rounded-lg object-cover shrink-0"
-                  />
+                  <button
+                    type="button"
+                    onClick={() => setPreviewImage({ url: reward.imageUrl!, name: reward.name })}
+                    className="h-12 w-12 md:h-14 md:w-14 rounded-lg overflow-hidden shrink-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-s-primary/50"
+                  >
+                    <img
+                      src={reward.imageUrl}
+                      alt={reward.name}
+                      className="h-full w-full object-cover"
+                    />
+                  </button>
                 ) : (
                   <div
                     className={cn(
@@ -176,6 +193,34 @@ export default function StudentRewardsPage() {
           </div>
         )}
       </div>
+
+      {/* 图片预览大图 */}
+      <AnimatePresence>
+        {previewImage && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setPreviewImage(null)}
+          >
+            <motion.div
+              className="relative max-w-[90vw] max-h-[90vh]"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <img
+                src={previewImage.url}
+                alt={previewImage.name}
+                className="max-w-full max-h-[85vh] w-auto h-auto object-contain rounded-lg"
+              />
+              <p className="text-center text-s-text mt-2 text-sm">{previewImage.name}</p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

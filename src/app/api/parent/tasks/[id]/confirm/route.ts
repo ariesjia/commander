@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireParent, getStudentId } from "@/lib/api-auth";
-import { getTodayStr, getWeekStartStr } from "@/lib/utils";
+import { getTodayStr, getWeekStartStr, toChinaDateStr } from "@/lib/utils";
 import { PointsLogType } from "@prisma/client";
 
 export async function POST(
@@ -46,6 +46,7 @@ export async function POST(
   const weekStr = getWeekStartStr();
 
   // RULE can be confirmed multiple times per day; DAILY once/day, WEEKLY once/week
+  // DAILY 使用中国时区当天范围，确保每日任务每天可确认一次
   const existingLog =
     task.type !== "RULE" &&
     (await prisma.taskLog.findFirst({
@@ -53,11 +54,11 @@ export async function POST(
         taskId,
         studentId,
         ...(task.type === "WEEKLY"
-          ? { completedAt: { gte: new Date(weekStr) } }
+          ? { completedAt: { gte: new Date(weekStr + "T00:00:00+08:00") } }
           : {
               completedAt: {
-                gte: new Date(todayStr),
-                lt: new Date(new Date(todayStr).getTime() + 86400000),
+                gte: new Date(todayStr + "T00:00:00+08:00"),
+                lt: new Date(new Date(todayStr + "T00:00:00+08:00").getTime() + 86400000),
               },
             }),
       },
@@ -72,13 +73,11 @@ export async function POST(
 
   const student = await prisma.student.findUniqueOrThrow({ where: { id: studentId } });
 
-  const todayDate = new Date(todayStr);
   const lastActive = student.lastActiveAt;
-  const lastActiveDate = lastActive ? lastActive.toISOString().split("T")[0] : null;
+  const lastActiveDate = lastActive ? toChinaDateStr(lastActive) : null;
+  const yesterdayStr = toChinaDateStr(new Date(Date.now() - 86400000));
   const isConsecutive =
-    lastActiveDate === todayStr ||
-    (lastActiveDate &&
-      todayDate.getTime() - new Date(lastActiveDate).getTime() <= 86400000);
+    lastActiveDate === todayStr || lastActiveDate === yesterdayStr;
   const newStreak =
     isConsecutive
       ? lastActiveDate === todayStr

@@ -1,20 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireStudent, getStudentId } from "@/lib/api-auth";
-import { getTodayStr, getWeekStartStr } from "@/lib/utils";
-
-function isExpired(task: { type: string }, todayStr: string, weekStr: string): boolean {
-  const now = new Date();
-  if (task.type === "WEEKLY") {
-    const sundayEnd = new Date(weekStr);
-    sundayEnd.setDate(sundayEnd.getDate() + 6);
-    sundayEnd.setHours(23, 59, 59, 999);
-    return now > sundayEnd;
-  }
-  const endOfDay = new Date(todayStr);
-  endOfDay.setHours(23, 59, 59, 999);
-  return now > endOfDay;
-}
+import { getTodayStr, getWeekStartStr, toChinaDateStr } from "@/lib/utils";
 
 export async function GET(request: Request) {
   const auth = await requireStudent();
@@ -41,12 +28,10 @@ export async function GET(request: Request) {
       t.type === "RULE"
         ? null
         : t.type === "WEEKLY"
-          ? taskLogs.find((l) => l.taskId === t.id && l.completedAt >= new Date(weekStr))
-          : taskLogs.find((l) => l.taskId === t.id && l.completedAt.toISOString().startsWith(todayStr));
+          ? taskLogs.find((l) => l.taskId === t.id && l.completedAt >= new Date(weekStr + "T00:00:00+08:00"))
+          : taskLogs.find((l) => l.taskId === t.id && toChinaDateStr(l.completedAt) === todayStr);
 
-    let status: "pending" | "completed" | "expired" = "pending";
-    if (log) status = "completed";
-    else if (isExpired(t, todayStr, weekStr)) status = "expired";
+    const status: "pending" | "completed" = log ? "completed" : "pending";
 
     return {
       id: t.id,

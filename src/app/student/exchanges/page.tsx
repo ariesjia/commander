@@ -1,9 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { useData } from "@/contexts/DataContext";
 import { Badge } from "@/components/ui/Badge";
-import { Clock, Check, X, Coins } from "lucide-react";
-import { formatDate, cn } from "@/lib/utils";
+import { TextWithPinyin } from "@/components/ui/TextWithPinyin";
+import { Clock, Check, X, Coins, ArrowLeft } from "lucide-react";
+import { formatDate } from "@/lib/utils";
 
 const statusMap = {
   PENDING: { label: "待确认", icon: Clock, variant: "neon" as const },
@@ -12,7 +14,7 @@ const statusMap = {
 };
 
 export default function StudentExchangesPage() {
-  const { exchanges, isLoading } = useData();
+  const { exchanges, isLoading, showPinyin } = useData();
   const sorted = [...exchanges].sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
   );
@@ -28,14 +30,27 @@ export default function StudentExchangesPage() {
 
   return (
     <div className="flex flex-col gap-4 pt-2">
-      <h1 className="font-display text-xl md:text-2xl font-bold text-s-text">
-        我的兑换
-      </h1>
+      <div className="flex items-center gap-3">
+        <Link
+          href="/student/rewards"
+          className="flex h-9 w-9 items-center justify-center rounded-lg text-s-text-secondary hover:bg-white/10 hover:text-s-text transition-colors"
+          aria-label="返回"
+        >
+          <ArrowLeft size={20} />
+        </Link>
+        <h1 className="font-display text-xl md:text-2xl font-bold text-s-text">
+          我的兑换
+        </h1>
+      </div>
 
       {sorted.length === 0 && (
         <div className="glass-card p-8 md:p-10 text-center">
-          <p className="text-base md:text-lg text-s-text-secondary">暂无兑换记录</p>
-          <p className="text-sm md:text-base text-s-text-secondary mt-1">去奖励商城看看吧</p>
+          <p className="text-base md:text-lg text-s-text-secondary">
+            <TextWithPinyin text="暂无兑换记录" showPinyin={showPinyin} />
+          </p>
+          <p className="text-sm md:text-base text-s-text-secondary mt-1">
+            <TextWithPinyin text="去奖励商城看看吧" showPinyin={showPinyin} />
+          </p>
         </div>
       )}
 
@@ -47,7 +62,9 @@ export default function StudentExchangesPage() {
               <div className="flex items-start justify-between gap-3 md:gap-4">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-base md:text-lg font-medium text-s-text">{ex.rewardName}</p>
+                    <p className="text-base md:text-lg font-medium text-s-text">
+                      <TextWithPinyin text={ex.rewardName} showPinyin={showPinyin} />
+                    </p>
                     <Badge variant={cfg.variant}>
                       <cfg.icon size={12} className="mr-1 md:w-3.5 md:h-3.5" />
                       {cfg.label}

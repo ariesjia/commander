@@ -145,15 +145,15 @@ body {
   }
 }
 
-/* ── 拼音注音 (ruby) ── */
+/* ── 拼音注音 (ruby)：默认加大拼音与文字间距 ── */
 .text-with-pinyin {
-  line-height: 2.2;
+  line-height: 3;
 }
 .text-with-pinyin ruby {
   ruby-position: over;
 }
 .text-with-pinyin .py-result-item {
-  margin-right: 0.65em;
+  margin-right: 0.85em;
 }
 .text-with-pinyin .py-result-item:last-child {
   margin-right: 0;
@@ -163,6 +163,7 @@ body {
   font-size: 0.95em;
   font-weight: 500;
   opacity: 0.95;
+  padding-bottom: 0.35em;
 }
 @media (min-width: 768px) {
   .text-with-pinyin rt,
@@ -172,6 +173,15 @@ body {
 }
 .theme-student .text-with-pinyin rt,
 .theme-student .text-with-pinyin .py-pinyin-item {
+  color: var(--color-s-text-secondary);
+}
+
+/* 盲盒提示：主文字白色，拼音用次要色区分 */
+.blind-box-hint {
+  color: white;
+}
+.blind-box-hint rt,
+.blind-box-hint .py-pinyin-item {
   color: var(--color-s-text-secondary);
 }
 .theme-parent .text-with-pinyin rt,

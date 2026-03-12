@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireParent, getStudentId } from "@/lib/api-auth";
 import { getCurrentStage, getEvolutionLevel } from "@/lib/mecha-config";
-import { getWeekStartStr } from "@/lib/utils";
+import { getTodayStr, getWeekStartStr, toChinaDateStr } from "@/lib/utils";
 
 export async function GET(request: Request) {
   const auth = await requireParent();
@@ -34,16 +34,16 @@ export async function GET(request: Request) {
   ]);
 
   const weekStart = getWeekStartStr();
-  const weeklyCompletedCount = taskLogs.filter((l) => l.completedAt >= new Date(weekStart)).length;
+  const todayStr = getTodayStr();
+  const weekStartDate = new Date(weekStart + "T00:00:00+08:00");
+  const weeklyCompletedCount = taskLogs.filter((l) => l.completedAt >= weekStartDate).length;
   const weeklyTotalCount = tasks.length;
 
-  const todayStr = new Date().toISOString().split("T")[0];
   const tasksWithLogs = tasks.map((t) => {
-    const periodKey = t.type === "DAILY" || t.type === "RULE" ? todayStr : weekStart;
     const hasLog =
       t.type === "DAILY" || t.type === "RULE"
-        ? taskLogs.some((l) => l.taskId === t.id && l.completedAt.toISOString().startsWith(periodKey))
-        : taskLogs.some((l) => l.taskId === t.id && l.completedAt >= new Date(periodKey));
+        ? taskLogs.some((l) => l.taskId === t.id && toChinaDateStr(l.completedAt) === todayStr)
+        : taskLogs.some((l) => l.taskId === t.id && l.completedAt >= weekStartDate);
     return { task: t, completed: hasLog };
   });
 

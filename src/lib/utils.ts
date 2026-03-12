@@ -38,17 +38,39 @@ export function isThisWeek(dateStr: string): boolean {
   return d >= startOfWeek && d < endOfWeek;
 }
 
+/** 使用中国时区 (Asia/Shanghai) 的当天日期，确保每日任务按自然日重置 */
 export function getTodayStr(): string {
-  return new Date().toISOString().split("T")[0];
+  return toChinaDateStr(new Date());
 }
 
+/** 将 Date 转为中国时区的日期字符串 YYYY-MM-DD */
+export function toChinaDateStr(date: Date): string {
+  const formatter = new Intl.DateTimeFormat("zh-CN", {
+    timeZone: "Asia/Shanghai",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+  const parts = formatter.formatToParts(date);
+  const year = parts.find((p) => p.type === "year")?.value ?? "";
+  const month = parts.find((p) => p.type === "month")?.value ?? "";
+  const day = parts.find((p) => p.type === "day")?.value ?? "";
+  return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+}
+
+/** 使用中国时区的本周一日期 */
 export function getWeekStartStr(): string {
-  const now = new Date();
-  const day = now.getDay();
-  const diff = day === 0 ? -6 : 1 - day;
-  const monday = new Date(now);
-  monday.setDate(now.getDate() + diff);
-  return monday.toISOString().split("T")[0];
+  const todayStr = getTodayStr();
+  const [y, m, d] = todayStr.split("-").map(Number);
+  const date = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
+  const dayOfWeek = date.getUTCDay();
+  const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  const monday = new Date(date);
+  monday.setUTCDate(date.getUTCDate() + diff);
+  const my = monday.getUTCFullYear();
+  const mm = String(monday.getUTCMonth() + 1).padStart(2, "0");
+  const md = String(monday.getUTCDate()).padStart(2, "0");
+  return `${my}-${mm}-${md}`;
 }
 
 export function cn(...classes: (string | false | null | undefined)[]): string {

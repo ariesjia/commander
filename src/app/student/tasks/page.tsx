@@ -3,13 +3,12 @@
 import { useData } from "@/contexts/DataContext";
 import { Badge } from "@/components/ui/Badge";
 import { TextWithPinyin } from "@/components/ui/TextWithPinyin";
-import { Check, Clock, AlertCircle, CalendarDays, CalendarRange, Coins } from "lucide-react";
+import { Check, Clock, CalendarDays, CalendarRange } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const statusConfig = {
-  pending: { label: "待完成", icon: Clock, variant: "neon" as const, color: "text-s-primary" },
-  completed: { label: "已完成", icon: Check, variant: "orange" as const, color: "text-s-success" },
-  expired: { label: "已过期", icon: AlertCircle, variant: "danger" as const, color: "text-s-danger" },
+const statusConfig: Record<string, { label: string; icon: typeof Clock; variant: "neon" | "orange"; color: string }> = {
+  pending: { label: "待完成", icon: Clock, variant: "neon", color: "text-s-primary" },
+  completed: { label: "已完成", icon: Check, variant: "orange", color: "text-s-success" },
 };
 
 export default function StudentTasksPage() {
@@ -42,7 +41,7 @@ export default function StudentTasksPage() {
       </div>
       <div className="flex flex-col gap-2 md:gap-3">
         {items.map((task) => {
-          const cfg = statusConfig[task.status];
+          const cfg = statusConfig[task.status] ?? statusConfig.pending;
           return (
             <div
               key={task.id}
@@ -56,9 +55,7 @@ export default function StudentTasksPage() {
                   "flex h-10 w-10 md:h-12 md:w-12 items-center justify-center rounded-lg shrink-0",
                   task.status === "completed"
                     ? "bg-s-success/20"
-                    : task.status === "expired"
-                      ? "bg-s-danger/20"
-                      : "bg-s-primary/10",
+                    : "bg-s-primary/10",
                 )}
               >
                 <cfg.icon size={20} className={cn("md:w-6 md:h-6", cfg.color)} />

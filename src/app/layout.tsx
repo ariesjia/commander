@@ -6,8 +6,15 @@ import { ModeTransition } from "@/components/mode-switch/ModeTransition";
 export const metadata: Metadata = {
   title: "MotiMech | 学生游戏化激励系统",
   description: "学生游戏化激励系统 — 完成任务，养成机甲，兑换奖励",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    title: "MotiMech",
+    statusBarStyle: "default",
+  },
   icons: {
     icon: "/logo.svg",
+    apple: "/apple-touch-icon.png",
   },
 };
 

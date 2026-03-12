@@ -5,8 +5,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { BlindBox } from "./BlindBox";
 import { SpriteAnimation } from "@/components/ui/SpriteAnimation";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { TextWithPinyin } from "@/components/ui/TextWithPinyin";
 import { api } from "@/lib/api";
 import { useToast } from "@/contexts/ToastContext";
+import { useData } from "@/contexts/DataContext";
 
 type Phase = "blind" | "confirm" | "opening" | "reveal" | "done";
 
@@ -22,6 +24,7 @@ interface AdoptionFlowProps {
 
 export function AdoptionFlow({ onComplete }: AdoptionFlowProps) {
   const { toast } = useToast();
+  const { showPinyin } = useData();
   const [phase, setPhase] = useState<Phase>("blind");
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [adopting, setAdopting] = useState(false);
@@ -92,8 +95,8 @@ export function AdoptionFlow({ onComplete }: AdoptionFlowProps) {
             exit={{ opacity: 0, scale: 0.95 }}
             className="flex flex-col items-center gap-6"
           >
-            <p className="text-s-text-secondary text-lg text-center">
-              点击盲盒，随机抽取你的机甲
+            <p className="blind-box-hint text-lg text-center">
+              <TextWithPinyin text="点击盲盒，随机抽取你的机甲" showPinyin={showPinyin} />
             </p>
             <button onClick={handleBlindClick} className="focus:outline-none">
               <BlindBox
@@ -186,7 +189,7 @@ export function AdoptionFlow({ onComplete }: AdoptionFlowProps) {
         onClose={() => setConfirmOpen(false)}
         onConfirm={handleConfirm}
         title="领取机甲"
-        message="确定要打开盲盒，随机抽取你的机甲吗？"
+        message={<TextWithPinyin text="确定要打开盲盒，随机抽取你的机甲吗？" showPinyin={showPinyin} />}
         confirmLabel="确认领取"
         cancelLabel="再想想"
         variant="default"

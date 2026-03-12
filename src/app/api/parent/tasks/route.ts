@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireParent, getStudentId } from "@/lib/api-auth";
-import { getTodayStr, getWeekStartStr } from "@/lib/utils";
+import { getTodayStr, getWeekStartStr, toChinaDateStr } from "@/lib/utils";
 import { TaskType } from "@prisma/client";
 
 const TASK_TYPE_MAP: Record<string, TaskType> = {
@@ -36,12 +36,12 @@ export async function GET(request: Request) {
     const log =
       t.type === "RULE"
         ? null
-        : taskLogs.find(
+        :         taskLogs.find(
             (l) =>
               l.taskId === t.id &&
               (t.type === "WEEKLY"
-                ? l.completedAt >= new Date(weekStr)
-                : l.completedAt.toISOString().startsWith(todayStr))
+                ? l.completedAt >= new Date(weekStr + "T00:00:00+08:00")
+                : toChinaDateStr(l.completedAt) === todayStr)
           );
     return {
       id: t.id,
