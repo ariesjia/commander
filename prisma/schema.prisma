@@ -21,15 +21,16 @@ model Parent {
 }
 
 model Student {
-  id             String    @id @default(cuid())
-  nickname       String
-  totalPoints    Int       @default(0)
-  balance        Int       @default(0)
-  frozenPoints   Int       @default(0)
-  streakDays     Int       @default(0)
-  adoptedMechaIds String[]  @default([]) // 领养的机甲 slug 列表（冗余，与 studentMechas 同步）
-  lastActiveAt   DateTime?
-  createdAt      DateTime  @default(now())
+  id               String    @id @default(cuid())
+  nickname         String
+  totalPoints      Int       @default(0)
+  balance          Int       @default(0)
+  frozenPoints     Int       @default(0)
+  streakDays       Int       @default(0)
+  primaryMechaId   String?   @unique // 当前主机甲实例，首页展示、任务积分归属
+  primaryMecha     StudentMecha? @relation("StudentPrimaryMecha", fields: [primaryMechaId], references: [id], onDelete: SetNull)
+  lastActiveAt     DateTime?
+  createdAt        DateTime  @default(now())
 
   parentId   String   @unique
   parent     Parent   @relation(fields: [parentId], references: [id], onDelete: Cascade)
@@ -47,6 +48,9 @@ model StudentMecha {
   mechaSlug String
   adoptedAt DateTime @default(now())
   points    Int      @default(0) // 领养后获得的任务积分，用于机甲升级
+
+  taskLogs     TaskLog[]
+  asPrimaryFor Student? @relation("StudentPrimaryMecha")
 
   @@unique([studentId, mechaSlug])
   @@index([studentId])
@@ -128,11 +132,13 @@ model TaskLog {
   id             String   @id @default(cuid())
   completedAt    DateTime @default(now())
   pointsAwarded Int
+  studentMechaId String?  // 确认时获得积分的机甲实例，撤销时用于回滚（支持同款机甲重复领养）
 
   taskId   String
   task     Task    @relation(fields: [taskId], references: [id], onDelete: Cascade)
   studentId String
   student  Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  studentMecha StudentMecha? @relation(fields: [studentMechaId], references: [id], onDelete: SetNull)
   pointsLogs PointsLog[]
 
   @@index([taskId, studentId])

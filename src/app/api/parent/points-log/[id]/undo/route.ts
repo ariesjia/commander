@@ -58,12 +58,8 @@ export async function POST(
     return NextResponse.json({ error: "积分不足，无法撤销（可能已用于兑换）" }, { status: 400 });
   }
 
-  const studentMechasToUndo = await prisma.studentMecha.findMany({
-    where: {
-      studentId,
-      adoptedAt: { lte: taskLog!.completedAt },
-    },
-  });
+  // 旧记录无 studentMechaId，回退到当前 primary 机甲
+  const studentMechaIdToUndo = taskLog.studentMechaId ?? student.primaryMechaId;
 
   const undoType =
     pointsLog.type === PointsLogType.TASK_REWARD ? PointsLogType.TASK_REWARD_UNDO : PointsLogType.TASK_PENALTY_UNDO;
@@ -82,12 +78,16 @@ export async function POST(
         balance: Math.max(0, student.balance - taskLog!.pointsAwarded),
       },
     });
-    for (const sm of studentMechasToUndo) {
-      // 机甲积分最低为 0，撤销惩罚时不会出现负分
-      await tx.studentMecha.update({
-        where: { id: sm.id },
-        data: { points: Math.max(0, sm.points - taskLog!.pointsAwarded) },
+    if (studentMechaIdToUndo) {
+      const sm = await tx.studentMecha.findUnique({
+        where: { id: studentMechaIdToUndo, studentId },
       });
+      if (sm) {
+        await tx.studentMecha.update({
+          where: { id: sm.id },
+          data: { points: Math.max(0, sm.points - taskLog!.pointsAwarded) },
+        });
+      }
     }
     await tx.pointsLog.delete({ where: { id: pointsLogId } });
     await tx.pointsLog.create({

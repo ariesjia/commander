@@ -23,44 +23,44 @@ export async function POST() {
     include: { levels: { orderBy: { level: "asc" } } },
   });
 
-  const adoptedIds = student.adoptedMechaIds ?? [];
+  const studentMechas = await prisma.studentMecha.findMany({ where: { studentId } });
+  const ownedSlugs = studentMechas.map((sm) => sm.mechaSlug);
   const pool = allMechas.filter(
-    (m) => m.levels.length > 0 && !adoptedIds.includes(m.slug),
+    (m) => m.levels.length > 0 && !ownedSlugs.includes(m.slug),
   );
   if (pool.length === 0) {
     return NextResponse.json(
-      adoptedIds.length > 0
+      ownedSlugs.length > 0
         ? { error: "已拥有所有可领取的机甲" }
         : { error: allMechas.length > 0 ? "机甲配置不完整，请运行 npm run db:seed" : "暂无可领取的机甲" },
       { status: 400 }
     );
   }
 
-  if (adoptedIds.length > 0) {
+  if (ownedSlugs.length > 0) {
     return NextResponse.json({ error: "已有机甲，无需重复领取" }, { status: 400 });
   }
 
   // 随机抽取一只（从未拥有的机甲中抽取，避免重复）
   const drawn = pool[Math.floor(Math.random() * pool.length)]!;
-  const mechaId = drawn.slug;
+  const mechaSlug = drawn.slug;
 
-  await prisma.$transaction([
-    prisma.student.update({
-      where: { id: studentId },
-      data: { adoptedMechaIds: [...(student.adoptedMechaIds ?? []), mechaId] },
-    }),
-    prisma.studentMecha.upsert({
-      where: {
-        studentId_mechaSlug: { studentId, mechaSlug: mechaId },
-      },
-      create: {
-        studentId,
-        mechaSlug: mechaId,
-        points: 0,
-      },
-      update: {}, // 已存在则不重复领养
-    }),
-  ]);
+  const studentMecha = await prisma.studentMecha.upsert({
+    where: {
+      studentId_mechaSlug: { studentId, mechaSlug },
+    },
+    create: {
+      studentId,
+      mechaSlug,
+      points: 0,
+    },
+    update: {},
+  });
+
+  await prisma.student.update({
+    where: { id: studentId },
+    data: { primaryMechaId: studentMecha.id },
+  });
 
   // 根据当前机甲积分计算等级展示（领养时 points=0）
   const levels = drawn.levels;
@@ -73,7 +73,7 @@ export async function POST() {
 
   return NextResponse.json({
     ok: true,
-    mechaId,
+    mechaId: mechaSlug,
     name: drawn.name,
     imageUrl: levelInfo.imageUrl,
     levelName: levelInfo.name,

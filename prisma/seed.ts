@@ -72,6 +72,22 @@ async function seedMecha(
 }
 
 async function main() {
+  // 回填 primaryMechaId：从 studentMechas 取第一个
+  const studentsToBackfill = await prisma.student.findMany({
+    where: { primaryMechaId: null, studentMechas: { some: {} } },
+    include: { studentMechas: { orderBy: { adoptedAt: "asc" } } },
+  });
+  for (const s of studentsToBackfill) {
+    const first = s.studentMechas[0];
+    if (first) {
+      await prisma.student.update({
+        where: { id: s.id },
+        data: { primaryMechaId: first.id },
+      });
+      console.log(`已回填 primaryMechaId: ${s.id} -> ${first.mechaSlug}`);
+    }
+  }
+
   await seedMecha(
     "xuanjia",
     "玄甲",
@@ -90,27 +106,6 @@ async function main() {
     STAR_SHIELD_LEVELS,
   );
 
-  // 回填：已有 adoptedMechaIds 但无 StudentMecha 的学生，用 totalPoints 初始化
-  const studentsToBackfill = await prisma.student.findMany({
-    where: { adoptedMechaIds: { isEmpty: false } },
-    include: { studentMechas: true },
-  });
-  for (const s of studentsToBackfill) {
-    const ids = s.adoptedMechaIds ?? [];
-    for (const slug of ids) {
-      const has = s.studentMechas.some((sm) => sm.mechaSlug === slug);
-      if (!has) {
-        await prisma.studentMecha.create({
-          data: {
-            studentId: s.id,
-            mechaSlug: slug,
-            points: s.totalPoints,
-          },
-        });
-        console.log(`已回填学生 ${s.id} 的机甲 ${slug}，积分 ${s.totalPoints}`);
-      }
-    }
-  }
 }
 
 main()

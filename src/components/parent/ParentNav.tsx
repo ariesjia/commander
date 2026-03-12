@@ -33,7 +33,7 @@ export function ParentNav() {
   return (
     <>
       {/* Top bar */}
-      <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-p-border bg-white/80 px-4 backdrop-blur-md sm:px-6">
+      <header className="sticky top-0 z-40 flex min-h-14 items-center justify-between border-b border-p-border bg-white/80 px-4 backdrop-blur-md sm:px-6 safe-header-height">
         <div className="flex items-center gap-2">
           <Image src="/logo.svg" alt="" width={28} height={28} className="shrink-0" />
           <span className="text-base font-semibold text-p-text">MotiMech</span>
@@ -49,7 +49,7 @@ export function ParentNav() {
       </header>
 
       {/* Bottom tab bar (mobile) */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 flex h-16 items-center justify-around border-t border-p-border bg-white sm:hidden">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 flex h-16 items-center justify-around border-t border-p-border bg-white sm:hidden safe-area-bottom">
         {links.map(({ href, label, icon: Icon }) => {
           const active = pathname === href;
           return (
@@ -69,7 +69,7 @@ export function ParentNav() {
       </nav>
 
       {/* Sidebar (tablet+) */}
-      <aside className="fixed left-0 top-14 bottom-0 z-30 hidden w-56 border-r border-p-border bg-white sm:block">
+      <aside className="fixed left-0 top-[calc(3.5rem+env(safe-area-inset-top,0px))] bottom-0 z-30 hidden w-56 border-r border-p-border bg-white sm:block">
         <nav className="flex flex-col gap-1 p-3 pt-4">
           {links.map(({ href, label, icon: Icon }) => {
             const active = pathname === href;

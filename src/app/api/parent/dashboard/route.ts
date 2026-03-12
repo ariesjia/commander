@@ -20,7 +20,7 @@ export async function GET(request: Request) {
     }),
     prisma.student.findUniqueOrThrow({
       where: { id: studentId },
-      include: { studentMechas: true },
+      include: { studentMechas: true, primaryMecha: true },
     }),
     prisma.task.findMany({ where: { parentId: auth.parentId, isActive: true } }),
     prisma.taskLog.findMany({
@@ -50,11 +50,17 @@ export async function GET(request: Request) {
   const pendingConfirmCount = tasksWithLogs.filter((t) => !t.completed).length;
   const pendingExchangeCount = exchanges.length;
 
-  const adoptedIds = student.adoptedMechaIds ?? [];
-  const primarySlug = adoptedIds[0] ?? null;
-  const primaryMecha = primarySlug
-    ? student.studentMechas.find((sm) => sm.mechaSlug === primarySlug)
-    : null;
+  // primaryMechaId 可能未回填（迁移前领养），有 studentMechas 时用第一个并回填
+  let primaryMecha = student.primaryMecha;
+  if (!primaryMecha && student.studentMechas.length > 0) {
+    const first = student.studentMechas.sort((a, b) => a.adoptedAt.getTime() - b.adoptedAt.getTime())[0]!;
+    await prisma.student.update({
+      where: { id: studentId },
+      data: { primaryMechaId: first.id },
+    });
+    primaryMecha = first;
+  }
+  const primarySlug = primaryMecha?.mechaSlug ?? null;
   const primaryMechaPoints = primaryMecha?.points ?? 0;
   const mechaStage = getCurrentStage(primaryMechaPoints);
   const evolutionLevel = getEvolutionLevel(primaryMechaPoints);

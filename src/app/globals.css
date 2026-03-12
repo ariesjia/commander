@@ -68,11 +68,21 @@
   --color-s-danger: var(--color-s-danger);
 }
 
+/* iOS PWA：全屏背景延伸至灵动岛/刘海区域，内容在安全区内 */
+html {
+  background: var(--color-s-bg-from, #0f172a);
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
+}
+
 body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
 }
+
 
 /* ── Student neon glow utilities ── */
 .neon-border {
@@ -107,6 +117,26 @@ body {
     radial-gradient(1px 1px at 90% 40%, rgba(255, 255, 255, 0.1) 50%, transparent 50%);
   pointer-events: none;
   z-index: 0;
+}
+
+/* iOS 安全区域：内容在 safe-area-inset 内渲染 */
+.safe-area-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.safe-area-insets {
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
+/* 固定顶部栏：高度含安全区 */
+.safe-header-height {
+  min-height: calc(3.5rem + env(safe-area-inset-top, 0px));
+  padding-top: env(safe-area-inset-top, 0px);
 }
 
 /* Content z-index is handled via inline classes on <main> in the layout */

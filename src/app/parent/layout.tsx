@@ -18,7 +18,7 @@ export default function ParentLayout({ children }: { children: React.ReactNode }
   return (
     <div className="min-h-dvh bg-p-bg theme-parent">
       <ParentNav />
-      <main className="pb-20 pt-4 sm:pb-8 sm:pl-56">
+      <main className="pb-[calc(4rem+env(safe-area-inset-bottom,0px))] pt-4 sm:pb-8 sm:pl-56">
         <div className="mx-auto max-w-4xl px-4 sm:px-6">{children}</div>
       </main>
     </div>

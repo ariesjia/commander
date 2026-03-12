@@ -71,7 +71,11 @@ export async function POST(
     );
   }
 
-  const student = await prisma.student.findUniqueOrThrow({ where: { id: studentId } });
+  const student = await prisma.student.findUniqueOrThrow({
+    where: { id: studentId },
+    include: { primaryMecha: true },
+  });
+  const primarySm = student.primaryMecha;
 
   const lastActive = student.lastActiveAt;
   const lastActiveDate = lastActive ? toChinaDateStr(lastActive) : null;
@@ -84,8 +88,6 @@ export async function POST(
         ? student.streakDays
         : student.streakDays + 1
       : 1;
-
-  const studentMechas = await prisma.studentMecha.findMany({ where: { studentId } });
 
   let pointsToApply: number;
   let logType: PointsLogType;
@@ -111,6 +113,7 @@ export async function POST(
         taskId,
         studentId,
         pointsAwarded: pointsToApply,
+        studentMechaId: primarySm?.id,
       },
     });
     await tx.student.update({
@@ -132,11 +135,11 @@ export async function POST(
         taskLogId: taskLog.id,
       },
     });
-    for (const sm of studentMechas) {
-      // 机甲积分最低为 0，惩罚规则下不会出现负分
+    // 仅 primary 机甲获得积分
+    if (primarySm) {
       await tx.studentMecha.update({
-        where: { id: sm.id },
-        data: { points: Math.max(0, sm.points + pointsToApply) },
+        where: { id: primarySm.id },
+        data: { points: Math.max(0, primarySm.points + pointsToApply) },
       });
     }
   });
