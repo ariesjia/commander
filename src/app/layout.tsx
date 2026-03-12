@@ -4,8 +4,11 @@ import { Providers } from "@/contexts/Providers";
 import { ModeTransition } from "@/components/mode-switch/ModeTransition";
 
 export const metadata: Metadata = {
-  title: "机甲指挥官 | MechCommander",
+  title: "MotiMech | 学生游戏化激励系统",
   description: "学生游戏化激励系统 — 完成任务，养成机甲，兑换奖励",
+  icons: {
+    icon: "/logo.svg",
+  },
 };
 
 export default function RootLayout({
@@ -15,14 +18,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-CN">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@400;700;900&display=swap"
-          rel="stylesheet"
-        />
-      </head>
+      <head />
       <body className="font-sans antialiased">
         <Providers>
           {children}

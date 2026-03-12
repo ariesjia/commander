@@ -41,7 +41,7 @@ export default function LoginPage() {
   return (
     <div className="rounded-xl bg-p-card p-8 shadow-sm border border-p-border">
       <div className="mb-6 flex flex-col items-center gap-2">
-        <h1 className="text-xl font-semibold text-p-text">机甲指挥官</h1>
+        <h1 className="text-xl font-semibold text-p-text">MotiMech</h1>
         <p className="text-sm text-p-text-secondary">登录家长账号</p>
       </div>
 

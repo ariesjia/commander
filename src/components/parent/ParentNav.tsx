@@ -36,7 +36,7 @@ export function ParentNav() {
       <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-p-border bg-white/80 px-4 backdrop-blur-md sm:px-6">
         <div className="flex items-center gap-2">
           <Image src="/logo.svg" alt="" width={28} height={28} className="shrink-0" />
-          <span className="text-base font-semibold text-p-text">机甲指挥官</span>
+          <span className="text-base font-semibold text-p-text">MotiMech</span>
         </div>
         <button
           onClick={handleSwitch}
