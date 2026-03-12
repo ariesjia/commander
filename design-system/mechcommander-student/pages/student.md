@@ -1,6 +1,6 @@
 # Student Page Overrides
 
-> **PROJECT:** MechCommander Student
+> **PROJECT:** MotiMech Student
 > **Generated:** 2026-03-11 22:39:22
 > **Page Type:** General
 

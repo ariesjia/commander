@@ -103,7 +103,7 @@ export default function StudentHome() {
         </div>
         <Image src="/logo.svg" alt="" width={40} height={40} className="mb-2 opacity-90" />
         <p className="font-display text-sm text-s-primary neon-text tracking-wider">
-          指挥官 {user?.childNickname ?? "---"}
+          MotiMech · {user?.childNickname ?? "---"}
         </p>
         <h1 className="font-display text-lg font-bold text-s-text mt-1">{displayTitle}</h1>
 

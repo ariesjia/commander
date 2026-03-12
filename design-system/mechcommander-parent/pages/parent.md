@@ -1,6 +1,6 @@
 # Parent Page Overrides
 
-> **PROJECT:** MechCommander Parent
+> **PROJECT:** MotiMech Parent
 > **Generated:** 2026-03-11 22:39:22
 > **Page Type:** Dashboard / Data View
 

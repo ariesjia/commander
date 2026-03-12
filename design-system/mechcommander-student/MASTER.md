@@ -6,7 +6,7 @@
 
 ---
 
-**Project:** MechCommander Student
+**Project:** MotiMech Student
 **Generated:** 2026-03-11 22:39:22
 **Category:** Gaming
 

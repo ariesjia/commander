@@ -6,7 +6,7 @@
 
 ---
 
-**Project:** MechCommander Parent
+**Project:** MotiMech Parent
 **Generated:** 2026-03-11 22:39:22
 **Category:** Productivity Tool
 
