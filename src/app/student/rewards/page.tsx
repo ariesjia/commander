@@ -3,17 +3,27 @@
 import { useState } from "react";
 import { useData } from "@/contexts/DataContext";
 import { Button } from "@/components/ui/Button";
+import { TextWithPinyin } from "@/components/ui/TextWithPinyin";
 import { Coins, ShoppingCart, ArrowRight, History } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
 export default function StudentRewardsPage() {
-  const { rewards, student, requestExchange } = useData();
+  const { rewards, student, requestExchange, showPinyin, isLoading } = useData();
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [successId, setSuccessId] = useState<string | null>(null);
 
   const activeRewards = rewards.filter((r) => r.isActive).sort((a, b) => a.points - b.points);
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col min-h-[40vh] items-center justify-center gap-4 pt-2">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-s-primary border-t-transparent" />
+        <p className="text-sm text-s-text-secondary">加载中...</p>
+      </div>
+    );
+  }
   const available = student.balance - student.frozenPoints;
 
   const handleExchange = async (rewardId: string) => {
@@ -28,26 +38,26 @@ export default function StudentRewardsPage() {
   return (
     <div className="flex flex-col gap-4 pt-2">
       <div className="flex items-center justify-between">
-        <h1 className="font-display text-lg font-bold text-s-text">
-          奖励商城
+        <h1 className="font-display text-xl md:text-2xl font-bold text-s-text">
+        奖励商城
         </h1>
         <div className="flex items-center gap-1.5 text-s-accent">
-          <Coins size={16} />
-          <span className="font-display text-sm font-bold">{available}</span>
-          <span className="text-xs text-s-text-secondary">可用</span>
+          <Coins size={20} className="md:w-6 md:h-6" />
+          <span className="font-display text-base md:text-lg font-bold">{available}</span>
+          <span className="text-sm md:text-base text-s-text-secondary">可用</span>
         </div>
       </div>
 
       {/* Link to exchanges */}
       <Link
         href="/student/exchanges"
-        className="glass-card flex items-center justify-between p-3 cursor-pointer hover:border-s-primary/30 transition-colors"
+        className="glass-card flex items-center justify-between p-4 md:p-5 cursor-pointer hover:border-s-primary/30 transition-colors"
       >
         <div className="flex items-center gap-2">
-          <History size={16} className="text-s-primary" />
-          <span className="text-sm text-s-text">我的兑换记录</span>
+          <History size={20} className="text-s-primary md:w-6 md:h-6" />
+          <span className="text-base md:text-lg text-s-text">我的兑换记录</span>
         </div>
-        <ArrowRight size={14} className="text-s-text-secondary" />
+        <ArrowRight size={18} className="text-s-text-secondary md:w-5 md:h-5" />
       </Link>
 
       <div className="flex flex-col gap-3">
@@ -61,37 +71,41 @@ export default function StudentRewardsPage() {
               key={reward.id}
               layout
               className={cn(
-                "glass-card p-4 transition-all",
+                "glass-card p-4 md:p-5 transition-all",
                 !canAfford && "opacity-60",
               )}
             >
-              <div className="flex items-start gap-3">
+              <div className="flex items-start gap-3 md:gap-4">
                 {reward.imageUrl ? (
                   <img
                     src={reward.imageUrl}
                     alt={reward.name}
-                    className="h-10 w-10 rounded-lg object-cover shrink-0"
+                    className="h-12 w-12 md:h-14 md:w-14 rounded-lg object-cover shrink-0"
                   />
                 ) : (
                   <div
                     className={cn(
-                      "flex h-10 w-10 items-center justify-center rounded-lg shrink-0",
+                      "flex h-12 w-12 md:h-14 md:w-14 items-center justify-center rounded-lg shrink-0",
                       canAfford ? "bg-s-accent/20" : "bg-white/5",
                     )}
                   >
-                    <ShoppingCart size={18} className={canAfford ? "text-s-accent" : "text-s-text-secondary"} />
+                    <ShoppingCart size={22} className={cn("md:w-7 md:h-7", canAfford ? "text-s-accent" : "text-s-text-secondary")} />
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-s-text">{reward.name}</p>
+                  <p className="text-base md:text-lg font-medium text-s-text">
+                    <TextWithPinyin text={reward.name} showPinyin={showPinyin} />
+                  </p>
                   {reward.description && (
-                    <p className="text-xs text-s-text-secondary mt-0.5">{reward.description}</p>
+                    <p className="text-sm md:text-base text-s-text-secondary mt-0.5">
+                      <TextWithPinyin text={reward.description} showPinyin={showPinyin} />
+                    </p>
                   )}
-                  <div className="flex items-center gap-1 mt-1.5">
-                    <Coins size={12} className="text-s-accent" />
-                    <span className="text-xs font-bold text-s-accent">{reward.points} 积分</span>
+                  <div className="flex items-center gap-1 mt-1.5 md:mt-2">
+                    <Coins size={16} className="text-s-accent md:w-5 md:h-5" />
+                    <span className="text-sm md:text-base font-bold text-s-accent">{reward.points} 积分</span>
                     {!canAfford && (
-                      <span className="text-xs text-s-text-secondary ml-1">
+                      <span className="text-sm md:text-base text-s-text-secondary ml-1">
                         (还差 {deficit} 积分)
                       </span>
                     )}
@@ -152,9 +166,13 @@ export default function StudentRewardsPage() {
         })}
 
         {activeRewards.length === 0 && (
-          <div className="glass-card p-8 text-center">
-            <p className="text-s-text-secondary">暂无奖励</p>
-            <p className="text-xs text-s-text-secondary mt-1">等待家长配置奖励</p>
+          <div className="glass-card p-8 md:p-10 text-center">
+            <p className="text-base md:text-lg text-s-text-secondary">
+              <TextWithPinyin text="暂无奖励" showPinyin={showPinyin} />
+            </p>
+            <p className="text-sm md:text-base text-s-text-secondary mt-1">
+              <TextWithPinyin text="等待家长配置奖励" showPinyin={showPinyin} />
+            </p>
           </div>
         )}
       </div>

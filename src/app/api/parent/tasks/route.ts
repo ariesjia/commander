@@ -4,6 +4,12 @@ import { requireParent, getStudentId } from "@/lib/api-auth";
 import { getTodayStr, getWeekStartStr } from "@/lib/utils";
 import { TaskType } from "@prisma/client";
 
+const TASK_TYPE_MAP: Record<string, TaskType> = {
+  DAILY: "DAILY",
+  WEEKLY: "WEEKLY",
+  RULE: "RULE",
+};
+
 export async function GET(request: Request) {
   const auth = await requireParent();
   if (!auth.ok) return auth.response;
@@ -26,20 +32,24 @@ export async function GET(request: Request) {
   const weekStr = getWeekStartStr();
 
   const tasksWithStatus = tasks.map((t) => {
-    const periodKey = t.type === "DAILY" ? todayStr : weekStr;
-    const log = taskLogs.find(
-      (l) =>
-        l.taskId === t.id &&
-        (t.type === "DAILY"
-          ? l.completedAt.toISOString().startsWith(todayStr)
-          : l.completedAt >= new Date(weekStr))
-    );
+    // RULE can be confirmed multiple times per day - always show pending for next confirmation
+    const log =
+      t.type === "RULE"
+        ? null
+        : taskLogs.find(
+            (l) =>
+              l.taskId === t.id &&
+              (t.type === "WEEKLY"
+                ? l.completedAt >= new Date(weekStr)
+                : l.completedAt.toISOString().startsWith(todayStr))
+          );
     return {
       id: t.id,
       name: t.name,
       description: t.description,
       type: t.type,
-      points: t.points,
+      maxPoints: t.maxPoints,
+      penaltyPoints: t.penaltyPoints ?? 0,
       isActive: t.isActive,
       createdAt: t.createdAt.toISOString(),
       status: log ? "completed" : "pending",
@@ -56,17 +66,27 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { name, description, type, points, isActive } = body;
+    const { name, description, type, maxPoints, penaltyPoints, isActive } = body;
 
-    if (!name || !type || points == null) {
+    if (!name || !type) {
       return NextResponse.json(
-        { error: "请填写任务名称、类型和积分" },
+        { error: "请填写任务名称和类型" },
         { status: 400 }
       );
     }
 
-    const taskType = type === "WEEKLY" ? ("WEEKLY" as TaskType) : ("DAILY" as TaskType);
-    const pts = Math.max(0, parseInt(String(points), 10) || 0);
+    const taskType = TASK_TYPE_MAP[type] ?? "DAILY";
+    const pts = Math.max(0, parseInt(String(maxPoints ?? 0), 10) || 0);
+    const penalty = Math.max(0, parseInt(String(penaltyPoints ?? 0), 10) || 0);
+
+    if (taskType === "RULE" && penalty > 0) {
+      // 惩罚规则：maxPoints 可为 0
+    } else if (pts <= 0) {
+      return NextResponse.json(
+        { error: "最大得分需大于 0" },
+        { status: 400 }
+      );
+    }
 
     const task = await prisma.task.create({
       data: {
@@ -74,7 +94,8 @@ export async function POST(request: Request) {
         name: String(name).trim(),
         description: description ? String(description).trim() : null,
         type: taskType,
-        points: pts,
+        maxPoints: pts,
+        penaltyPoints: penalty,
         isActive: isActive !== false,
       },
     });
@@ -84,7 +105,8 @@ export async function POST(request: Request) {
       name: task.name,
       description: task.description,
       type: task.type,
-      points: task.points,
+      maxPoints: task.maxPoints,
+      penaltyPoints: task.penaltyPoints,
       isActive: task.isActive,
       createdAt: task.createdAt.toISOString(),
     });

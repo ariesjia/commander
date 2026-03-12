@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireStudent, getStudentId } from "@/lib/api-auth";
-import { MECHA_XUANJIA, MECHA_SECOND, ADOPTION_ORDER, getXuanjiaLevelInfo, MECHA_SECOND_INFO } from "@/lib/mecha-adoption";
-import { getXuanjiaLevel } from "@/lib/mecha-adoption";
 
+/** 随机抽取一只机甲并领养 */
 export async function POST() {
   const auth = await requireStudent();
   if (!auth.ok) return auth.response;
@@ -18,36 +17,60 @@ export async function POST() {
     return NextResponse.json({ error: "未找到学生" }, { status: 404 });
   }
 
-  const ids = student.adoptedMechaIds ?? [];
-  const nextIndex = ids.length;
-
-  if (nextIndex >= ADOPTION_ORDER.length) {
-    return NextResponse.json({ error: "已领养全部机甲" }, { status: 400 });
-  }
-
-  const mechaId = ADOPTION_ORDER[nextIndex];
-
-  // 第二只需玄甲满级
-  if (mechaId === MECHA_SECOND) {
-    const xuanjiaLevel = getXuanjiaLevel(student.totalPoints);
-    if (xuanjiaLevel < 7) {
-      return NextResponse.json({ error: "玄甲需满级才能领取第二只机甲" }, { status: 400 });
-    }
-  }
-
-  await prisma.student.update({
-    where: { id: studentId },
-    data: { adoptedMechaIds: [...ids, mechaId] },
+  // 获取所有可抽取的机甲（必须有等级配置）
+  const allMechas = await prisma.mecha.findMany({
+    where: { isActive: true },
+    include: { levels: { orderBy: { level: "asc" } } },
   });
 
-  // 返回机甲信息供前端展示
-  const mechaInfo =
-    mechaId === MECHA_XUANJIA
-      ? (() => {
-          const level = getXuanjiaLevelInfo(student.totalPoints);
-          return { name: "玄甲", imageUrl: level.imageUrl, levelName: level.name };
-        })()
-      : { name: MECHA_SECOND_INFO.name, imageUrl: MECHA_SECOND_INFO.imageUrl, levelName: null };
+  const availableMechas = allMechas.filter((m) => m.levels.length > 0);
+  if (availableMechas.length === 0) {
+    return NextResponse.json(
+      { error: allMechas.length > 0 ? "机甲配置不完整，请运行 npm run db:seed" : "暂无可领取的机甲" },
+      { status: 400 }
+    );
+  }
 
-  return NextResponse.json({ ok: true, mechaId, ...mechaInfo });
+  if ((student.adoptedMechaIds ?? []).length > 0) {
+    return NextResponse.json({ error: "已有机甲，无需重复领取" }, { status: 400 });
+  }
+
+  // 随机抽取一只
+  const drawn = availableMechas[Math.floor(Math.random() * availableMechas.length)]!;
+  const mechaId = drawn.slug;
+
+  await prisma.$transaction([
+    prisma.student.update({
+      where: { id: studentId },
+      data: { adoptedMechaIds: [...(student.adoptedMechaIds ?? []), mechaId] },
+    }),
+    prisma.studentMecha.upsert({
+      where: {
+        studentId_mechaSlug: { studentId, mechaSlug: mechaId },
+      },
+      create: {
+        studentId,
+        mechaSlug: mechaId,
+        points: 0,
+      },
+      update: {}, // 已存在则不重复领养
+    }),
+  ]);
+
+  // 根据当前机甲积分计算等级展示（领养时 points=0）
+  const levels = drawn.levels;
+  const mechaPoints = 0; // 新领养，积分为 0
+  let levelInfo = levels[0]!;
+  for (const l of levels) {
+    if (mechaPoints >= l.threshold) levelInfo = l;
+    else break;
+  }
+
+  return NextResponse.json({
+    ok: true,
+    mechaId,
+    name: drawn.name,
+    imageUrl: levelInfo.imageUrl,
+    levelName: levelInfo.name,
+  });
 }

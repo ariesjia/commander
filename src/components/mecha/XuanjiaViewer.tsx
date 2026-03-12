@@ -1,32 +1,35 @@
 "use client";
 
 import { useState } from "react";
-import { getXuanjiaLevelInfo } from "@/lib/mecha-adoption";
-import { BlindBox } from "./BlindBox";
+import { useMecha, getLevelFromMecha } from "@/hooks/useMecha";
 
 interface XuanjiaViewerProps {
-  totalPoints: number;
+  slug: string;
+  mechaPoints: number;
   className?: string;
 }
 
-export function XuanjiaViewer({ totalPoints, className = "" }: XuanjiaViewerProps) {
-  const levelInfo = getXuanjiaLevelInfo(totalPoints);
+export function XuanjiaViewer({ slug, mechaPoints, className = "" }: XuanjiaViewerProps) {
+  const { data: mecha } = useMecha(slug);
+  const levelInfo = getLevelFromMecha(mecha, mechaPoints);
   const [imgError, setImgError] = useState(false);
 
-  if (imgError) {
-    // 图片未就绪时，level 0 用盲盒第一帧作为占位
-    if (levelInfo.level === 0) {
-      return (
-        <div className={`flex justify-center items-center ${className}`}>
-          <BlindBox src="/box.png" frameCount={8} frameHeight={200} className="rounded-xl" />
-        </div>
-      );
-    }
+  if (!levelInfo) {
     return (
       <div
         className={`flex items-center justify-center bg-s-card/30 rounded-xl text-s-text-secondary ${className}`}
       >
-        <span className="text-sm">玄甲 · {levelInfo.name}</span>
+        <span className="text-sm">加载中...</span>
+      </div>
+    );
+  }
+
+  if (imgError) {
+    return (
+      <div
+        className={`flex items-center justify-center bg-s-card/30 rounded-xl text-s-text-secondary ${className}`}
+      >
+        <span className="text-sm">{mecha?.name ?? "机甲"} · {levelInfo.name}</span>
       </div>
     );
   }
@@ -34,7 +37,7 @@ export function XuanjiaViewer({ totalPoints, className = "" }: XuanjiaViewerProp
   return (
     <img
       src={levelInfo.imageUrl}
-      alt={`玄甲 ${levelInfo.name}`}
+      alt={`${mecha?.name ?? "机甲"} ${levelInfo.name}`}
       className={`object-contain ${className}`}
       onError={() => setImgError(true)}
     />

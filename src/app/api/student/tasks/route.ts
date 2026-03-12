@@ -5,15 +5,15 @@ import { getTodayStr, getWeekStartStr } from "@/lib/utils";
 
 function isExpired(task: { type: string }, todayStr: string, weekStr: string): boolean {
   const now = new Date();
-  if (task.type === "DAILY") {
-    const endOfDay = new Date(todayStr);
-    endOfDay.setHours(23, 59, 59, 999);
-    return now > endOfDay;
+  if (task.type === "WEEKLY") {
+    const sundayEnd = new Date(weekStr);
+    sundayEnd.setDate(sundayEnd.getDate() + 6);
+    sundayEnd.setHours(23, 59, 59, 999);
+    return now > sundayEnd;
   }
-  const sundayEnd = new Date(weekStr);
-  sundayEnd.setDate(sundayEnd.getDate() + 6);
-  sundayEnd.setHours(23, 59, 59, 999);
-  return now > sundayEnd;
+  const endOfDay = new Date(todayStr);
+  endOfDay.setHours(23, 59, 59, 999);
+  return now > endOfDay;
 }
 
 export async function GET(request: Request) {
@@ -36,11 +36,13 @@ export async function GET(request: Request) {
   const weekStr = getWeekStartStr();
 
   const tasksWithStatus = tasks.map((t) => {
-    const periodKey = t.type === "DAILY" ? todayStr : weekStr;
+    // RULE can be done multiple times per day - always show pending for next confirmation
     const log =
-      t.type === "DAILY"
-        ? taskLogs.find((l) => l.taskId === t.id && l.completedAt.toISOString().startsWith(todayStr))
-        : taskLogs.find((l) => l.taskId === t.id && l.completedAt >= new Date(weekStr));
+      t.type === "RULE"
+        ? null
+        : t.type === "WEEKLY"
+          ? taskLogs.find((l) => l.taskId === t.id && l.completedAt >= new Date(weekStr))
+          : taskLogs.find((l) => l.taskId === t.id && l.completedAt.toISOString().startsWith(todayStr));
 
     let status: "pending" | "completed" | "expired" = "pending";
     if (log) status = "completed";
@@ -51,7 +53,8 @@ export async function GET(request: Request) {
       name: t.name,
       description: t.description,
       type: t.type,
-      points: t.points,
+      maxPoints: t.maxPoints,
+      penaltyPoints: t.penaltyPoints ?? 0,
       isActive: t.isActive,
       createdAt: t.createdAt.toISOString(),
       status,

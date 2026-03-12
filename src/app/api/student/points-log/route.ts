@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireStudent, getStudentId } from "@/lib/api-auth";
+import { PointsLogType } from "@prisma/client";
 
 export async function GET(_request: Request) {
   const auth = await requireStudent();
@@ -11,8 +12,14 @@ export async function GET(_request: Request) {
     return NextResponse.json({ error: "未找到学生" }, { status: 404 });
   }
 
+  // 学生端不显示撤销记录（TASK_REWARD_UNDO, TASK_PENALTY_UNDO）
   const logs = await prisma.pointsLog.findMany({
-    where: { studentId },
+    where: {
+      studentId,
+      type: {
+        notIn: [PointsLogType.TASK_REWARD_UNDO, PointsLogType.TASK_PENALTY_UNDO],
+      },
+    },
     orderBy: { createdAt: "desc" },
   });
 

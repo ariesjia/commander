@@ -22,13 +22,14 @@ export async function PUT(
 
   try {
     const body = await request.json();
-    const { name, description, type, points, isActive } = body;
+    const { name, description, type, maxPoints, penaltyPoints, isActive } = body;
 
-    const data: { name?: string; description?: string | null; type?: TaskType; points?: number; isActive?: boolean } = {};
+    const data: { name?: string; description?: string | null; type?: TaskType; maxPoints?: number; penaltyPoints?: number; isActive?: boolean } = {};
     if (name !== undefined) data.name = String(name).trim();
     if (description !== undefined) data.description = description ? String(description).trim() : null;
-    if (type !== undefined) data.type = type === "WEEKLY" ? ("WEEKLY" as TaskType) : ("DAILY" as TaskType);
-    if (points !== undefined) data.points = Math.max(0, parseInt(String(points), 10) || 0);
+    if (type !== undefined) data.type = type === "WEEKLY" ? ("WEEKLY" as TaskType) : type === "RULE" ? ("RULE" as TaskType) : ("DAILY" as TaskType);
+    if (maxPoints !== undefined) data.maxPoints = Math.max(0, parseInt(String(maxPoints), 10) || 0);
+    if (penaltyPoints !== undefined) data.penaltyPoints = Math.max(0, parseInt(String(penaltyPoints), 10) || 0);
     if (isActive !== undefined) data.isActive = Boolean(isActive);
 
     const updated = await prisma.task.update({
@@ -41,7 +42,8 @@ export async function PUT(
       name: updated.name,
       description: updated.description,
       type: updated.type,
-      points: updated.points,
+      maxPoints: updated.maxPoints,
+      penaltyPoints: updated.penaltyPoints ?? 0,
       isActive: updated.isActive,
       createdAt: updated.createdAt.toISOString(),
     });

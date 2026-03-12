@@ -8,39 +8,53 @@ import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { Plus, Check, Pencil, Trash2, Undo2, CalendarDays, CalendarRange } from "lucide-react";
+import { Plus, Check, Pencil, Trash2, CalendarDays, CalendarRange } from "lucide-react";
 import { Task, TaskType } from "@/types";
 import { cn } from "@/lib/utils";
 
 export default function TasksPage() {
-  const { tasks, addTask, updateTask, deleteTask, confirmTask, undoTask, getTasksWithStatus } = useData();
+  const { addTask, updateTask, deleteTask, confirmTask, getTasksWithStatus, isLoading } = useData();
   const { toast } = useToast();
   const tasksWithStatus = getTasksWithStatus();
 
-  const [tab, setTab] = useState<"all" | "DAILY" | "WEEKLY">("all");
+  const [tab, setTab] = useState<"all" | "DAILY" | "WEEKLY" | "RULE">("all");
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Task | null>(null);
 
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [confirmTaskId, setConfirmTaskId] = useState<string | null>(null);
-  const [undoTaskId, setUndoTaskId] = useState<string | null>(null);
+  const [confirmPoints, setConfirmPoints] = useState<number>(10);
+  const [confirmPenaltyAmount, setConfirmPenaltyAmount] = useState<number>(5);
+  const [confirmIsPenalty, setConfirmIsPenalty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [confirming, setConfirming] = useState(false);
-  const [undoing, setUndoing] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [type, setType] = useState<TaskType>("DAILY");
-  const [points, setPoints] = useState("10");
+  const [ruleKind, setRuleKind] = useState<"reward" | "penalty">("reward"); // 规则子类型：奖励 or 惩罚
+  const [maxPoints, setMaxPoints] = useState("10");
+  const [penaltyPoints, setPenaltyPoints] = useState("5");
 
   const filtered = tab === "all" ? tasksWithStatus : tasksWithStatus.filter((t) => t.type === tab);
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col min-h-[50vh] items-center justify-center gap-4">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-p-accent border-t-transparent" />
+        <p className="text-sm text-p-text-secondary">加载中...</p>
+      </div>
+    );
+  }
 
   const openCreate = () => {
     setEditing(null);
     setName("");
     setDescription("");
     setType("DAILY");
-    setPoints("10");
+    setRuleKind("reward");
+    setMaxPoints("10");
+    setPenaltyPoints("5");
     setModalOpen(true);
   };
 
@@ -49,27 +63,68 @@ export default function TasksPage() {
     setName(task.name);
     setDescription(task.description ?? "");
     setType(task.type);
-    setPoints(String(task.points));
+    const pen = task.penaltyPoints ?? 0;
+    setRuleKind(pen > 0 ? "penalty" : "reward");
+    setMaxPoints(String(task.maxPoints));
+    setPenaltyPoints(pen > 0 ? String(pen) : "5");
     setModalOpen(true);
   };
 
   const handleSave = async () => {
-    if (!name.trim()) return;
-    const pts = parseInt(points) || 0;
-    if (pts <= 0) return;
+    if (!name.trim()) {
+      toast("请输入任务名称", "error");
+      return;
+    }
+    const pts = parseInt(maxPoints) || 0;
+    const penalty = Math.max(0, parseInt(penaltyPoints) || 0);
+
+    if (type === "RULE") {
+      if (ruleKind === "reward") {
+        if (pts <= 0) {
+          toast("奖励积分需大于 0", "error");
+          return;
+        }
+      } else {
+        if (penalty <= 0) {
+          toast("惩罚扣分需大于 0", "error");
+          return;
+        }
+      }
+    } else {
+      if (pts <= 0) {
+        toast("最大得分需大于 0", "error");
+        return;
+      }
+    }
+
+    const finalMaxPoints = type === "RULE" && ruleKind === "penalty" ? 0 : pts;
+    const finalPenalty = type === "RULE" && ruleKind === "penalty" ? penalty : 0;
 
     setSaving(true);
     try {
       if (editing) {
-        await updateTask(editing.id, { name: name.trim(), description: description.trim() || undefined, type, points: pts });
+        await updateTask(editing.id, {
+          name: name.trim(),
+          description: description.trim() || undefined,
+          type,
+          maxPoints: finalMaxPoints,
+          penaltyPoints: finalPenalty,
+        });
         toast("任务已更新");
       } else {
-        await addTask({ name: name.trim(), description: description.trim() || undefined, type, points: pts, isActive: true });
+        await addTask({
+          name: name.trim(),
+          description: description.trim() || undefined,
+          type,
+          maxPoints: finalMaxPoints,
+          penaltyPoints: finalPenalty,
+          isActive: true,
+        });
         toast("任务创建成功");
       }
       setModalOpen(false);
-    } catch {
-      // ignore
+    } catch (e) {
+      toast(e instanceof Error ? e.message : "操作失败", "error");
     } finally {
       setSaving(false);
     }
@@ -93,8 +148,12 @@ export default function TasksPage() {
     if (confirmTaskId) {
       setConfirming(true);
       try {
-        await confirmTask(confirmTaskId);
-        toast("任务已确认完成");
+        await confirmTask(confirmTaskId, {
+          pointsAwarded: confirmIsPenalty ? undefined : confirmPoints,
+          penaltyAmount: confirmIsPenalty ? confirmPenaltyAmount : undefined,
+          isPenalty: confirmIsPenalty,
+        });
+        toast(confirmIsPenalty ? "已记录惩罚" : "任务已确认完成");
         setConfirmTaskId(null);
       } catch {
         // ignore
@@ -104,19 +163,13 @@ export default function TasksPage() {
     }
   };
 
-  const handleUndoTask = async () => {
-    if (undoTaskId) {
-      setUndoing(true);
-      try {
-        await undoTask(undoTaskId);
-        toast("已撤销完成");
-        setUndoTaskId(null);
-      } catch {
-        // ignore
-      } finally {
-        setUndoing(false);
-      }
-    }
+  const openConfirmDialog = (taskId: string) => {
+    const task = tasksWithStatus.find((t) => t.id === taskId);
+    const isPenaltyOnly = task?.type === "RULE" && (task.penaltyPoints ?? 0) > 0 && (task.maxPoints ?? 0) === 0;
+    setConfirmTaskId(taskId);
+    setConfirmPoints(task?.maxPoints ?? 10);
+    setConfirmPenaltyAmount(task?.penaltyPoints ?? 5);
+    setConfirmIsPenalty(!!isPenaltyOnly);
   };
 
   return (
@@ -131,7 +184,7 @@ export default function TasksPage() {
 
       {/* Tabs */}
       <div className="flex gap-1 rounded-lg bg-gray-100 p-1">
-        {(["all", "DAILY", "WEEKLY"] as const).map((t) => (
+        {(["all", "DAILY", "WEEKLY", "RULE"] as const).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -140,7 +193,7 @@ export default function TasksPage() {
               tab === t ? "bg-white text-p-text shadow-sm" : "text-p-text-secondary hover:text-p-text",
             )}
           >
-            {t === "all" ? "全部" : t === "DAILY" ? "每日" : "每周"}
+            {t === "all" ? "全部" : t === "DAILY" ? "每日" : t === "WEEKLY" ? "每周" : "规则"}
           </button>
         ))}
       </div>
@@ -160,28 +213,28 @@ export default function TasksPage() {
                 <span className={cn("font-medium text-p-text", task.status === "completed" && "line-through opacity-60")}>
                   {task.name}
                 </span>
-                <Badge variant={task.type === "DAILY" ? "default" : "warning"}>
-                  {task.type === "DAILY" ? "每日" : "每周"}
+                <Badge variant={task.type === "DAILY" ? "default" : task.type === "WEEKLY" ? "warning" : "neon"}>
+                  {task.type === "DAILY" ? "每日" : task.type === "WEEKLY" ? "每周" : "规则"}
                 </Badge>
                 {task.status === "completed" && <Badge variant="success">已完成</Badge>}
               </div>
               {task.description && (
                 <p className="text-xs text-p-text-secondary mt-1 truncate">{task.description}</p>
               )}
-              <p className="text-xs text-p-accent font-medium mt-1">+{task.points} 积分</p>
+              <p className="text-xs font-medium mt-1">
+                {task.type === "RULE" && (task.penaltyPoints ?? 0) > 0 ? (
+                  <span className="text-red-600">扣分 · 违反扣 {task.penaltyPoints} 分</span>
+                ) : (
+                  <span className="text-green-600">加分 · 完成可得 {task.maxPoints} 分</span>
+                )}
+              </p>
             </div>
 
             <div className="flex items-center gap-1.5 shrink-0">
               {task.status === "pending" && (
-                <Button size="sm" onClick={() => setConfirmTaskId(task.id)}>
+                <Button size="sm" onClick={() => openConfirmDialog(task.id)}>
                   <Check size={14} className="mr-1" />
                   确认
-                </Button>
-              )}
-              {task.status === "completed" && (
-                <Button size="sm" variant="secondary" onClick={() => setUndoTaskId(task.id)}>
-                  <Undo2 size={14} className="mr-1" />
-                  撤销
                 </Button>
               )}
               <button
@@ -232,17 +285,78 @@ export default function TasksPage() {
                 <CalendarRange size={16} />
                 每周
               </button>
+              <button
+                type="button"
+                onClick={() => setType("RULE")}
+                className={cn(
+                  "flex flex-1 items-center justify-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors cursor-pointer",
+                  type === "RULE" ? "border-p-accent bg-p-accent/5 text-p-accent" : "border-p-border text-p-text-secondary hover:bg-gray-50",
+                )}
+              >
+                <span className="text-base">📋</span>
+                规则
+              </button>
             </div>
           </div>
 
-          <Input
-            label="积分奖励"
-            type="number"
-            min={1}
-            placeholder="10"
-            value={points}
-            onChange={(e) => setPoints(e.target.value)}
-          />
+          {type === "RULE" && (
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-medium text-p-primary">规则类型</label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setRuleKind("reward")}
+                  className={cn(
+                    "flex flex-1 items-center justify-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors cursor-pointer",
+                    ruleKind === "reward" ? "border-p-accent bg-p-accent/5 text-p-accent" : "border-p-border text-p-text-secondary hover:bg-gray-50",
+                  )}
+                >
+                  🎁 奖励规则
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRuleKind("penalty")}
+                  className={cn(
+                    "flex flex-1 items-center justify-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors cursor-pointer",
+                    ruleKind === "penalty" ? "border-p-accent bg-p-accent/5 text-p-accent" : "border-p-border text-p-text-secondary hover:bg-gray-50",
+                  )}
+                >
+                  ⚠️ 惩罚规则
+                </button>
+              </div>
+            </div>
+          )}
+
+          {type !== "RULE" && (
+            <Input
+              label="最大得分"
+              type="number"
+              min={1}
+              placeholder="10"
+              value={maxPoints}
+              onChange={(e) => setMaxPoints(e.target.value)}
+            />
+          )}
+          {type === "RULE" && ruleKind === "reward" && (
+            <Input
+              label="奖励积分"
+              type="number"
+              min={1}
+              placeholder="10"
+              value={maxPoints}
+              onChange={(e) => setMaxPoints(e.target.value)}
+            />
+          )}
+          {type === "RULE" && ruleKind === "penalty" && (
+            <Input
+              label="惩罚扣分"
+              type="number"
+              min={1}
+              placeholder="5"
+              value={penaltyPoints}
+              onChange={(e) => setPenaltyPoints(e.target.value)}
+            />
+          )}
 
           <div className="flex gap-3 mt-2">
             <Button variant="secondary" onClick={() => setModalOpen(false)} className="flex-1" disabled={saving}>
@@ -256,28 +370,81 @@ export default function TasksPage() {
       </Modal>
 
       {/* Confirm task dialog */}
-      <ConfirmDialog
+      <Modal
         open={!!confirmTaskId}
-        onClose={() => setConfirmTaskId(null)}
-        onConfirm={handleConfirmTask}
+        onClose={confirming ? () => {} : () => setConfirmTaskId(null)}
         title="确认任务完成"
-        message={confirmTaskId ? `确定要确认「${tasksWithStatus.find((t) => t.id === confirmTaskId)?.name}」已完成吗？将发放对应积分。` : ""}
-        confirmLabel="确认完成"
-        variant="default"
-        loading={confirming}
-      />
+      >
+        {confirmTaskId && (() => {
+          const task = tasksWithStatus.find((t) => t.id === confirmTaskId);
+          if (!task) return null;
+          const isPenaltyOnlyRule = task.type === "RULE" && (task.penaltyPoints ?? 0) > 0 && (task.maxPoints ?? 0) === 0;
 
-      {/* Undo task dialog */}
-      <ConfirmDialog
-        open={!!undoTaskId}
-        onClose={() => setUndoTaskId(null)}
-        onConfirm={handleUndoTask}
-        title="撤销任务完成"
-        message={undoTaskId ? `确定要撤销「${tasksWithStatus.find((t) => t.id === undoTaskId)?.name}」的完成状态吗？已发放的积分将被收回。` : ""}
-        confirmLabel="确认撤销"
-        variant="danger"
-        loading={undoing}
-      />
+          if (isPenaltyOnlyRule) {
+            return (
+              <div className="flex flex-col gap-4">
+                <p className="text-sm text-p-text-secondary">
+                  规则「{task.name}」违反最多可扣 {task.penaltyPoints} 分
+                </p>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-sm font-medium text-p-text">扣分 (1~{task.penaltyPoints})</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="range"
+                      min={1}
+                      max={task.penaltyPoints}
+                      value={confirmPenaltyAmount}
+                      onChange={(e) => setConfirmPenaltyAmount(parseInt(e.target.value, 10))}
+                      className="flex-1"
+                    />
+                    <span className="text-sm font-medium w-10">-{confirmPenaltyAmount}</span>
+                  </div>
+                </div>
+                <div className="flex gap-3 mt-2">
+                  <Button variant="secondary" onClick={() => setConfirmTaskId(null)} className="flex-1" disabled={confirming}>
+                    取消
+                  </Button>
+                  <Button onClick={handleConfirmTask} className="flex-1" loading={confirming}>
+                    确认惩罚
+                  </Button>
+                </div>
+              </div>
+            );
+          }
+
+          return (
+            <div className="flex flex-col gap-4">
+              <p className="text-sm text-p-text-secondary">
+                任务「{task.name}」最大可得 {task.maxPoints} 积分
+              </p>
+              {!confirmIsPenalty && (
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-sm font-medium text-p-text">给予积分 (0~{task.maxPoints})</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="range"
+                      min={0}
+                      max={task.maxPoints}
+                      value={confirmPoints}
+                      onChange={(e) => setConfirmPoints(parseInt(e.target.value, 10))}
+                      className="flex-1"
+                    />
+                    <span className="text-sm font-medium w-10">{confirmPoints}</span>
+                  </div>
+                </div>
+              )}
+              <div className="flex gap-3 mt-2">
+                <Button variant="secondary" onClick={() => setConfirmTaskId(null)} className="flex-1" disabled={confirming}>
+                  取消
+                </Button>
+                <Button onClick={handleConfirmTask} className="flex-1" loading={confirming}>
+                  {confirmIsPenalty ? "确认惩罚" : "确认完成"}
+                </Button>
+              </div>
+            </div>
+          );
+        })()}
+      </Modal>
 
       {/* Delete confirm */}
       <ConfirmDialog

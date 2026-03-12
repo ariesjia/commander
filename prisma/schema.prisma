@@ -12,6 +12,7 @@ model Parent {
   email        String   @unique
   passwordHash String
   pinHash      String
+  showPinyin   Boolean  @default(false) // 学生端是否显示拼音注音
   createdAt    DateTime @default(now())
 
   student Student?
@@ -26,7 +27,7 @@ model Student {
   balance        Int       @default(0)
   frozenPoints   Int       @default(0)
   streakDays     Int       @default(0)
-  adoptedMechaIds String[]  @default([]) // 领养的机甲 id 列表
+  adoptedMechaIds String[]  @default([]) // 领养的机甲 slug 列表（冗余，与 studentMechas 同步）
   lastActiveAt   DateTime?
   createdAt      DateTime  @default(now())
 
@@ -35,17 +36,32 @@ model Student {
   taskLogs   TaskLog[]
   exchanges  Exchange[]
   pointsLogs PointsLog[]
+  studentMechas StudentMecha[]
+}
+
+// 学生领养的机甲及积分：积分仅来自领养后完成的任务，兑换奖励不扣
+model StudentMecha {
+  id        String   @id @default(cuid())
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  mechaSlug String
+  adoptedAt DateTime @default(now())
+  points    Int      @default(0) // 领养后获得的任务积分，用于机甲升级
+
+  @@unique([studentId, mechaSlug])
+  @@index([studentId])
 }
 
 model Task {
-  id          String    @id @default(cuid())
-  name        String
-  description String?
-  type        TaskType
-  points      Int
-  isActive    Boolean   @default(true)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id            String    @id @default(cuid())
+  name          String
+  description   String?
+  type          TaskType
+  maxPoints     Int       @default(10) // 最大得分，完成时家长可给予 0～maxPoints
+  penaltyPoints Int       @default(0) // 惩罚扣分（仅 RULE 类型使用）
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   parentId  String
   parent    Parent    @relation(fields: [parentId], references: [id], onDelete: Cascade)
@@ -55,19 +71,7 @@ model Task {
 enum TaskType {
   DAILY
   WEEKLY
-}
-
-model TaskLog {
-  id             String   @id @default(cuid())
-  completedAt    DateTime @default(now())
-  pointsAwarded Int
-
-  taskId   String
-  task     Task    @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  studentId String
-  student  Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
-
-  @@index([taskId, studentId])
+  RULE   // 规则：可奖励加分，可惩罚扣分
 }
 
 model Reward {
@@ -114,13 +118,62 @@ model PointsLog {
 
   studentId   String
   student     Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  taskLogId   String?
+  taskLog     TaskLog? @relation(fields: [taskLogId], references: [id], onDelete: SetNull)
 
   @@index([studentId])
+}
+
+model TaskLog {
+  id             String   @id @default(cuid())
+  completedAt    DateTime @default(now())
+  pointsAwarded Int
+
+  taskId   String
+  task     Task    @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  studentId String
+  student  Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  pointsLogs PointsLog[]
+
+  @@index([taskId, studentId])
+}
+
+// 机甲配置：由后端提供，支持后续扩展
+model Mecha {
+  id          String   @id @default(cuid())
+  slug        String   @unique // 唯一标识，如 xuanjia
+  name        String
+  description String?
+  intro       String?
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  levels MechaLevel[]
+}
+
+model MechaLevel {
+  id          String   @id @default(cuid())
+  mechaId     String
+  mecha       Mecha    @relation(fields: [mechaId], references: [id], onDelete: Cascade)
+  level       Int
+  name        String
+  threshold   Int
+  imageUrl    String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([mechaId, level])
+  @@index([mechaId])
 }
 
 enum PointsLogType {
   TASK_REWARD
   TASK_REWARD_UNDO
+  TASK_PENALTY
+  TASK_PENALTY_UNDO
   EXCHANGE_COST
   EXCHANGE_REFUND
 }

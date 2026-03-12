@@ -5,19 +5,17 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useMode } from "@/contexts/ModeContext";
 import { useRouter } from "next/navigation";
 import { DashboardStats } from "@/components/parent/DashboardStats";
-import { SpriteAnimation } from "@/components/ui/SpriteAnimation";
 import { Bot, ChevronRight } from "lucide-react";
-import { MECHA_STAGES } from "@/lib/mecha-config";
 
 export default function ParentDashboard() {
-  const { student, mechaStage, pendingExchanges, weeklyCompletedCount, weeklyTotalCount, getTasksWithStatus } = useData();
+  const { student, mechaName, mechaLevelName, pendingExchanges, weeklyCompletedCount, weeklyTotalCount, getTasksWithStatus } = useData();
   const { user } = useAuth();
   const { switchToStudent, setTransitioning } = useMode();
   const router = useRouter();
 
   const pendingTasks = getTasksWithStatus().filter((t) => t.status === "pending").length;
   const pendingCount = pendingExchanges.length + pendingTasks;
-  const stageName = MECHA_STAGES[mechaStage]?.name ?? "未启动";
+  const mechaDisplay = mechaName && mechaLevelName ? `${mechaName} · ${mechaLevelName}` : mechaName ?? "未领养机甲";
 
   const handleSwitch = async () => {
     setTransitioning(true);
@@ -57,7 +55,7 @@ export default function ParentDashboard() {
           <div>
             <h2 className="text-sm font-medium text-p-text-secondary">机甲状态</h2>
             <p className="text-lg font-bold text-p-text mt-1">
-              阶段 {mechaStage} · {stageName}
+              {mechaDisplay}
             </p>
             <p className="text-sm text-p-text-secondary mt-0.5">
               累计积分 {student.totalPoints}

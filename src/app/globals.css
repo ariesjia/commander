@@ -136,3 +136,70 @@ body {
     animation: none;
   }
 }
+
+/* ── 拼音注音 (ruby) ── */
+.text-with-pinyin {
+  line-height: 2.2;
+}
+.text-with-pinyin ruby {
+  ruby-position: over;
+}
+.text-with-pinyin .py-result-item {
+  margin-right: 0.65em;
+}
+.text-with-pinyin .py-result-item:last-child {
+  margin-right: 0;
+}
+.text-with-pinyin rt,
+.text-with-pinyin .py-pinyin-item {
+  font-size: 0.95em;
+  font-weight: 500;
+  opacity: 0.95;
+}
+@media (min-width: 768px) {
+  .text-with-pinyin rt,
+  .text-with-pinyin .py-pinyin-item {
+    font-size: 1em;
+  }
+}
+.theme-student .text-with-pinyin rt,
+.theme-student .text-with-pinyin .py-pinyin-item {
+  color: var(--color-s-text-secondary);
+}
+.theme-parent .text-with-pinyin rt,
+.theme-parent .text-with-pinyin .py-pinyin-item {
+  color: var(--color-p-text-secondary);
+}
+
+/* 机甲详情弹窗：有拼音时故事段落行间距加大 */
+.mecha-detail-modal .mecha-detail-story .text-with-pinyin {
+  line-height: 3.2;
+}
+
+/* 机甲详情弹窗：横屏时左右布局 */
+@media (orientation: landscape) {
+  .mecha-detail-modal {
+    max-width: min(56rem, 95vw);
+  }
+  .mecha-detail-modal .mecha-detail-content {
+    flex-direction: row;
+    gap: 1.5rem;
+    max-width: 56rem;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .mecha-detail-modal .mecha-detail-content .mecha-detail-text {
+    margin-top: 0;
+    justify-content: center;
+    text-align: left;
+  }
+  .mecha-detail-modal .mecha-detail-content .mecha-detail-image {
+    width: 18rem;
+    min-height: 0;
+    flex-shrink: 0;
+  }
+  .mecha-detail-modal .mecha-detail-content .mecha-detail-image img {
+    width: 18rem;
+    height: 24rem;
+  }
+}

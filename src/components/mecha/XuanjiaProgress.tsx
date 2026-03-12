@@ -1,25 +1,34 @@
 "use client";
 
-import { getNextXuanjiaProgress, XUANJIA_LEVELS } from "@/lib/mecha-adoption";
+import { useMecha, getNextLevelProgress } from "@/hooks/useMecha";
 
 interface XuanjiaProgressProps {
-  totalPoints: number;
+  slug: string;
+  mechaPoints: number;
 }
 
-export function XuanjiaProgress({ totalPoints }: XuanjiaProgressProps) {
-  const { current, next, progress } = getNextXuanjiaProgress(totalPoints);
+export function XuanjiaProgress({ slug, mechaPoints }: XuanjiaProgressProps) {
+  const { data: mecha } = useMecha(slug);
+  const progress = getNextLevelProgress(mecha, mechaPoints);
+
+  if (!progress) {
+    return null;
+  }
+
+  const { current, next, progress: progressPct } = progress;
+  const maxLevel = mecha?.levels?.length ? mecha.levels.length - 1 : 7;
 
   return (
     <div className="glass-card p-4">
       <div className="flex items-center justify-between mb-2">
         <span className="text-xs text-s-text-secondary">升级进度</span>
         <span className="text-xs font-medium text-s-primary">
-          级别 {current.level} / 7
+          级别 {current.level} / {maxLevel}
         </span>
       </div>
 
       <div className="flex items-center gap-1 mb-3">
-        {XUANJIA_LEVELS.map((l) => (
+        {mecha?.levels.map((l) => (
           <div
             key={l.level}
             className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${
@@ -45,7 +54,7 @@ export function XuanjiaProgress({ totalPoints }: XuanjiaProgressProps) {
         <div className="mt-2 h-1.5 rounded-full bg-white/10 overflow-hidden">
           <div
             className="h-full rounded-full bg-gradient-to-r from-s-primary to-s-accent transition-all duration-700"
-            style={{ width: `${progress}%` }}
+            style={{ width: `${progressPct}%` }}
           />
         </div>
       )}

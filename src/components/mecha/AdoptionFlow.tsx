@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { BlindBox } from "./BlindBox";
 import { SpriteAnimation } from "@/components/ui/SpriteAnimation";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { getXuanjiaLevelInfo, MECHA_SECOND_INFO } from "@/lib/mecha-adoption";
 import { api } from "@/lib/api";
 import { useToast } from "@/contexts/ToastContext";
 
@@ -19,14 +18,9 @@ interface AdoptedMechaInfo {
 
 interface AdoptionFlowProps {
   onComplete: () => void;
-  totalPoints: number;
-  /** 0=第一只(玄甲), 1=第二只 */
-  mechaIndex?: number;
-  /** 紧凑模式，用于第二只领取 */
-  compact?: boolean;
 }
 
-export function AdoptionFlow({ onComplete, totalPoints, mechaIndex = 0, compact = false }: AdoptionFlowProps) {
+export function AdoptionFlow({ onComplete }: AdoptionFlowProps) {
   const { toast } = useToast();
   const [phase, setPhase] = useState<Phase>("blind");
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -50,11 +44,22 @@ export function AdoptionFlow({ onComplete, totalPoints, mechaIndex = 0, compact 
   const handleOpenComplete = async () => {
     setAdopting(true);
     try {
-      const res = await api.post<{ ok: boolean; mechaId: string; name: string; imageUrl: string; levelName: string | null }>("/api/student/adopt");
-      setAdoptedInfo({ name: res.name, imageUrl: res.imageUrl, levelName: res.levelName });
+      const res = await api.post<{
+        ok: boolean;
+        mechaId: string;
+        name: string;
+        imageUrl: string;
+        levelName: string | null;
+      }>("/api/student/adopt");
+      setAdoptedInfo({
+        name: res.name,
+        imageUrl: res.imageUrl,
+        levelName: res.levelName,
+      });
       setPhase("reveal");
     } catch (e) {
-      toast(typeof e === "object" && e && "message" in e ? String((e as Error).message) : "领取失败，请重试");
+      const msg = typeof e === "object" && e && "message" in e ? String((e as Error).message) : "领取失败，请重试";
+      toast(msg, "error");
       setPhase("blind");
     } finally {
       setAdopting(false);
@@ -70,12 +75,14 @@ export function AdoptionFlow({ onComplete, totalPoints, mechaIndex = 0, compact 
     return () => clearTimeout(timer);
   }, [phase, onComplete]);
 
-  const levelInfo = getXuanjiaLevelInfo(totalPoints);
-  const isSecond = mechaIndex === 1;
-  const revealInfo = adoptedInfo ?? (isSecond ? { name: MECHA_SECOND_INFO.name, imageUrl: MECHA_SECOND_INFO.imageUrl, levelName: null } : { name: "玄甲", imageUrl: levelInfo.imageUrl, levelName: levelInfo.name });
+  const revealInfo = adoptedInfo ?? {
+    name: "机甲",
+    imageUrl: "/mecha/xuanjia/level-0.png",
+    levelName: null,
+  };
 
   return (
-    <div className={`flex flex-col items-center justify-center px-4 ${compact ? "gap-4" : "min-h-[60vh]"}`}>
+    <div className="flex flex-col items-center justify-center px-4 min-h-[60vh]">
       <AnimatePresence mode="wait">
         {phase === "blind" && (
           <motion.div
@@ -83,16 +90,16 @@ export function AdoptionFlow({ onComplete, totalPoints, mechaIndex = 0, compact 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className={`flex flex-col items-center ${compact ? "gap-3" : "gap-6"}`}
+            className="flex flex-col items-center gap-6"
           >
-            <p className="text-s-text-secondary text-sm text-center">
-              {isSecond ? "点击盲盒，领取你的第二台机甲" : "点击盲盒，领取你的第一台机甲"}
+            <p className="text-s-text-secondary text-lg text-center">
+              点击盲盒，随机抽取你的机甲
             </p>
             <button onClick={handleBlindClick} className="focus:outline-none">
               <BlindBox
                 src="/box.png"
                 frameCount={8}
-                frameHeight={compact ? 120 : 160}
+                frameHeight={300}
                 className="rounded-xl shadow-lg ring-2 ring-s-primary/30"
               />
             </button>
@@ -112,7 +119,7 @@ export function AdoptionFlow({ onComplete, totalPoints, mechaIndex = 0, compact 
               src="/box.png"
               frameCount={8}
               fps={8}
-              frameHeight={compact ? 150 : 200}
+              frameHeight={300}
               loop={false}
               onComplete={handleOpenComplete}
               className="rounded-xl"
@@ -147,14 +154,14 @@ export function AdoptionFlow({ onComplete, totalPoints, mechaIndex = 0, compact 
                 className="rounded-xl overflow-hidden ring-4 ring-s-primary/50 shadow-[0_0_40px_rgba(0,212,255,0.3)]"
               >
                 {imgError ? (
-                  <div className={`flex items-center justify-center bg-s-card/50 text-s-text-secondary ${compact ? "w-48 h-60" : "w-64 h-80"}`}>
+                  <div className="flex items-center justify-center bg-s-card/50 text-s-text-secondary w-64 h-80">
                     <span>{revealInfo.name}</span>
                   </div>
                 ) : (
                   <img
                     src={revealInfo.imageUrl}
                     alt={revealInfo.name}
-                    className={`object-contain bg-s-card/50 ${compact ? "w-48 h-60" : "w-64 h-80"}`}
+                    className="object-contain bg-s-card/50 w-64 h-80"
                     onError={() => setImgError(true)}
                   />
                 )}
@@ -166,7 +173,9 @@ export function AdoptionFlow({ onComplete, totalPoints, mechaIndex = 0, compact 
               className="text-center"
             >
               <p className="text-s-primary font-display text-xl font-bold">{revealInfo.name}</p>
-              {revealInfo.levelName && <p className="text-s-text-secondary text-sm mt-1">{revealInfo.levelName}</p>}
+              {revealInfo.levelName && (
+                <p className="text-s-text-secondary text-sm mt-1">{revealInfo.levelName}</p>
+              )}
             </motion.div>
           </motion.div>
         )}
@@ -177,7 +186,7 @@ export function AdoptionFlow({ onComplete, totalPoints, mechaIndex = 0, compact 
         onClose={() => setConfirmOpen(false)}
         onConfirm={handleConfirm}
         title="领取机甲"
-        message={isSecond ? "确定要打开盲盒，领取你的第二台机甲吗？" : "确定要打开盲盒，领取你的第一台机甲吗？"}
+        message="确定要打开盲盒，随机抽取你的机甲吗？"
         confirmLabel="确认领取"
         cancelLabel="再想想"
         variant="default"

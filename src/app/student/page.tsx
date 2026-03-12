@@ -15,20 +15,24 @@ import { PinDialog } from "@/components/mode-switch/PinDialog";
 import Image from "next/image";
 import { Coins, Flame, Snowflake, Lock } from "lucide-react";
 import { MECHA_STAGES, STREAK_EFFECTS } from "@/lib/mecha-config";
-import { MECHA_XUANJIA, getXuanjiaLevelInfo, canAdoptSecond } from "@/lib/mecha-adoption";
+import { useMecha, getLevelFromMecha } from "@/hooks/useMecha";
 
 export default function StudentHome() {
-  const { student, mechaStage, adoptedMechaIds, refetch } = useData();
+  const { student, mechaStage, adoptedMechaIds, mechaPointsBySlug, showPinyin, isLoading, refetch } = useData();
   const { user } = useAuth();
   const { switchToParent, setTransitioning } = useMode();
   const router = useRouter();
   const [pinOpen, setPinOpen] = useState(false);
-  const [showSecondAdoption, setShowSecondAdoption] = useState(false);
+
+  const primarySlug = adoptedMechaIds[0] ?? null;
+  const primaryMechaPoints = primarySlug ? (mechaPointsBySlug[primarySlug] ?? 0) : 0;
+  const { data: primaryMecha } = useMecha(primarySlug);
+  const levelInfo = getLevelFromMecha(primaryMecha, primaryMechaPoints);
 
   const stageName = MECHA_STAGES[mechaStage]?.name ?? "未启动";
-  const xuanjiaLevelInfo = adoptedMechaIds.includes(MECHA_XUANJIA) ? getXuanjiaLevelInfo(student.totalPoints) : null;
-  const xuanjiaLevel = xuanjiaLevelInfo?.level ?? 0;
-  const canAdopt2nd = canAdoptSecond(adoptedMechaIds, xuanjiaLevel);
+  const displayTitle = primaryMecha
+    ? `${primaryMecha.name} · ${levelInfo?.name ?? ""}`
+    : stageName;
   const streakEffect = STREAK_EFFECTS.filter((e) => student.streakDays >= e.days).pop();
 
   const handlePinSuccess = () => {
@@ -41,7 +45,30 @@ export default function StudentHome() {
   };
   const verifyPin = async (pin: string) => switchToParent(pin);
 
-  // 未领养第一只：显示领养流程
+  // 加载中：显示 loading
+  if (isLoading) {
+    return (
+      <div className="flex flex-col min-h-[70vh] items-center justify-center gap-4">
+        <div className="relative flex justify-center pt-4 w-full">
+          <Image src="/logo.svg" alt="" width={40} height={40} className="opacity-90" />
+          <button
+            onClick={() => setPinOpen(true)}
+            className="absolute right-0 top-4 flex h-8 w-8 items-center justify-center rounded-lg text-s-text-secondary/30 hover:text-s-text-secondary/60 hover:bg-white/5 transition-all cursor-pointer"
+            aria-label="切回家长模式"
+          >
+            <Lock size={14} />
+          </button>
+        </div>
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-s-primary border-t-transparent" />
+          <p className="text-sm text-s-text-secondary">加载中...</p>
+        </div>
+        <PinDialog open={pinOpen} onClose={() => setPinOpen(false)} onSuccess={handlePinSuccess} verifyPin={verifyPin} />
+      </div>
+    );
+  }
+
+  // 未领养：显示领养流程
   if (adoptedMechaIds.length === 0) {
     return (
       <div className="flex flex-col min-h-[70vh]">
@@ -55,7 +82,7 @@ export default function StudentHome() {
             <Lock size={14} />
           </button>
         </div>
-        <AdoptionFlow onComplete={refetch} totalPoints={student.totalPoints} mechaIndex={0} />
+        <AdoptionFlow onComplete={refetch} />
         <PinDialog open={pinOpen} onClose={() => setPinOpen(false)} onSuccess={handlePinSuccess} verifyPin={verifyPin} />
       </div>
     );
@@ -67,18 +94,19 @@ export default function StudentHome() {
       <div className="relative flex flex-col items-center text-center">
         <div className="absolute left-0 top-0">
           {adoptedMechaIds.length > 0 && (
-            <MechaLibrary adoptedMechaIds={adoptedMechaIds} totalPoints={student.totalPoints} />
+            <MechaLibrary
+              adoptedMechaIds={adoptedMechaIds}
+              mechaPointsBySlug={mechaPointsBySlug}
+              showPinyin={showPinyin}
+            />
           )}
         </div>
         <Image src="/logo.svg" alt="" width={40} height={40} className="mb-2 opacity-90" />
         <p className="font-display text-sm text-s-primary neon-text tracking-wider">
           指挥官 {user?.childNickname ?? "---"}
         </p>
-        <h1 className="font-display text-lg font-bold text-s-text mt-1">
-          {adoptedMechaIds.includes(MECHA_XUANJIA) ? `玄甲 · ${xuanjiaLevelInfo?.name ?? ""}` : stageName}
-        </h1>
+        <h1 className="font-display text-lg font-bold text-s-text mt-1">{displayTitle}</h1>
 
-        {/* Switch back to parent — small, subtle */}
         <button
           onClick={() => setPinOpen(true)}
           className="absolute right-0 top-0 flex h-8 w-8 items-center justify-center rounded-lg text-s-text-secondary/30 hover:text-s-text-secondary/60 hover:bg-white/5 transition-all cursor-pointer"
@@ -88,28 +116,14 @@ export default function StudentHome() {
         </button>
       </div>
 
-      {/* 可领取第二只时显示入口 */}
-      {canAdopt2nd && !showSecondAdoption && (
-        <button
-          onClick={() => setShowSecondAdoption(true)}
-          className="w-full rounded-xl border-2 border-dashed border-s-primary/50 bg-s-primary/10 py-4 text-s-primary font-medium transition-all hover:bg-s-primary/20"
-        >
-          玄甲已满级！点击领取第二只机甲
-        </button>
-      )}
-      {canAdopt2nd && showSecondAdoption && (
-        <AdoptionFlow
-          onComplete={() => { refetch(); setShowSecondAdoption(false); }}
-          totalPoints={student.totalPoints}
-          mechaIndex={1}
-          compact
-        />
-      )}
-
       {/* Mecha display */}
       <div className="relative flex justify-center">
-        {adoptedMechaIds.includes(MECHA_XUANJIA) ? (
-          <XuanjiaViewer totalPoints={student.totalPoints} className="w-64 h-80 sm:w-72 sm:h-96" />
+        {primarySlug ? (
+          <XuanjiaViewer
+            slug={primarySlug}
+            mechaPoints={primaryMechaPoints}
+            className="w-64 h-80 sm:w-72 sm:h-96"
+          />
         ) : (
           <MechaViewer stage={mechaStage} className="w-64 h-80 sm:w-72 sm:h-96" />
         )}
@@ -129,9 +143,7 @@ export default function StudentHome() {
           <Coins size={18} className="text-s-accent" />
           <div>
             <p className="text-xs text-s-text-secondary">可用积分</p>
-            <p className="font-display text-xl font-bold text-s-text">
-              {student.balance}
-            </p>
+            <p className="font-display text-xl font-bold text-s-text">{student.balance}</p>
           </div>
         </div>
         {student.frozenPoints > 0 && (
@@ -150,13 +162,12 @@ export default function StudentHome() {
       </div>
 
       {/* Progress */}
-      {adoptedMechaIds.includes(MECHA_XUANJIA) ? (
-        <XuanjiaProgress totalPoints={student.totalPoints} />
+      {primarySlug ? (
+        <XuanjiaProgress slug={primarySlug} mechaPoints={primaryMechaPoints} />
       ) : (
         <MechaProgress totalPoints={student.totalPoints} stage={mechaStage} />
       )}
 
-      {/* PIN dialog */}
       <PinDialog
         open={pinOpen}
         onClose={() => setPinOpen(false)}

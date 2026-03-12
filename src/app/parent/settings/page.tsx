@@ -1,20 +1,28 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useData } from "@/contexts/DataContext";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
-import { User, KeyRound, LogOut, Check } from "lucide-react";
+import { User, KeyRound, LogOut, Check, BookOpen } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function SettingsPage() {
   const { user, updateNickname, updatePin, logout } = useAuth();
+  const { showPinyin, updateShowPinyin } = useData();
   const router = useRouter();
 
   const [nickname, setNickname] = useState(user?.childNickname ?? "");
   const [pin, setPin] = useState(["", "", "", ""]);
   const [savedNickname, setSavedNickname] = useState(false);
   const [savedPin, setSavedPin] = useState(false);
+  const [pinyinOn, setPinyinOn] = useState(showPinyin);
+  const [savingPinyin, setSavingPinyin] = useState(false);
+
+  useEffect(() => {
+    setPinyinOn(showPinyin);
+  }, [showPinyin]);
 
   const handleSaveNickname = async () => {
     if (!nickname.trim()) return;
@@ -41,6 +49,19 @@ export default function SettingsPage() {
   const handlePinKeyDown = (idx: number, e: React.KeyboardEvent) => {
     if (e.key === "Backspace" && !pin[idx] && idx > 0) {
       document.getElementById(`settings-pin-${idx - 1}`)?.focus();
+    }
+  };
+
+  const handleTogglePinyin = async () => {
+    const next = !pinyinOn;
+    setSavingPinyin(true);
+    try {
+      await updateShowPinyin(next);
+      setPinyinOn(next);
+    } catch {
+      // ignore
+    } finally {
+      setSavingPinyin(false);
     }
   };
 
@@ -84,6 +105,38 @@ export default function SettingsPage() {
             {savedNickname ? <Check size={16} /> : "保存"}
           </Button>
         </div>
+      </div>
+
+      {/* 注音 */}
+      <div className="rounded-xl border border-p-border bg-p-card p-5">
+        <div className="flex items-center gap-2 mb-4">
+          <BookOpen size={18} className="text-p-accent" />
+          <h2 className="text-base font-medium text-p-text">是否注音</h2>
+        </div>
+        <p className="text-sm text-p-text-secondary mb-4">
+          开启后，学生端的奖励列表和任务列表会在文字上方显示拼音
+        </p>
+        <button
+          type="button"
+          onClick={handleTogglePinyin}
+          disabled={savingPinyin}
+          className={`flex items-center justify-between w-full rounded-lg border-2 px-4 py-3 transition-colors cursor-pointer ${
+            pinyinOn ? "border-p-accent bg-p-accent/5" : "border-p-border bg-white hover:bg-gray-50"
+          }`}
+        >
+          <span className="text-sm font-medium text-p-text">{pinyinOn ? "已开启" : "已关闭"}</span>
+          <div
+            className={`relative h-6 w-11 rounded-full transition-colors ${
+              pinyinOn ? "bg-p-accent" : "bg-gray-300"
+            }`}
+          >
+            <div
+              className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow transition-transform ${
+                pinyinOn ? "left-6" : "left-1"
+              }`}
+            />
+          </div>
+        </button>
       </div>
 
       {/* PIN */}

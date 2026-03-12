@@ -9,10 +9,12 @@
     "lint": "eslint",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
+    "db:seed": "npx tsx prisma/seed.ts",
     "db:studio": "prisma studio"
   },
   "dependencies": {
     "@prisma/client": "^6.19.2",
+    "pinyin-pro": "^3.25.0",
     "bcryptjs": "^3.0.3",
     "framer-motion": "^12.35.2",
     "jose": "^6.2.1",
@@ -21,6 +23,9 @@
     "prisma": "^6.19.2",
     "react": "19.2.3",
     "react-dom": "19.2.3"
+  },
+  "prisma": {
+    "seed": "npx tsx prisma/seed.ts"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

@@ -1,11 +1,12 @@
-export type TaskType = "DAILY" | "WEEKLY";
+export type TaskType = "DAILY" | "WEEKLY" | "RULE";
 
 export interface Task {
   id: string;
   name: string;
   description?: string;
   type: TaskType;
-  points: number;
+  maxPoints: number;
+  penaltyPoints: number;
   isActive: boolean;
   createdAt: string;
 }
@@ -48,7 +49,7 @@ export interface Exchange {
   confirmedAt?: string;
 }
 
-export type PointsLogType = "TASK_REWARD" | "EXCHANGE_COST" | "EXCHANGE_REFUND";
+export type PointsLogType = "TASK_REWARD" | "TASK_REWARD_UNDO" | "TASK_PENALTY" | "TASK_PENALTY_UNDO" | "EXCHANGE_COST" | "EXCHANGE_REFUND";
 
 export interface PointsLog {
   id: string;
@@ -66,6 +67,8 @@ export interface StudentData {
   frozenPoints: number;
   streakDays: number;
   lastActiveDate?: string;
+  /** 机甲积分（领养后任务获得，兑换不扣） */
+  mechaPoints?: number;
 }
 
 export interface MechaStage {

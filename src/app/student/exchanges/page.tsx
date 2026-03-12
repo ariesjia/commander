@@ -12,49 +12,58 @@ const statusMap = {
 };
 
 export default function StudentExchangesPage() {
-  const { exchanges } = useData();
+  const { exchanges, isLoading } = useData();
   const sorted = [...exchanges].sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
   );
 
+  if (isLoading) {
+    return (
+      <div className="flex flex-col min-h-[40vh] items-center justify-center gap-4 pt-2">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-s-primary border-t-transparent" />
+        <p className="text-sm text-s-text-secondary">加载中...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-4 pt-2">
-      <h1 className="font-display text-lg font-bold text-s-text">
+      <h1 className="font-display text-xl md:text-2xl font-bold text-s-text">
         我的兑换
       </h1>
 
       {sorted.length === 0 && (
-        <div className="glass-card p-8 text-center">
-          <p className="text-s-text-secondary">暂无兑换记录</p>
-          <p className="text-xs text-s-text-secondary mt-1">去奖励商城看看吧</p>
+        <div className="glass-card p-8 md:p-10 text-center">
+          <p className="text-base md:text-lg text-s-text-secondary">暂无兑换记录</p>
+          <p className="text-sm md:text-base text-s-text-secondary mt-1">去奖励商城看看吧</p>
         </div>
       )}
 
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2 md:gap-3">
         {sorted.map((ex) => {
           const cfg = statusMap[ex.status];
           return (
-            <div key={ex.id} className="glass-card p-4">
-              <div className="flex items-start justify-between gap-3">
+            <div key={ex.id} className="glass-card p-4 md:p-5">
+              <div className="flex items-start justify-between gap-3 md:gap-4">
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-medium text-s-text">{ex.rewardName}</p>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="text-base md:text-lg font-medium text-s-text">{ex.rewardName}</p>
                     <Badge variant={cfg.variant}>
-                      <cfg.icon size={10} className="mr-1" />
+                      <cfg.icon size={12} className="mr-1 md:w-3.5 md:h-3.5" />
                       {cfg.label}
                     </Badge>
                   </div>
-                  <div className="flex items-center gap-1 mt-1.5">
-                    <Coins size={12} className="text-s-accent" />
-                    <span className="text-xs text-s-accent">{ex.pointsCost} 积分</span>
+                  <div className="flex items-center gap-1 mt-1.5 md:mt-2">
+                    <Coins size={16} className="text-s-accent md:w-5 md:h-5" />
+                    <span className="text-sm md:text-base text-s-accent">{ex.pointsCost} 积分</span>
                   </div>
                   {ex.rejectReason && (
-                    <p className="text-xs text-s-danger mt-1.5">
+                    <p className="text-sm md:text-base text-s-danger mt-1.5">
                       拒绝原因: {ex.rejectReason}
                     </p>
                   )}
                 </div>
-                <span className="text-xs text-s-text-secondary shrink-0">
+                <span className="text-sm md:text-base text-s-text-secondary shrink-0">
                   {formatDate(ex.createdAt)}
                 </span>
               </div>

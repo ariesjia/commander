@@ -14,15 +14,29 @@ export async function GET(request: Request) {
 
   const student = await prisma.student.findUniqueOrThrow({
     where: { id: studentId },
-    include: { parent: true },
+    include: { parent: { select: { showPinyin: true } }, studentMechas: true },
   });
 
-  const mechaStage = getCurrentStage(student.totalPoints);
-  const evolutionLevel = getEvolutionLevel(student.totalPoints);
+  const adoptedIds = student.adoptedMechaIds ?? [];
+  const primarySlug = adoptedIds[0] ?? null;
+  const primaryMecha = primarySlug
+    ? student.studentMechas.find((sm) => sm.mechaSlug === primarySlug)
+    : null;
+  const primaryMechaPoints = primaryMecha?.points ?? 0;
+
+  const mechaStage = getCurrentStage(primaryMechaPoints);
+  const evolutionLevel = getEvolutionLevel(primaryMechaPoints);
+
+  const mechaPointsBySlug: Record<string, number> = {};
+  for (const sm of student.studentMechas) {
+    mechaPointsBySlug[sm.mechaSlug] = sm.points;
+  }
 
   return NextResponse.json({
+    showPinyin: student.parent.showPinyin,
     nickname: student.nickname,
-    adoptedMechaIds: student.adoptedMechaIds ?? [],
+    adoptedMechaIds: adoptedIds,
+    mechaPointsBySlug,
     totalPoints: student.totalPoints,
     balance: student.balance,
     frozenPoints: student.frozenPoints,
