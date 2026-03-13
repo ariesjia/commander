@@ -179,8 +179,8 @@ export default function TasksPage() {
           <h1 className="text-xl font-semibold text-p-text">任务管理</h1>
           <p className="mt-1 text-sm text-p-text-secondary">建议参考机甲图鉴的升级积分来设置任务分数，让孩子更有动力</p>
         </div>
-        <Button size="sm" onClick={openCreate}>
-          <Plus size={16} className="mr-1.5" />
+        <Button size="sm" onClick={openCreate} className="whitespace-nowrap shrink-0">
+          <Plus size={16} className="mr-1.5 shrink-0" />
           新建任务
         </Button>
       </div>
@@ -235,8 +235,8 @@ export default function TasksPage() {
 
             <div className="flex items-center gap-1.5 shrink-0">
               {task.status === "pending" && (
-                <Button size="sm" onClick={() => openConfirmDialog(task.id)}>
-                  <Check size={14} className="mr-1" />
+                <Button size="sm" onClick={() => openConfirmDialog(task.id)} className="whitespace-nowrap">
+                  <Check size={14} className="mr-1 shrink-0" />
                   确认
                 </Button>
               )}

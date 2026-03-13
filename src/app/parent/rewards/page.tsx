@@ -121,8 +121,8 @@ export default function RewardsPage() {
           <h1 className="text-xl font-semibold text-p-text">奖励管理</h1>
           <p className="mt-1 text-sm text-p-text-secondary">建议参考机甲图鉴的积分来设置奖励，让兑换更有意义</p>
         </div>
-        <Button size="sm" onClick={openCreate}>
-          <Plus size={16} className="mr-1.5" />
+        <Button size="sm" onClick={openCreate} className="whitespace-nowrap shrink-0">
+          <Plus size={16} className="mr-1.5 shrink-0" />
           新建奖励
         </Button>
       </div>
@@ -146,13 +146,13 @@ export default function RewardsPage() {
                     {ex.pointsCost} 积分
                   </p>
                 </div>
-                <div className="flex gap-1.5">
-                  <Button size="sm" onClick={() => handleConfirmExchange(ex.id)} loading={confirmingExchangeId === ex.id}>
-                    <Check size={14} className="mr-1" />
+                <div className="flex gap-1.5 shrink-0">
+                  <Button size="sm" onClick={() => handleConfirmExchange(ex.id)} loading={confirmingExchangeId === ex.id} className="whitespace-nowrap">
+                    <Check size={14} className="mr-1 shrink-0" />
                     确认
                   </Button>
-                  <Button size="sm" variant="danger" onClick={() => setRejectId(ex.id)}>
-                    <X size={14} className="mr-1" />
+                  <Button size="sm" variant="danger" onClick={() => setRejectId(ex.id)} className="whitespace-nowrap">
+                    <X size={14} className="mr-1 shrink-0" />
                     拒绝
                   </Button>
                 </div>
