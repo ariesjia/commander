@@ -92,6 +92,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
             evolutionLevel?: number;
             mechaName?: string | null;
             mechaLevelName?: string | null;
+            adoptedMechaIds?: string[];
+            mechaPointsBySlug?: Record<string, number>;
             showPinyin?: boolean;
           }>("/api/parent/dashboard"),
           api.get<Array<Task & { status: string; completedAt?: string }>>("/api/parent/tasks"),
@@ -118,6 +120,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         setEvolutionLevel(dashboard.evolutionLevel ?? getEvolutionLevel(dashboard.student.totalPoints));
         setMechaName(dashboard.mechaName ?? null);
         setMechaLevelName(dashboard.mechaLevelName ?? null);
+        setAdoptedMechaIds(dashboard.adoptedMechaIds ?? []);
+        setMechaPointsBySlug(dashboard.mechaPointsBySlug ?? {});
         setShowPinyin(dashboard.showPinyin ?? false);
       } catch {
         // not logged in or error

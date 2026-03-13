@@ -47,7 +47,7 @@ export default function StudentRewardsPage() {
   const available = student.balance - student.frozenPoints;
 
   return (
-    <div className="flex flex-col gap-4 pt-2">
+    <div className="flex flex-col gap-4 pt-2 pb-6">
       <div className="flex items-center justify-between">
         <h1 className="font-display text-xl md:text-2xl font-bold text-s-text">
         奖励商城

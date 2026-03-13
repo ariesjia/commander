@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 
 const links = [
   { href: "/parent", label: "总览", icon: LayoutDashboard },
+  { href: "/parent/mecha", label: "机甲", icon: Bot },
   { href: "/parent/tasks", label: "任务", icon: ListChecks },
   { href: "/parent/rewards", label: "奖励", icon: Gift },
   { href: "/parent/points-log", label: "积分", icon: ScrollText },

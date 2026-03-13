@@ -91,7 +91,7 @@ export default function StudentHome() {
   }
 
   return (
-    <div className="flex flex-col gap-4 pt-2">
+    <div className="flex flex-col gap-4 pt-2 pb-6">
       {/* Header with lock button + 机甲库 */}
       <div className="relative flex flex-col items-center text-center">
         <div className="absolute left-0 top-0">

@@ -1,36 +1,126 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MotiMech | 学生游戏化激励系统
 
-## Getting Started
+完成任务，养成机甲，兑换奖励 —— 一款面向家长与孩子的任务激励与积分养成应用。
 
-First, run the development server:
+## 产品简介
+
+MotiMech 帮助家长通过「任务 → 积分 → 机甲养成 → 奖励兑换」的闭环，激励孩子完成日常任务。孩子完成任务获得积分，机甲随之升级，积分累积后可兑换家长设置的奖励；家长负责确认任务完成、审核兑换、管理任务与奖励。
+
+支持 **PWA**：添加到手机主屏幕后，可作为独立应用使用，适配 iOS 灵动岛与安全区。
+
+---
+
+## 使用流程
+
+### 1. 注册与登录
+
+- 家长使用邮箱注册账号
+- 登录后进入家长端总览
+
+### 2. 家长端设置
+
+| 设置项 | 说明 |
+|--------|------|
+| **孩子昵称** | 设置后，学生端与家长端会显示该昵称 |
+| **PIN 码** | 4 位数字，用于从学生模式切换回家长模式 |
+| **拼音显示** | 控制学生端是否显示汉字拼音注音 |
+
+### 3. 创建任务与奖励
+
+- **任务**：创建每日任务、每周任务或规则任务（可奖励/惩罚）
+- **奖励**：设置奖励名称、所需积分、图片（可选）
+
+### 4. 切换学生模式
+
+- 家长端点击「切换到学生模式」，将设备交给孩子
+- 学生端需输入 PIN 码才能切回家长模式
+
+### 5. 学生端使用
+
+1. **领养机甲**：首次进入打开盲盒，随机抽取一台机甲
+2. **完成任务**：查看任务列表，完成后由家长确认
+3. **获得积分**：家长确认后，积分计入当前主机甲
+4. **机甲养成**：积分累积，机甲升级解锁新形态
+5. **兑换奖励**：积分足够时兑换奖励，等待家长审核
+
+---
+
+## 功能说明
+
+### 家长端
+
+| 功能 | 说明 |
+|------|------|
+| **总览** | 查看孩子积分、本周任务完成、机甲状态、待审核兑换 |
+| **任务管理** | 创建/编辑/删除任务，确认任务完成并给予积分 |
+| **奖励管理** | 创建/编辑/删除奖励，审核或拒绝兑换申请 |
+| **积分流水** | 查看积分变动记录，支持撤销误操作 |
+| **设置** | 孩子昵称、PIN 码、拼音显示开关 |
+
+### 学生端
+
+| 功能 | 说明 |
+|------|------|
+| **机甲** | 机甲库、主机甲展示、养成进度、连续打卡特效 |
+| **任务** | 查看任务列表及完成状态 |
+| **奖励** | 浏览可兑换奖励，发起兑换申请 |
+| **积分** | 查看积分余额与流水 |
+
+### 任务类型
+
+- **每日**：每天可确认一次
+- **每周**：每周可确认一次
+- **规则**：可多次确认，支持奖励加分或惩罚扣分
+
+### 机甲养成
+
+- 完成任务获得的积分计入主机甲
+- 积分累积解锁机甲阶段（从零件到完整体）
+- 连续打卡可解锁火焰、翅膀等特效
+
+---
+
+## 技术栈
+
+- **框架**：Next.js 16 + React 19
+- **数据库**：PostgreSQL + Prisma
+- **样式**：Tailwind CSS v4
+
+---
+
+## 开发
+
+### 环境要求
+
+- Node.js 18+
+- PostgreSQL
+
+### 安装与运行
 
 ```bash
+# 安装依赖
+npm install
+
+# 配置环境变量（.env）
+DATABASE_URL="postgresql://..."
+
+# 初始化数据库
+npm run db:push
+npm run db:seed
+
+# 启动开发服务器
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+访问 [http://localhost:3000](http://localhost:3000)，默认会跳转到登录页。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 常用命令
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| 命令 | 说明 |
+|------|------|
+| `npm run dev` | 启动开发服务器 |
+| `npm run build` | 构建生产版本 |
+| `npm run start` | 启动生产服务器 |
+| `npm run db:push` | 同步 Prisma 模型到数据库 |
+| `npm run db:seed` | 执行种子数据（机甲配置等） |
+| `npm run db:studio` | 打开 Prisma Studio 管理数据 |

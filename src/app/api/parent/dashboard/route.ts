@@ -62,6 +62,14 @@ export async function GET(request: Request) {
   }
   const primarySlug = primaryMecha?.mechaSlug ?? null;
   const primaryMechaPoints = primaryMecha?.points ?? 0;
+
+  const mechaPointsBySlug: Record<string, number> = {};
+  for (const sm of student.studentMechas) {
+    mechaPointsBySlug[sm.mechaSlug] = sm.points;
+  }
+  const adoptedMechaIds = primarySlug
+    ? [primarySlug, ...student.studentMechas.filter((sm) => sm.mechaSlug !== primarySlug).map((sm) => sm.mechaSlug)]
+    : student.studentMechas.map((sm) => sm.mechaSlug);
   const mechaStage = getCurrentStage(primaryMechaPoints);
   const evolutionLevel = getEvolutionLevel(primaryMechaPoints);
 
@@ -102,6 +110,8 @@ export async function GET(request: Request) {
     evolutionLevel,
     mechaName,
     mechaLevelName,
+    adoptedMechaIds,
+    mechaPointsBySlug,
     pendingExchanges: exchanges.map((e) => ({
       id: e.id,
       rewardName: e.reward.name,

@@ -115,9 +115,12 @@ export default function RewardsPage() {
   };
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-5 pb-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-p-text">奖励管理</h1>
+        <div>
+          <h1 className="text-xl font-semibold text-p-text">奖励管理</h1>
+          <p className="mt-1 text-sm text-p-text-secondary">建议参考机甲图鉴的积分来设置奖励，让兑换更有意义</p>
+        </div>
         <Button size="sm" onClick={openCreate}>
           <Plus size={16} className="mr-1.5" />
           新建奖励

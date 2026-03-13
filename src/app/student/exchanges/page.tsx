@@ -29,7 +29,7 @@ export default function StudentExchangesPage() {
   }
 
   return (
-    <div className="flex flex-col gap-4 pt-2">
+    <div className="flex flex-col gap-4 pt-2 pb-6">
       <div className="flex items-center gap-3">
         <Link
           href="/student/rewards"

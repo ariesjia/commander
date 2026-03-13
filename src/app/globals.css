@@ -1,13 +1,5 @@
 @import "tailwindcss";
 
-/* ── Local font: jijia ── */
-@font-face {
-  font-family: "Jijia";
-  src: url("/fonts/jijia.woff2") format("woff2");
-  font-weight: 400 700;
-  font-display: swap;
-}
-
 /* ── Parent theme (clean / minimal) ── */
 :root,
 .theme-parent {
@@ -41,8 +33,9 @@
 }
 
 @theme inline {
-  --font-sans: "Jijia", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Jijia", ui-sans-serif, system-ui, sans-serif;
+  /* iOS: PingFang (-apple-system) | Android: Noto Sans SC (小朋友易读) */
+  --font-sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "PingFang TC", "Hiragino Sans GB", var(--font-noto-sans-sc), sans-serif;
+  --font-display: -apple-system, BlinkMacSystemFont, "PingFang SC", "PingFang TC", "Hiragino Sans GB", var(--font-noto-sans-sc), sans-serif;
 
   --color-p-bg: var(--color-p-bg);
   --color-p-card: var(--color-p-card);

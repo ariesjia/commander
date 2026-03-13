@@ -27,7 +27,7 @@ export default function ParentDashboard() {
   };
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 pb-6">
       {/* Welcome */}
       <div className="flex items-center gap-4">
         <div>
@@ -50,7 +50,10 @@ export default function ParentDashboard() {
       />
 
       {/* Mecha overview card */}
-      <div className="rounded-xl border border-p-border bg-p-card p-5">
+      <button
+        onClick={() => router.push("/parent/mecha")}
+        className="w-full rounded-xl border border-p-border bg-p-card p-5 text-left transition-shadow hover:shadow-sm cursor-pointer"
+      >
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-sm font-medium text-p-text-secondary">机甲状态</h2>
@@ -65,7 +68,7 @@ export default function ParentDashboard() {
             <Bot size={32} className="text-p-accent" />
           </div>
         </div>
-      </div>
+      </button>
 
       {/* Switch to student mode CTA */}
       <button
@@ -88,6 +91,13 @@ export default function ParentDashboard() {
 
       {/* Quick links */}
       <div className="grid grid-cols-2 gap-3">
+        <button
+          onClick={() => router.push("/parent/mecha")}
+          className="rounded-xl border border-p-border bg-p-card p-4 text-left transition-shadow hover:shadow-sm cursor-pointer"
+        >
+          <p className="font-medium text-p-text">机甲查看</p>
+          <p className="text-xs text-p-text-secondary mt-1">查看机甲及积分进度</p>
+        </button>
         <button
           onClick={() => router.push("/parent/tasks")}
           className="rounded-xl border border-p-border bg-p-card p-4 text-left transition-shadow hover:shadow-sm cursor-pointer"

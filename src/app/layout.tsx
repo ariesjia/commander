@@ -1,7 +1,15 @@
 import type { Metadata, Viewport } from "next";
+import { Noto_Sans_SC } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/contexts/Providers";
 import { ModeTransition } from "@/components/mode-switch/ModeTransition";
+
+const notoSansSC = Noto_Sans_SC({
+  weight: ["400", "500", "700"],
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-noto-sans-sc",
+});
 
 export const metadata: Metadata = {
   title: "MotiMech | 学生游戏化激励系统",
@@ -34,7 +42,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh-CN">
+    <html lang="zh-CN" className={notoSansSC.variable}>
       <head />
       <body className="font-sans antialiased">
         <Providers>

@@ -173,9 +173,12 @@ export default function TasksPage() {
   };
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-5 pb-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-p-text">任务管理</h1>
+        <div>
+          <h1 className="text-xl font-semibold text-p-text">任务管理</h1>
+          <p className="mt-1 text-sm text-p-text-secondary">建议参考机甲图鉴的升级积分来设置任务分数，让孩子更有动力</p>
+        </div>
         <Button size="sm" onClick={openCreate}>
           <Plus size={16} className="mr-1.5" />
           新建任务

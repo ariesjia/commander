@@ -88,7 +88,7 @@ export default function StudentTasksPage() {
   );
 
   return (
-    <div className="flex flex-col gap-6 pt-2">
+    <div className="flex flex-col gap-6 pt-2 pb-6">
       <h1 className="font-display text-xl md:text-2xl font-bold text-s-text">
       任务列表
       </h1>

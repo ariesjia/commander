@@ -67,7 +67,7 @@ export default function ParentPointsLogPage() {
   };
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-5 pb-6">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold text-p-text">积分记录</h1>
         <div className="flex items-center gap-1.5 rounded-lg bg-amber-50 px-3 py-1.5 text-sm">
