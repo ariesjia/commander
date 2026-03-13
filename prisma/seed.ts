@@ -1,7 +1,32 @@
 import { PrismaClient } from "@prisma/client";
+import { hashPassword } from "../src/lib/auth";
 import { MECHA_CONFIGS } from "../src/config/mechas";
 
 const prisma = new PrismaClient();
+
+async function seedAdmin() {
+  const email = process.env.ADMIN_EMAIL;
+  const password = process.env.ADMIN_PASSWORD;
+  if (!email || !password) {
+    console.log("跳过 Admin 种子：未设置 ADMIN_EMAIL / ADMIN_PASSWORD");
+    return;
+  }
+  const emailStr = email.trim().toLowerCase();
+  const existing = await prisma.admin.findUnique({ where: { email: emailStr } });
+  const hash = await hashPassword(password);
+  if (existing) {
+    await prisma.admin.update({
+      where: { id: existing.id },
+      data: { passwordHash: hash },
+    });
+    console.log("已更新 Admin 密码:", emailStr);
+  } else {
+    await prisma.admin.create({
+      data: { email: emailStr, passwordHash: hash },
+    });
+    console.log("已创建 Admin:", emailStr);
+  }
+}
 
 async function seedMecha(config: (typeof MECHA_CONFIGS)[number]) {
   const existing = await prisma.mecha.findUnique({
@@ -61,6 +86,8 @@ async function seedMecha(config: (typeof MECHA_CONFIGS)[number]) {
 }
 
 async function main() {
+  await seedAdmin();
+
   // 回填 primaryMechaId：从 studentMechas 取第一个
   const studentsToBackfill = await prisma.student.findMany({
     where: { primaryMechaId: null, studentMechas: { some: {} } },

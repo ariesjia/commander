@@ -5,14 +5,13 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
-import Link from "next/link";
-
 export default function LoginPage() {
   const { login, isLoggedIn } = useAuth();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   if (isLoggedIn) {
     router.replace("/parent");
@@ -25,6 +24,7 @@ export default function LoginPage() {
       setError("请填写邮箱和密码");
       return;
     }
+    setLoading(true);
     try {
       const ok = await login(email, password);
       if (ok) {
@@ -35,6 +35,8 @@ export default function LoginPage() {
       }
     } catch {
       setError("登录失败，请重试");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -61,17 +63,10 @@ export default function LoginPage() {
           onChange={(e) => { setPassword(e.target.value); setError(""); }}
         />
         {error && <p className="text-sm text-p-danger">{error}</p>}
-        <Button type="submit" className="mt-2 w-full">
+        <Button type="submit" className="mt-2 w-full" loading={loading}>
           登录
         </Button>
       </form>
-
-      <p className="mt-6 text-center text-sm text-p-text-secondary">
-        还没有账号？{" "}
-        <Link href="/register" className="font-medium text-p-accent hover:underline">
-          立即注册
-        </Link>
-      </p>
     </div>
   );
 }

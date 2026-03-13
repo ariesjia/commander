@@ -19,6 +19,13 @@ export default function SettingsPage() {
   const [savedPin, setSavedPin] = useState(false);
   const [pinyinOn, setPinyinOn] = useState(showPinyin);
   const [savingPinyin, setSavingPinyin] = useState(false);
+  const [savingNickname, setSavingNickname] = useState(false);
+  const [savingPin, setSavingPin] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  useEffect(() => {
+    setNickname(user?.childNickname ?? "");
+  }, [user?.childNickname]);
 
   useEffect(() => {
     setPinyinOn(showPinyin);
@@ -26,12 +33,15 @@ export default function SettingsPage() {
 
   const handleSaveNickname = async () => {
     if (!nickname.trim()) return;
+    setSavingNickname(true);
     try {
       await updateNickname(nickname.trim());
       setSavedNickname(true);
       setTimeout(() => setSavedNickname(false), 2000);
     } catch {
       // ignore
+    } finally {
+      setSavingNickname(false);
     }
   };
 
@@ -68,6 +78,7 @@ export default function SettingsPage() {
   const handleSavePin = async () => {
     const pinStr = pin.join("");
     if (pinStr.length !== 4) return;
+    setSavingPin(true);
     try {
       await updatePin(pinStr);
       setSavedPin(true);
@@ -75,12 +86,19 @@ export default function SettingsPage() {
       setTimeout(() => setSavedPin(false), 2000);
     } catch {
       // ignore
+    } finally {
+      setSavingPin(false);
     }
   };
 
   const handleLogout = async () => {
-    await logout();
-    router.push("/login");
+    setLoggingOut(true);
+    try {
+      await logout();
+      router.push("/login");
+    } finally {
+      setLoggingOut(false);
+    }
   };
 
   return (
@@ -101,7 +119,7 @@ export default function SettingsPage() {
               onChange={(e) => setNickname(e.target.value)}
             />
           </div>
-          <Button onClick={handleSaveNickname} size="md">
+          <Button onClick={handleSaveNickname} size="md" loading={savingNickname}>
             {savedNickname ? <Check size={16} /> : "保存"}
           </Button>
         </div>
@@ -164,22 +182,14 @@ export default function SettingsPage() {
               />
             ))}
           </div>
-          <Button onClick={handleSavePin} disabled={pin.join("").length !== 4}>
+          <Button onClick={handleSavePin} disabled={pin.join("").length !== 4} loading={savingPin}>
             {savedPin ? <Check size={16} /> : "更新"}
           </Button>
         </div>
       </div>
 
-      {/* Account info */}
-      <div className="rounded-xl border border-p-border bg-p-card p-5">
-        <h2 className="text-base font-medium text-p-text mb-3">账号信息</h2>
-        <p className="text-sm text-p-text-secondary">
-          邮箱: {user?.email ?? "—"}
-        </p>
-      </div>
-
       {/* Logout */}
-      <Button variant="danger" onClick={handleLogout} className="w-full">
+      <Button variant="danger" onClick={handleLogout} className="w-full" loading={loggingOut}>
         <LogOut size={16} className="mr-2" />
         退出登录
       </Button>

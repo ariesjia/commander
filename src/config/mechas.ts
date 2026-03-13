@@ -104,4 +104,21 @@ export const MECHA_CONFIGS: MechaConfig[] = [
       { level: 7, name: "完整体", threshold: 800, imageUrl: "/mecha/thunder/level-7.png", description: "锤盾齐鸣，雷霆万钧，与你心意相通。" },
     ],
   },
+  {
+    slug: "magnet",
+    name: "磁暴",
+    description: "磁暴，控磁场牵引之力",
+    intro: "磁暴，控磁场牵引之力。它在历练中不断觉醒，解锁更强形态、磁暴装甲与引力核心，每一次蜕变都让磁力之力更强。",
+    sortOrder: 5,
+    levels: [
+      { level: 0, name: "初识", threshold: 0, imageUrl: "/mecha/magnet/level-0.png", description: "橙金铁灰初现，磁力若隐若现，牵引之力开始凝聚。" },
+      { level: 1, name: "觉醒", threshold: 20, imageUrl: "/mecha/magnet/level-1.png", description: "磁能逐渐觉醒，双极之力初绽。" },
+      { level: 2, name: "成型", threshold: 50, imageUrl: "/mecha/magnet/level-2.png", description: "磁暴成型，牵引之姿初成。" },
+      { level: 3, name: "强化", threshold: 100, imageUrl: "/mecha/magnet/level-3.png", description: "磁力愈发凝实，干扰与控场之力涌动。" },
+      { level: 4, name: "磁能进阶", threshold: 200, imageUrl: "/mecha/magnet/level-4.png", description: "双极磁能臂甲显现，磁暴装甲初成。" },
+      { level: 5, name: "引力突破", threshold: 350, imageUrl: "/mecha/magnet/level-5.png", description: "引力核心觉醒，范围控制之威尽显。" },
+      { level: 6, name: "磁暴启核", threshold: 500, imageUrl: "/mecha/magnet/level-6.png", description: "磁暴启核，磁力之力臻于完美。" },
+      { level: 7, name: "完整体", threshold: 800, imageUrl: "/mecha/magnet/level-7.png", description: "磁力之力达到巅峰，与你心意相通。" },
+    ],
+  },
 ];
