@@ -1,6 +1,6 @@
 # 新增机甲指南
 
-本文档说明如何向系统中添加一台新机甲。机甲配置统一存放在 `src/config/mechas.ts`，seed 会自动读取并写入数据库。
+本文档说明如何向系统中添加一台新机甲。机甲种子数据存放在 `prisma/seed-data/mechas.ts`，seed 会读取并同步到数据库。
 
 ## 前置要求
 
@@ -27,9 +27,9 @@ public/mecha/<slug>/
 
 **图片规范**：建议尺寸一致，与现有机甲（如 `xuanjia`、`star-shield`、`razor`）保持相近比例。
 
-### 2. 在配置文件中添加机甲
+### 2. 在种子数据中添加机甲
 
-编辑 `src/config/mechas.ts`，在 `MECHA_CONFIGS` 数组中追加一项：
+编辑 `prisma/seed-data/mechas.ts`，在 `MECHA_SEED_DATA` 数组中追加一项：
 
 ```ts
 {
@@ -72,7 +72,11 @@ public/mecha/<slug>/
 | `imageUrl` | 图片路径，以 `/mecha/<slug>/level-N.png` 形式 |
 | `description` | 该等级的文案描述 |
 
-### 3. 执行数据库 seed
+### 3. 添加人物设定
+
+编辑 `docs/MECHA_CHARACTERS.md`，在文档末尾追加新机甲的人物设定（定位、特点、职责），格式参考现有条目。
+
+### 4. 执行数据库 seed
 
 ```bash
 npx prisma db seed
@@ -92,4 +96,4 @@ seed 会检测该机甲是否已存在且配置完整：若已存在则跳过，
 - **星盾** (star-shield)：守护/星光路线
 - **利刃** (razor)：极速/斩击路线
 
-可直接参考 `src/config/mechas.ts` 中现有配置的写法。
+可直接参考 `prisma/seed-data/mechas.ts` 中现有配置的写法。

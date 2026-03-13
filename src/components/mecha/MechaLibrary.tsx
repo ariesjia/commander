@@ -76,7 +76,7 @@ function MechaDetailModal({
   }, []);
 
   const handleSpeak = () => {
-    const text = mecha?.intro ?? mecha?.description;
+    const text = mecha?.intro;
     if (!text || !speechSupported) return;
 
     if (isSpeaking) {
@@ -152,11 +152,11 @@ function MechaDetailModal({
               <p className="text-s-text-secondary text-sm mt-0.5 text-center">
                 <TextWithPinyin text={levelInfo.name} showPinyin={!!showPinyin} />
               </p>
-              {(mecha.intro ?? mecha.description) && (
+              {mecha.intro && (
                 <div className="mt-3 min-w-0">
                   <p className="mecha-detail-story text-s-text text-sm md:text-base text-left break-words">
                     <TextWithPinyin
-                      text={mecha.intro ?? mecha.description ?? ""}
+                      text={mecha.intro}
                       showPinyin={!!showPinyin}
                     />
                   </p>

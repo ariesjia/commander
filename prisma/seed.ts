@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { hashPassword } from "../src/lib/auth";
-import { MECHA_CONFIGS } from "../src/config/mechas";
+import { MECHA_SEED_DATA } from "./seed-data/mechas";
 
 const prisma = new PrismaClient();
 
@@ -28,29 +28,38 @@ async function seedAdmin() {
   }
 }
 
-async function seedMecha(config: (typeof MECHA_CONFIGS)[number]) {
+async function seedMecha(config: (typeof MECHA_SEED_DATA)[number]) {
   const existing = await prisma.mecha.findUnique({
     where: { slug: config.slug },
     include: { levels: { orderBy: { level: "asc" } } },
   });
 
   if (existing?.levels && existing.levels.length > 0) {
-    const needsUpdate = config.levels.some(
+    const levelsNeedUpdate = config.levels.some(
       (c, i) =>
         existing.levels[i]?.name !== c.name ||
         existing.levels[i]?.description !== c.description ||
         existing.levels[i]?.threshold !== c.threshold ||
         existing.levels[i]?.imageUrl !== c.imageUrl,
     );
-    if (needsUpdate) {
+    const mechaNeedUpdate = existing.description !== config.description || existing.intro !== config.intro || existing.sortOrder !== config.sortOrder;
+    if (levelsNeedUpdate) {
       for (const l of config.levels) {
         await prisma.mechaLevel.updateMany({
           where: { mechaId: existing.id, level: l.level },
           data: { name: l.name, description: l.description, threshold: l.threshold, imageUrl: l.imageUrl },
         });
       }
-      console.log(`已同步更新${config.name}配置`);
-    } else {
+      console.log(`已同步更新${config.name}等级配置`);
+    }
+    if (mechaNeedUpdate) {
+      await prisma.mecha.update({
+        where: { id: existing.id },
+        data: { description: config.description, intro: config.intro, sortOrder: config.sortOrder },
+      });
+      console.log(`已同步更新${config.name}介绍`);
+    }
+    if (!levelsNeedUpdate && !mechaNeedUpdate) {
       console.log(`${config.name}已存在且配置完整，跳过`);
     }
     return;
@@ -104,7 +113,7 @@ async function main() {
     }
   }
 
-  for (const config of MECHA_CONFIGS) {
+  for (const config of MECHA_SEED_DATA) {
     await seedMecha(config);
   }
 }

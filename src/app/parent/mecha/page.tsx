@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { api } from "@/lib/api";
 import { Bot, X } from "lucide-react";
 
@@ -42,6 +42,18 @@ function MechaDetailModal({
 }) {
   const currentLevel = getCurrentLevel(mecha.levels, mecha.points);
   const currentIdx = mecha.levels.findIndex((l) => l === currentLevel);
+  const currentLevelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = currentLevelRef.current;
+    if (el) {
+      const t = setTimeout(() => {
+        el.scrollIntoView({ block: "center", behavior: "smooth" });
+      }, 50);
+      return () => clearTimeout(t);
+    }
+  }, [mecha.slug]);
+
   const nextLevel = currentIdx >= 0 && currentIdx < mecha.levels.length - 1
     ? mecha.levels[currentIdx + 1]!
     : null;
@@ -52,7 +64,7 @@ function MechaDetailModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-x-hidden" onClick={onClose}>
       <div
-        className="max-h-[90vh] w-full max-w-md min-w-0 overflow-hidden rounded-2xl bg-white shadow-xl"
+        className="max-h-[90vh] w-full max-w-md md:max-w-4xl min-w-0 overflow-hidden rounded-2xl bg-white shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex min-w-0 items-center justify-between gap-2 border-b border-p-border p-4">
@@ -65,83 +77,101 @@ function MechaDetailModal({
             <X size={20} />
           </button>
         </div>
-        <div className="max-h-[70vh] min-w-0 overflow-y-auto overflow-x-hidden p-4">
-          {/* 拥有与积分 */}
-          <div className="mb-4 flex gap-4 rounded-xl bg-p-bg p-4">
-            <div>
-              <p className="text-xs text-p-text-secondary">孩子拥有</p>
-              <p className="text-lg font-semibold text-p-text">{mecha.ownedCount} 个</p>
-            </div>
-            <div>
-              <p className="text-xs text-p-text-secondary">机甲积分</p>
-              <p className="text-lg font-semibold text-p-text">{mecha.points}</p>
-            </div>
-          </div>
+        <div className="max-h-[70vh] min-w-0 overflow-y-auto overflow-x-hidden p-4 md:overflow-hidden md:flex md:flex-col">
+          <div className="flex flex-col gap-4 md:flex-row md:items-stretch md:gap-6 md:flex-1 md:min-h-0">
+            {/* 左侧：介绍、积分、当前等级 */}
+            <div className="min-w-0 flex-1">
+              {/* 机甲介绍 */}
+              {mecha.intro && (
+                <div className="mb-4 rounded-xl border border-p-border bg-p-bg/50 p-4">
+                  <p className="text-sm text-p-text leading-relaxed">
+                    {mecha.intro}
+                  </p>
+                </div>
+              )}
 
-          {/* 当前等级与进度 */}
-          {currentLevel && (
-            <div className="mb-4">
-              <p className="mb-2 text-sm font-medium text-p-text">当前等级</p>
-              <div className="flex min-w-0 items-center gap-3 rounded-xl border border-p-border p-3">
-                <img
-                  src={currentLevel.imageUrl}
-                  alt={currentLevel.name}
-                  className="h-16 w-12 shrink-0 object-contain"
-                />
-                <div className="min-w-0 flex-1">
-                  <p className="font-medium text-p-text">{currentLevel.name}</p>
-                  <p className="break-words text-xs text-p-text-secondary">{currentLevel.description}</p>
+              {/* 拥有与积分 */}
+              <div className="mb-4 flex gap-4 rounded-xl bg-p-bg p-4">
+                <div>
+                  <p className="text-xs text-p-text-secondary">孩子拥有</p>
+                  <p className="text-lg font-semibold text-p-text">{mecha.ownedCount} 个</p>
+                </div>
+                <div>
+                  <p className="text-xs text-p-text-secondary">机甲积分</p>
+                  <p className="text-lg font-semibold text-p-text">{mecha.points}</p>
                 </div>
               </div>
-              {nextLevel && (
-                <div className="mt-2">
-                  <div className="flex justify-between text-xs text-p-text-secondary">
-                    <span>距下一级 {nextLevel.name}</span>
-                    <span>{mecha.points} / {nextLevel.threshold}</span>
-                  </div>
-                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-p-border">
-                    <div
-                      className="h-full rounded-full bg-p-accent transition-all"
-                      style={{ width: `${progress}%` }}
+
+              {/* 当前等级与进度 */}
+              {currentLevel && (
+                <div>
+                  <p className="mb-2 text-sm font-medium text-p-text">当前等级</p>
+                  <div className="flex min-w-0 items-center gap-4 rounded-xl border border-p-border p-4">
+                    <img
+                      src={currentLevel.imageUrl}
+                      alt={currentLevel.name}
+                      className="h-28 w-20 shrink-0 object-contain md:h-36 md:w-28"
                     />
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-p-text">{currentLevel.name}</p>
+                      <p className="break-words text-xs text-p-text-secondary">{currentLevel.description}</p>
+                    </div>
                   </div>
+                  {nextLevel && (
+                    <div className="mt-2 md:hidden">
+                      <div className="flex justify-between text-xs text-p-text-secondary">
+                        <span>距下一级 {nextLevel.name}</span>
+                        <span>{mecha.points} / {nextLevel.threshold}</span>
+                      </div>
+                      <div className="mt-2 h-2 overflow-hidden rounded-full bg-p-border">
+                        <div
+                          className="h-full rounded-full bg-p-accent transition-all"
+                          style={{ width: `${progress}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
-          )}
 
-          {/* 等级列表 */}
-          <div className="min-w-0">
-            <p className="mb-2 text-sm font-medium text-p-text">等级一览</p>
-            <div className="space-y-2">
-              {mecha.levels.map((l) => {
-                const isUnlocked = mecha.points >= l.threshold;
-                return (
-                  <div
-                    key={l.level}
-                    className={`flex min-w-0 items-center gap-3 rounded-lg border p-3 ${
-                      isUnlocked ? "border-p-border bg-p-card" : "border-p-border/50 bg-p-bg/50 opacity-70"
-                    }`}
-                  >
-                    <img
-                      src={l.imageUrl}
-                      alt={l.name}
-                      className="h-12 w-9 object-contain shrink-0"
-                    />
-                    <div className="min-w-0 flex-1">
-                      <p className="font-medium text-p-text">{l.name}</p>
-                      <p className="break-words text-xs text-p-text-secondary">
-                        {l.threshold} 积分 · {l.description}
-                      </p>
+            {/* 右侧：等级一览（PC 时与左侧同高，列表独立滚动） */}
+            <div className="min-w-0 shrink-0 md:w-72 md:flex md:flex-col md:min-h-0">
+              <p className="mb-2 text-sm font-medium text-p-text shrink-0">等级一览</p>
+              <div className="min-h-0 md:flex-1 md:overflow-y-auto">
+                <div className="space-y-2">
+                {mecha.levels.map((l) => {
+                  const isUnlocked = mecha.points >= l.threshold;
+                  const isCurrent = l === currentLevel;
+                  return (
+                    <div
+                      key={l.level}
+                      ref={isCurrent ? currentLevelRef : undefined}
+                      className={`flex min-w-0 items-center gap-3 rounded-lg border p-3 ${
+                        isUnlocked ? "border-p-border bg-p-card" : "border-p-border/50 bg-p-bg/50 opacity-70"
+                      }`}
+                    >
+                      <img
+                        src={l.imageUrl}
+                        alt={l.name}
+                        className="h-14 w-10 object-contain shrink-0"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-p-text">{l.name}</p>
+                        <p className="break-words text-xs text-p-text-secondary">
+                          {l.threshold} 积分 · {l.description}
+                        </p>
+                      </div>
+                      {isUnlocked && (
+                        <span className="shrink-0 rounded bg-p-success/10 px-2 py-0.5 text-xs text-p-success">
+                          已解锁
+                        </span>
+                      )}
                     </div>
-                    {isUnlocked && (
-                      <span className="shrink-0 rounded bg-p-success/10 px-2 py-0.5 text-xs text-p-success">
-                        已解锁
-                      </span>
-                    )}
-                  </div>
-                );
-              })}
+                  );
+                })}
+                </div>
+              </div>
             </div>
           </div>
         </div>
