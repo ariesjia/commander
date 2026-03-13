@@ -28,10 +28,14 @@ export async function GET(request: Request) {
     primaryMecha = first;
   }
   const primarySlug = primaryMecha?.mechaSlug ?? null;
-  // 兼容前端：primary 放首位，其余按领养时间
-  const adoptedIds = primarySlug
-    ? [primarySlug, ...student.studentMechas.filter((sm) => sm.mechaSlug !== primarySlug).map((sm) => sm.mechaSlug)]
-    : student.studentMechas.map((sm) => sm.mechaSlug);
+  const adoptedMechas =
+    primarySlug
+      ? [
+          student.studentMechas.find((sm) => sm.mechaSlug === primarySlug)!,
+          ...student.studentMechas.filter((sm) => sm.mechaSlug !== primarySlug),
+        ].filter(Boolean)
+      : [...student.studentMechas];
+  const adoptedMechaIds = adoptedMechas.map((sm) => sm.mechaSlug);
   const primaryMechaPoints = primaryMecha?.points ?? 0;
 
   const mechaStage = getCurrentStage(primaryMechaPoints);
@@ -45,7 +49,8 @@ export async function GET(request: Request) {
   return NextResponse.json({
     showPinyin: student.parent.showPinyin,
     nickname: student.nickname,
-    adoptedMechaIds: adoptedIds,
+    adoptedMechaIds,
+    adoptedMechas: adoptedMechas.map((sm) => ({ id: sm.id, slug: sm.mechaSlug, points: sm.points })),
     mechaPointsBySlug,
     totalPoints: student.totalPoints,
     balance: student.balance,

@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useData } from "@/contexts/DataContext";
 import { Button } from "@/components/ui/Button";
 import { TextWithPinyin } from "@/components/ui/TextWithPinyin";
+import { ImagePreviewModal } from "@/components/ui/ImagePreviewModal";
 import { Coins, ShoppingCart, ArrowRight, History } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -17,14 +18,6 @@ export default function StudentRewardsPage() {
 
   const activeRewards = rewards.filter((r) => r.isActive).sort((a, b) => a.points - b.points);
 
-  useEffect(() => {
-    if (!previewImage) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setPreviewImage(null);
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [previewImage]);
 
   const handleExchange = async (rewardId: string) => {
     const ok = await requestExchange(rewardId);
@@ -197,28 +190,13 @@ export default function StudentRewardsPage() {
       {/* 图片预览大图 */}
       <AnimatePresence>
         {previewImage && (
-          <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setPreviewImage(null)}
-          >
-            <motion.div
-              className="relative max-w-[90vw] max-h-[90vh]"
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <img
-                src={previewImage.url}
-                alt={previewImage.name}
-                className="max-w-full max-h-[85vh] w-auto h-auto object-contain rounded-lg"
-              />
-              <p className="text-center text-s-text mt-2 text-sm">{previewImage.name}</p>
-            </motion.div>
-          </motion.div>
+          <ImagePreviewModal
+            key="preview"
+            imageUrl={previewImage.url}
+            caption={previewImage.name}
+            showPinyin={showPinyin}
+            onClose={() => setPreviewImage(null)}
+          />
         )}
       </AnimatePresence>
     </div>

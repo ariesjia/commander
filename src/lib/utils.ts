@@ -17,6 +17,23 @@ export function formatDateShort(dateStr: string): string {
   return d.toLocaleDateString("zh-CN", { month: "short", day: "numeric" });
 }
 
+/** 进化历程用：今天/昨天/X月X日/去年X月X日 */
+export function formatDateFriendly(dateStr: string): string {
+  const d = new Date(dateStr);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const dateOnly = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const diffDays = Math.floor((today.getTime() - dateOnly.getTime()) / 86400000);
+
+  if (diffDays === 0) return "今天";
+  if (diffDays === 1) return "昨天";
+  if (diffDays < 7 && diffDays > 0) return `${diffDays}天前`;
+  if (d.getFullYear() === now.getFullYear()) {
+    return d.toLocaleDateString("zh-CN", { month: "long", day: "numeric" });
+  }
+  return d.toLocaleDateString("zh-CN", { year: "numeric", month: "long", day: "numeric" });
+}
+
 export function isToday(dateStr: string): boolean {
   const d = new Date(dateStr);
   const now = new Date();

@@ -21,6 +21,7 @@ interface DataState {
   student: StudentData;
   mechaStage: number;
   adoptedMechaIds: string[];
+  adoptedMechas: { id: string; slug: string; points: number }[];
   mechaPointsBySlug: Record<string, number>;
   evolutionLevel: number;
   mechaName: string | null;
@@ -74,6 +75,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const [mechaStage, setMechaStage] = useState(0);
   const [evolutionLevel, setEvolutionLevel] = useState(0);
   const [adoptedMechaIds, setAdoptedMechaIds] = useState<string[]>([]);
+  const [adoptedMechas, setAdoptedMechas] = useState<{ id: string; slug: string; points: number }[]>([]);
   const [mechaPointsBySlug, setMechaPointsBySlug] = useState<Record<string, number>>({});
   const [mechaName, setMechaName] = useState<string | null>(null);
   const [mechaLevelName, setMechaLevelName] = useState<string | null>(null);
@@ -93,6 +95,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
             mechaName?: string | null;
             mechaLevelName?: string | null;
             adoptedMechaIds?: string[];
+            adoptedMechas?: { id: string; slug: string; points: number }[];
             mechaPointsBySlug?: Record<string, number>;
             showPinyin?: boolean;
           }>("/api/parent/dashboard"),
@@ -121,6 +124,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         setMechaName(dashboard.mechaName ?? null);
         setMechaLevelName(dashboard.mechaLevelName ?? null);
         setAdoptedMechaIds(dashboard.adoptedMechaIds ?? []);
+        setAdoptedMechas(dashboard.adoptedMechas ?? []);
         setMechaPointsBySlug(dashboard.mechaPointsBySlug ?? {});
         setShowPinyin(dashboard.showPinyin ?? false);
       } catch {
@@ -129,7 +133,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     } else {
       try {
         const [profile, tasksRes, rewardsRes, exchangesRes, pointsRes] = await Promise.all([
-          api.get<StudentData & { mechaStage: number; evolutionLevel: number; adoptedMechaIds?: string[]; mechaPointsBySlug?: Record<string, number>; showPinyin?: boolean }>("/api/student/profile"),
+          api.get<StudentData & { mechaStage: number; evolutionLevel: number; adoptedMechaIds?: string[]; adoptedMechas?: { id: string; slug: string; points: number }[]; mechaPointsBySlug?: Record<string, number>; showPinyin?: boolean }>("/api/student/profile"),
           api.get<TaskWithStatus[]>("/api/student/tasks"),
           api.get<Array<Reward & { canRedeem?: boolean; pointsNeeded?: number }>>("/api/student/rewards"),
           api.get<Exchange[]>("/api/student/exchanges"),
@@ -151,6 +155,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         setMechaStage(profile.mechaStage);
         setEvolutionLevel(profile.evolutionLevel);
         setAdoptedMechaIds(profile.adoptedMechaIds ?? []);
+        setAdoptedMechas(profile.adoptedMechas ?? []);
         setMechaPointsBySlug(profile.mechaPointsBySlug ?? {});
         setShowPinyin(profile.showPinyin ?? false);
         setWeeklyCompletedCount(0);
@@ -244,6 +249,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         student,
         mechaStage,
         adoptedMechaIds,
+        adoptedMechas,
         mechaPointsBySlug,
         evolutionLevel,
         mechaName,

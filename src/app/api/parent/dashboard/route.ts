@@ -67,9 +67,13 @@ export async function GET(request: Request) {
   for (const sm of student.studentMechas) {
     mechaPointsBySlug[sm.mechaSlug] = sm.points;
   }
-  const adoptedMechaIds = primarySlug
-    ? [primarySlug, ...student.studentMechas.filter((sm) => sm.mechaSlug !== primarySlug).map((sm) => sm.mechaSlug)]
-    : student.studentMechas.map((sm) => sm.mechaSlug);
+  const adoptedMechas = primarySlug
+    ? [
+        student.studentMechas.find((sm) => sm.mechaSlug === primarySlug)!,
+        ...student.studentMechas.filter((sm) => sm.mechaSlug !== primarySlug),
+      ].filter(Boolean)
+    : [...student.studentMechas];
+  const adoptedMechaIds = adoptedMechas.map((sm) => sm.mechaSlug);
   const mechaStage = getCurrentStage(primaryMechaPoints);
   const evolutionLevel = getEvolutionLevel(primaryMechaPoints);
 
@@ -111,6 +115,7 @@ export async function GET(request: Request) {
     mechaName,
     mechaLevelName,
     adoptedMechaIds,
+    adoptedMechas: adoptedMechas.map((sm) => ({ id: sm.id, slug: sm.mechaSlug, points: sm.points })),
     mechaPointsBySlug,
     pendingExchanges: exchanges.map((e) => ({
       id: e.id,

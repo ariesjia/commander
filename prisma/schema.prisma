@@ -150,6 +150,7 @@ model TaskLog {
   pointsLogs PointsLog[]
 
   @@index([taskId, studentId])
+  @@index([studentMechaId])
 }
 
 // 机甲配置：由后端提供，支持后续扩展

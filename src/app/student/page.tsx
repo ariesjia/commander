@@ -10,15 +10,16 @@ import { XuanjiaViewer } from "@/components/mecha/XuanjiaViewer";
 import { AdoptionFlow } from "@/components/mecha/AdoptionFlow";
 import { MechaProgress } from "@/components/mecha/MechaProgress";
 import { XuanjiaProgress } from "@/components/mecha/XuanjiaProgress";
-import { MechaLibrary } from "@/components/mecha/MechaLibrary";
+import Link from "next/link";
 import { PinDialog } from "@/components/mode-switch/PinDialog";
 import Image from "next/image";
-import { Coins, Flame, Snowflake, Lock } from "lucide-react";
+import { Coins, Flame, Snowflake, Lock, Library } from "lucide-react";
 import { MECHA_STAGES, STREAK_EFFECTS } from "@/lib/mecha-config";
 import { useMecha, getLevelFromMecha } from "@/hooks/useMecha";
 
 export default function StudentHome() {
-  const { student, mechaStage, adoptedMechaIds, mechaPointsBySlug, showPinyin, isLoading, refetch } = useData();
+  const { student, mechaStage, adoptedMechaIds, adoptedMechas, mechaPointsBySlug, showPinyin, isLoading, refetch } = useData();
+  const hasMechas = adoptedMechas.length > 0;
   const { user } = useAuth();
   const { switchToParent, setTransitioning } = useMode();
   const router = useRouter();
@@ -53,10 +54,10 @@ export default function StudentHome() {
           <Image src="/logo.svg" alt="" width={40} height={40} className="opacity-90" />
           <button
             onClick={() => setPinOpen(true)}
-            className="absolute right-0 top-4 flex h-8 w-8 items-center justify-center rounded-lg text-s-text-secondary/30 hover:text-s-text-secondary/60 hover:bg-white/5 transition-all cursor-pointer"
+            className="absolute right-0 top-4 flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-xl text-s-text-secondary/30 hover:text-s-text-secondary/60 hover:bg-white/5 transition-all cursor-pointer touch-manipulation"
             aria-label="切回家长模式"
           >
-            <Lock size={14} />
+            <Lock size={20} />
           </button>
         </div>
         <div className="flex flex-1 flex-col items-center justify-center gap-3">
@@ -76,10 +77,10 @@ export default function StudentHome() {
           <Image src="/logo.svg" alt="" width={40} height={40} className="opacity-90" />
           <button
             onClick={() => setPinOpen(true)}
-            className="absolute right-0 top-4 flex h-8 w-8 items-center justify-center rounded-lg text-s-text-secondary/30 hover:text-s-text-secondary/60 hover:bg-white/5 transition-all cursor-pointer"
+            className="absolute right-0 top-4 flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-xl text-s-text-secondary/30 hover:text-s-text-secondary/60 hover:bg-white/5 transition-all cursor-pointer touch-manipulation"
             aria-label="切回家长模式"
           >
-            <Lock size={14} />
+            <Lock size={20} />
           </button>
         </div>
         <div className="mt-10 md:mt-14">
@@ -95,12 +96,14 @@ export default function StudentHome() {
       {/* Header with lock button + 机甲库 */}
       <div className="relative flex flex-col items-center text-center">
         <div className="absolute left-0 top-0">
-          {adoptedMechaIds.length > 0 && (
-            <MechaLibrary
-              adoptedMechaIds={adoptedMechaIds}
-              mechaPointsBySlug={mechaPointsBySlug}
-              showPinyin={showPinyin}
-            />
+          {hasMechas && (
+            <Link
+              href="/student/mecha"
+              className="flex items-center justify-center gap-2 rounded-xl border border-s-primary/30 bg-s-primary/5 px-4 py-2.5 min-h-[44px] text-sm text-s-primary transition-colors hover:bg-s-primary/10 touch-manipulation"
+            >
+              <Library size={18} />
+              机甲库
+            </Link>
           )}
         </div>
         <Image src="/logo.svg" alt="" width={40} height={40} className="mb-2 opacity-90" />
@@ -111,10 +114,10 @@ export default function StudentHome() {
 
         <button
           onClick={() => setPinOpen(true)}
-          className="absolute right-0 top-0 flex h-8 w-8 items-center justify-center rounded-lg text-s-text-secondary/30 hover:text-s-text-secondary/60 hover:bg-white/5 transition-all cursor-pointer"
+          className="absolute right-0 top-0 flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-xl text-s-text-secondary/30 hover:text-s-text-secondary/60 hover:bg-white/5 transition-all cursor-pointer touch-manipulation"
           aria-label="切回家长模式"
         >
-          <Lock size={14} />
+          <Lock size={20} />
         </button>
       </div>
 

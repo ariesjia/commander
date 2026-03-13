@@ -2,12 +2,21 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Library, X, Volume2, Square } from "lucide-react";
+import { Library, X, Volume2, Square, Lock } from "lucide-react";
 import { useMecha, getLevelFromMecha } from "@/hooks/useMecha";
 import { TextWithPinyin } from "@/components/ui/TextWithPinyin";
+import { api } from "@/lib/api";
+import { formatDateFriendly } from "@/lib/utils";
+import type { MechaEvolutionDto } from "@/app/api/student/mecha-evolution/[id]/route";
+
+interface AdoptedMecha {
+  id: string;
+  slug: string;
+  points: number;
+}
 
 interface MechaLibraryProps {
-  adoptedMechaIds: string[];
+  adoptedMechas: AdoptedMecha[];
   mechaPointsBySlug: Record<string, number>;
   showPinyin?: boolean;
 }
@@ -44,11 +53,13 @@ function MechaCard({
 }
 
 function MechaDetailModal({
+  studentMechaId,
   slug,
   mechaPoints,
   showPinyin,
   onClose,
 }: {
+  studentMechaId: string;
   slug: string;
   mechaPoints: number;
   showPinyin?: boolean;
@@ -58,6 +69,25 @@ function MechaDetailModal({
   const levelInfo = getLevelFromMecha(mecha, mechaPoints);
   const [speechSupported, setSpeechSupported] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [evolution, setEvolution] = useState<MechaEvolutionDto | null>(null);
+  const [evolutionLoading, setEvolutionLoading] = useState(true);
+  const [evolutionError, setEvolutionError] = useState(false);
+
+  useEffect(() => {
+    setEvolutionLoading(true);
+    setEvolutionError(false);
+    api
+      .get<MechaEvolutionDto>(`/api/student/mecha-evolution/${studentMechaId}`)
+      .then((data) => {
+        setEvolution(data);
+        setEvolutionError(false);
+      })
+      .catch(() => {
+        setEvolution(null);
+        setEvolutionError(true);
+      })
+      .finally(() => setEvolutionLoading(false));
+  }, [studentMechaId]);
 
   useEffect(() => {
     const ok =
@@ -184,6 +214,81 @@ function MechaDetailModal({
                   )}
                 </div>
               )}
+
+              {/* 进化历程：垂直时间轴 - 左侧日期、中间时间线+圆点、右侧等级图+名称 */}
+              <div className="mt-6 pt-4 border-t border-s-primary/20">
+                <h4 className="text-sm font-semibold text-s-primary mb-4">进化历程</h4>
+                {evolutionLoading ? (
+                  <div className="py-4 flex items-center justify-center">
+                    <span className="text-sm text-s-text-secondary">加载中...</span>
+                  </div>
+                ) : evolutionError ? (
+                  <div className="py-4 text-center">
+                    <p className="text-sm text-s-text-secondary">加载失败，请确保已切换到学生模式</p>
+                  </div>
+                ) : evolution && evolution.milestones.length > 0 ? (
+                  <div className="space-y-0">
+                    {evolution.milestones.map((m, i) => {
+                      const isReached = !!m.reachedAt;
+                      const isLast = i === evolution.milestones.length - 1;
+                      return (
+                        <div key={m.level} className="flex items-start gap-3">
+                          {/* 左侧：日期 */}
+                          <div className="w-16 shrink-0 pt-0.5">
+                            <p className="text-xs text-s-text-secondary">
+                              {m.reachedAt ? formatDateFriendly(m.reachedAt) : "未解锁"}
+                            </p>
+                          </div>
+                          {/* 中间：时间线 + 圆点 */}
+                          <div className="flex flex-col items-center shrink-0">
+                            <div
+                              className={`w-3 h-3 rounded-full shrink-0 ${
+                                isReached ? "bg-s-primary ring-2 ring-s-primary/50" : "bg-s-text-secondary/30"
+                              }`}
+                            />
+                            {!isLast && (
+                              <div
+                                className={`w-0.5 flex-1 min-h-[2.5rem] ${
+                                  isReached ? "bg-s-primary/40" : "bg-s-text-secondary/20"
+                                }`}
+                              />
+                            )}
+                          </div>
+                          {/* 右侧：等级图 + 等级名 */}
+                          <div className="flex-1 min-w-0 pb-4">
+                            <div className="flex items-start gap-3">
+                              <img
+                                src={m.imageUrl}
+                                alt={m.name}
+                                className={`w-14 h-[4.5rem] object-contain rounded-lg shrink-0 ${
+                                  isReached ? "opacity-100" : "opacity-40 grayscale"
+                                }`}
+                                onError={(e) => (e.currentTarget.style.display = "none")}
+                              />
+                              <div className="flex-1 min-w-0">
+                                <p className={`text-sm font-medium ${isReached ? "text-s-text" : "text-s-text-secondary"}`}>
+                                  {m.level === 0 ? "领养 · " : "达到 "}
+                                  <TextWithPinyin text={m.name} showPinyin={!!showPinyin} />
+                                </p>
+                                {!isReached && m.threshold > 0 && (
+                                  <p className="text-xs text-s-text-secondary mt-0.5 flex items-center gap-1">
+                                    <Lock size={10} />
+                                    {m.threshold} 积分可解锁
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="py-4 text-center">
+                    <p className="text-sm text-s-text-secondary">暂无进化记录</p>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
@@ -192,9 +297,9 @@ function MechaDetailModal({
   );
 }
 
-export function MechaLibrary({ adoptedMechaIds, mechaPointsBySlug, showPinyin = false }: MechaLibraryProps) {
+export function MechaLibrary({ adoptedMechas, mechaPointsBySlug, showPinyin = false }: MechaLibraryProps) {
   const [open, setOpen] = useState(false);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selected, setSelected] = useState<AdoptedMecha | null>(null);
 
   return (
     <>
@@ -235,12 +340,12 @@ export function MechaLibrary({ adoptedMechaIds, mechaPointsBySlug, showPinyin = 
 
               <div className="flex-1 overflow-y-auto p-4">
                 <div className="grid grid-cols-3 gap-3">
-                  {adoptedMechaIds.map((slug) => (
+                  {adoptedMechas.map((m) => (
                     <MechaCard
-                      key={slug}
-                      slug={slug}
-                      mechaPoints={mechaPointsBySlug[slug] ?? 0}
-                      onSelect={() => setSelectedId(slug)}
+                      key={m.id}
+                      slug={m.slug}
+                      mechaPoints={m.points}
+                      onSelect={() => setSelected(m)}
                     />
                   ))}
                 </div>
@@ -248,13 +353,14 @@ export function MechaLibrary({ adoptedMechaIds, mechaPointsBySlug, showPinyin = 
             </motion.div>
 
             <AnimatePresence>
-              {selectedId && (
+              {selected && (
                 <MechaDetailModal
-                  key={selectedId}
-                  slug={selectedId}
-                  mechaPoints={mechaPointsBySlug[selectedId] ?? 0}
+                  key={selected.id}
+                  studentMechaId={selected.id}
+                  slug={selected.slug}
+                  mechaPoints={selected.points}
                   showPinyin={showPinyin}
-                  onClose={() => setSelectedId(null)}
+                  onClose={() => setSelected(null)}
                 />
               )}
             </AnimatePresence>
