@@ -38,6 +38,16 @@ export default function TasksPage() {
 
   const filtered = tab === "all" ? tasksWithStatus : tasksWithStatus.filter((t) => t.type === tab);
 
+  // 选「全部」时按任务类型分组：每日 → 每周 → 规则
+  const typeOrder: TaskType[] = ["DAILY", "WEEKLY", "RULE"];
+  const typeLabels: Record<TaskType, string> = { DAILY: "每日", WEEKLY: "每周", RULE: "规则" };
+  const showGrouped = tab === "all";
+  const grouped = showGrouped
+    ? typeOrder
+        .map((type) => ({ type, tasks: filtered.filter((t) => t.type === type) }))
+        .filter((g) => g.tasks.length > 0)
+    : [{ type: tab, tasks: filtered }];
+
   if (isLoading) {
     return (
       <div className="flex flex-col min-h-[50vh] items-center justify-center gap-4">
@@ -201,60 +211,127 @@ export default function TasksPage() {
         ))}
       </div>
 
-      {/* Task list */}
-      <div className="flex flex-col gap-2">
+      {/* Task list - 选「全部」时按类型分组显示，非全部时不展示分组标题 */}
+      <div className="flex flex-col gap-5">
         {filtered.length === 0 && (
           <p className="py-12 text-center text-sm text-p-text-secondary">暂无任务，点击右上角创建</p>
         )}
-        {filtered.map((task) => (
-          <div
-            key={task.id}
-            className="flex items-center gap-3 rounded-xl border border-p-border bg-p-card p-4 transition-shadow hover:shadow-sm"
-          >
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className={cn("font-medium text-p-text", task.status === "completed" && "line-through opacity-60")}>
-                  {task.name}
-                </span>
-                <Badge variant={task.type === "DAILY" ? "default" : task.type === "WEEKLY" ? "warning" : "neon"}>
-                  {task.type === "DAILY" ? "每日" : task.type === "WEEKLY" ? "每周" : "规则"}
-                </Badge>
-                {task.status === "completed" && <Badge variant="success">已完成</Badge>}
+        {showGrouped ? (
+          grouped.map(({ type, tasks }) => (
+            <div key={type} className="flex flex-col gap-2">
+              <div className="flex items-center gap-2">
+                {type === "DAILY" && <CalendarDays size={16} className="text-p-accent" />}
+                {type === "WEEKLY" && <CalendarRange size={16} className="text-amber-500" />}
+                {type === "RULE" && <span className="text-base">📋</span>}
+                <h2 className="text-sm font-semibold text-p-text">{typeLabels[type]}</h2>
+                <span className="text-xs text-p-text-secondary">({tasks.length})</span>
               </div>
-              {task.description && (
-                <p className="text-xs text-p-text-secondary mt-1 truncate">{task.description}</p>
-              )}
-              <p className="text-xs font-medium mt-1">
-                {task.type === "RULE" && (task.penaltyPoints ?? 0) > 0 ? (
-                  <span className="text-red-600">扣分 · 违反扣 {task.penaltyPoints} 分</span>
-                ) : (
-                  <span className="text-green-600">加分 · 完成可得 {task.maxPoints} 分</span>
-                )}
-              </p>
-            </div>
+              <div className="flex flex-col gap-2">
+                {tasks.map((task) => (
+                <div
+                  key={task.id}
+                  className="flex items-center gap-3 rounded-xl border border-p-border bg-p-card p-4 transition-shadow hover:shadow-sm"
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className={cn("font-medium text-p-text", task.status === "completed" && "line-through opacity-60")}>
+                        {task.name}
+                      </span>
+                      <Badge variant={task.type === "DAILY" ? "default" : task.type === "WEEKLY" ? "warning" : "neon"}>
+                        {task.type === "DAILY" ? "每日" : task.type === "WEEKLY" ? "每周" : "规则"}
+                      </Badge>
+                      {task.status === "completed" && <Badge variant="success">已完成</Badge>}
+                    </div>
+                    {task.description && (
+                      <p className="text-xs text-p-text-secondary mt-1 truncate">{task.description}</p>
+                    )}
+                    <p className="text-xs font-medium mt-1">
+                      {task.type === "RULE" && (task.penaltyPoints ?? 0) > 0 ? (
+                        <span className="text-red-600">扣分 · 违反扣 {task.penaltyPoints} 分</span>
+                      ) : (
+                        <span className="text-green-600">加分 · 完成可得 {task.maxPoints} 分</span>
+                      )}
+                    </p>
+                  </div>
 
-            <div className="flex items-center gap-1.5 shrink-0">
-              {task.status === "pending" && (
-                <Button size="sm" onClick={() => openConfirmDialog(task.id)} className="whitespace-nowrap">
-                  <Check size={14} className="mr-1 shrink-0" />
-                  确认
-                </Button>
-              )}
-              <button
-                onClick={() => openEdit(task)}
-                className="rounded-lg p-2 text-p-text-secondary hover:bg-gray-100 transition-colors cursor-pointer"
-              >
-                <Pencil size={14} />
-              </button>
-              <button
-                onClick={() => setDeleteId(task.id)}
-                className="rounded-lg p-2 text-p-text-secondary hover:bg-red-50 hover:text-p-danger transition-colors cursor-pointer"
-              >
-                <Trash2 size={14} />
-              </button>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {task.status === "pending" && (
+                      <Button size="sm" onClick={() => openConfirmDialog(task.id)} className="whitespace-nowrap">
+                        <Check size={14} className="mr-1 shrink-0" />
+                        确认
+                      </Button>
+                    )}
+                    <button
+                      onClick={() => openEdit(task)}
+                      className="rounded-lg p-2 text-p-text-secondary hover:bg-gray-100 transition-colors cursor-pointer"
+                    >
+                      <Pencil size={14} />
+                    </button>
+                    <button
+                      onClick={() => setDeleteId(task.id)}
+                      className="rounded-lg p-2 text-p-text-secondary hover:bg-red-50 hover:text-p-danger transition-colors cursor-pointer"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+              </div>
             </div>
-          </div>
-        ))}
+          ))
+        ) : (
+          <div className="flex flex-col gap-2">
+            {filtered.map((task) => (
+                <div
+                  key={task.id}
+                  className="flex items-center gap-3 rounded-xl border border-p-border bg-p-card p-4 transition-shadow hover:shadow-sm"
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className={cn("font-medium text-p-text", task.status === "completed" && "line-through opacity-60")}>
+                        {task.name}
+                      </span>
+                      <Badge variant={task.type === "DAILY" ? "default" : task.type === "WEEKLY" ? "warning" : "neon"}>
+                        {task.type === "DAILY" ? "每日" : task.type === "WEEKLY" ? "每周" : "规则"}
+                      </Badge>
+                      {task.status === "completed" && <Badge variant="success">已完成</Badge>}
+                    </div>
+                    {task.description && (
+                      <p className="text-xs text-p-text-secondary mt-1 truncate">{task.description}</p>
+                    )}
+                    <p className="text-xs font-medium mt-1">
+                      {task.type === "RULE" && (task.penaltyPoints ?? 0) > 0 ? (
+                        <span className="text-red-600">扣分 · 违反扣 {task.penaltyPoints} 分</span>
+                      ) : (
+                        <span className="text-green-600">加分 · 完成可得 {task.maxPoints} 分</span>
+                      )}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {task.status === "pending" && (
+                      <Button size="sm" onClick={() => openConfirmDialog(task.id)} className="whitespace-nowrap">
+                        <Check size={14} className="mr-1 shrink-0" />
+                        确认
+                      </Button>
+                    )}
+                    <button
+                      onClick={() => openEdit(task)}
+                      className="rounded-lg p-2 text-p-text-secondary hover:bg-gray-100 transition-colors cursor-pointer"
+                    >
+                      <Pencil size={14} />
+                    </button>
+                    <button
+                      onClick={() => setDeleteId(task.id)}
+                      className="rounded-lg p-2 text-p-text-secondary hover:bg-red-50 hover:text-p-danger transition-colors cursor-pointer"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+        )}
       </div>
 
       {/* Create/Edit modal */}
