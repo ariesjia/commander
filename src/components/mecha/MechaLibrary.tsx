@@ -109,7 +109,7 @@ function MechaDetailModal({
     >
       <div className="absolute inset-0 bg-black/70" />
       <motion.div
-        className="mecha-detail-modal relative flex flex-col rounded-2xl bg-[#0c1222] border border-s-primary/20 w-full max-w-md max-h-[80vh] md:max-h-[calc(100vh-6rem)] shadow-xl overflow-hidden"
+        className="mecha-detail-modal relative flex flex-col rounded-2xl bg-[#0c1222] border border-s-primary/20 w-full max-w-md max-h-[80vh] md:max-h-[calc(100vh-6rem)] min-h-0 shadow-xl overflow-hidden"
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
@@ -126,7 +126,7 @@ function MechaDetailModal({
           </button>
         </div>
 
-        <div className="mecha-detail-content flex flex-col overflow-y-auto overflow-x-hidden flex-1 min-h-0 p-6 pt-12">
+        <div className="mecha-detail-content flex flex-col overflow-y-auto overflow-x-hidden flex-1 min-h-0 p-6 pt-12 min-w-0">
           {/* 图片区域 */}
           <div className="mecha-detail-image flex justify-center shrink-0">
             {mecha && levelInfo ? (
@@ -145,7 +145,7 @@ function MechaDetailModal({
 
           {/* 文字区域 */}
           {mecha && levelInfo && (
-            <div className="mecha-detail-text flex flex-col flex-1 min-w-0 mt-4">
+            <div className="mecha-detail-text flex flex-col flex-1 min-w-0 mt-4 overflow-x-hidden">
               <h3 className="text-s-primary font-display text-xl font-bold text-center">
                 <TextWithPinyin text={mecha.name} showPinyin={!!showPinyin} />
               </h3>

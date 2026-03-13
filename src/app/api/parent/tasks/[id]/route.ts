@@ -13,7 +13,7 @@ export async function PUT(
   const { id } = await params;
 
   const task = await prisma.task.findFirst({
-    where: { id, parentId: auth.parentId },
+    where: { id, parentId: auth.parentId, deletedAt: null },
   });
 
   if (!task) {
@@ -63,13 +63,17 @@ export async function DELETE(
   const { id } = await params;
 
   const task = await prisma.task.findFirst({
-    where: { id, parentId: auth.parentId },
+    where: { id, parentId: auth.parentId, deletedAt: null },
   });
 
   if (!task) {
     return NextResponse.json({ error: "任务不存在" }, { status: 404 });
   }
 
-  await prisma.task.delete({ where: { id } });
+  // 软删除：保留 Task 和 TaskLog，支持后续撤销积分
+  await prisma.task.update({
+    where: { id },
+    data: { deletedAt: new Date() },
+  });
   return NextResponse.json({ success: true });
 }

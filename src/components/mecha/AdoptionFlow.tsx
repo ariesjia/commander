@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { BlindBox } from "./BlindBox";
 import { SpriteAnimation } from "@/components/ui/SpriteAnimation";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -25,6 +25,7 @@ interface AdoptionFlowProps {
 export function AdoptionFlow({ onComplete }: AdoptionFlowProps) {
   const { toast } = useToast();
   const { showPinyin } = useData();
+  const reduceMotion = useReducedMotion();
   const [phase, setPhase] = useState<Phase>("blind");
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [adopting, setAdopting] = useState(false);
@@ -35,6 +36,18 @@ export function AdoptionFlow({ onComplete }: AdoptionFlowProps) {
   useEffect(() => {
     if (phase === "reveal" && prevPhase.current !== "reveal") setImgError(false);
     prevPhase.current = phase;
+  }, [phase]);
+
+  // 盲盒开启时播放音效（用户确认后进入 opening 阶段）
+  useEffect(() => {
+    if (phase !== "opening") return;
+    try {
+      const audio = new Audio("/sounds/box-open.mp3");
+      audio.volume = 0.6;
+      audio.play().catch(() => {});
+    } catch {
+      // 音效文件不存在或播放失败时静默跳过
+    }
   }, [phase]);
 
   const handleBlindClick = () => setConfirmOpen(true);
@@ -95,17 +108,37 @@ export function AdoptionFlow({ onComplete }: AdoptionFlowProps) {
             exit={{ opacity: 0, scale: 0.95 }}
             className="flex flex-col items-center gap-6"
           >
-            <p className="blind-box-hint text-lg text-center">
+            <p className="blind-box-hint text-lg md:text-xl text-center">
               <TextWithPinyin text="点击盲盒，随机抽取你的机甲" showPinyin={showPinyin} />
             </p>
-            <button onClick={handleBlindClick} className="focus:outline-none">
+            <motion.button
+              onClick={handleBlindClick}
+              className="focus:outline-none"
+              animate={
+                reduceMotion
+                  ? {}
+                  : {
+                      rotate: [0, -4, 4, -4, 4, 0],
+                      scale: [1, 1.03, 1],
+                    }
+              }
+              transition={
+                reduceMotion
+                  ? {}
+                  : {
+                      repeat: Infinity,
+                      duration: 2.2,
+                      repeatDelay: 0.6,
+                    }
+              }
+            >
               <BlindBox
                 src="/box.png"
                 frameCount={8}
                 frameHeight={300}
                 className="rounded-xl shadow-lg ring-2 ring-s-primary/30"
               />
-            </button>
+            </motion.button>
           </motion.div>
         )}
 

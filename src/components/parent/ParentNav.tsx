@@ -23,12 +23,14 @@ export function ParentNav() {
   const router = useRouter();
 
   const handleSwitch = async () => {
-    setTransitioning(true);
-    setTimeout(async () => {
+    try {
       await switchToStudent();
+      setTransitioning(true);
+      await new Promise((r) => setTimeout(r, 800));
       router.push("/student");
+    } finally {
       setTransitioning(false);
-    }, 400);
+    }
   };
 
   return (

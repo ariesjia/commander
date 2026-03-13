@@ -24,7 +24,7 @@ export function StudentNav() {
             key={href}
             href={href}
             className={cn(
-              "flex flex-col items-center gap-1.5 px-3 py-1.5 text-xs transition-all cursor-pointer min-w-[56px]",
+              "flex flex-col items-center gap-1.5 px-3 py-1.5 text-xs md:text-sm transition-all cursor-pointer min-w-[56px]",
               active
                 ? "text-s-primary"
                 : "text-s-text-secondary hover:text-s-text",

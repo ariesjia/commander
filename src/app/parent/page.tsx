@@ -18,12 +18,14 @@ export default function ParentDashboard() {
   const mechaDisplay = mechaName && mechaLevelName ? `${mechaName} · ${mechaLevelName}` : mechaName ?? "未领养机甲";
 
   const handleSwitch = async () => {
-    setTransitioning(true);
-    setTimeout(async () => {
+    try {
       await switchToStudent();
+      setTransitioning(true);
+      await new Promise((r) => setTimeout(r, 800));
       router.push("/student");
+    } finally {
       setTransitioning(false);
-    }, 400);
+    }
   };
 
   return (

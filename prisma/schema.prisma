@@ -71,6 +71,7 @@ model Task {
   maxPoints     Int       @default(10) // 最大得分，完成时家长可给予 0～maxPoints
   penaltyPoints Int       @default(0) // 惩罚扣分（仅 RULE 类型使用）
   isActive      Boolean   @default(true)
+  deletedAt     DateTime? // 软删除：删除后仍保留 TaskLog，支持撤销积分
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 

@@ -41,7 +41,7 @@ export default function StudentHome() {
     setTimeout(() => {
       router.push("/parent");
       setTransitioning(false);
-    }, 400);
+    }, 800);
   };
   const verifyPin = async (pin: string) => switchToParent(pin);
 

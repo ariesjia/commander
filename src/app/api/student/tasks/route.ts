@@ -14,7 +14,7 @@ export async function GET(request: Request) {
 
   const [tasks, taskLogs] = await Promise.all([
     prisma.task.findMany({
-      where: { parentId: auth.parentId, isActive: true },
+      where: { parentId: auth.parentId, isActive: true, deletedAt: null },
     }),
     prisma.taskLog.findMany({ where: { studentId } }),
   ]);

@@ -14,7 +14,7 @@ export function ModeTransition() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0.6 }}
         >
           <motion.div
             className="absolute inset-0"
@@ -26,13 +26,13 @@ export function ModeTransition() {
             }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: 0.6 }}
           />
           <motion.div
             className="relative z-10 text-center"
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.1, duration: 0.3 }}
+            transition={{ delay: 0.15, duration: 0.6 }}
           >
             {mode === "student" ? (
               <p className="font-display text-xl font-bold text-cyan-400 neon-text">

@@ -17,6 +17,7 @@
 }
 
 /* ── Student theme (sci-fi / neon) ── */
+/* iPad 及以上：整体放大字体，方便小朋友阅读 */
 .theme-student {
   --color-s-bg-from: #0f172a;
   --color-s-bg-to: #1e1b4b;
@@ -59,6 +60,17 @@
   --color-s-text-secondary: var(--color-s-text-secondary);
   --color-s-success: var(--color-s-success);
   --color-s-danger: var(--color-s-danger);
+}
+
+@media (min-width: 768px) {
+  .theme-student {
+    font-size: 118.75%; /* 19px base，iPad 更易读 */
+  }
+}
+@media (min-width: 1024px) {
+  .theme-student {
+    font-size: 125%; /* 20px base */
+  }
 }
 
 /* iOS PWA：全屏背景延伸至灵动岛/刘海区域，内容在安全区内 */
@@ -212,14 +224,18 @@ body {
   color: var(--color-p-text-secondary);
 }
 
-/* 机甲详情弹窗：有拼音时故事段落行间距加大，文字换行防止横向滚动 */
+/* 机甲详情弹窗：有拼音时故事段落行间距加大，文字换行防止横向滚动、撑开 modal */
 .mecha-detail-modal .mecha-detail-story {
   word-wrap: break-word;
   overflow-wrap: break-word;
   word-break: break-word;
+  min-width: 0;
+  overflow-x: hidden;
 }
 .mecha-detail-modal .mecha-detail-story .text-with-pinyin {
   line-height: 3.2;
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 
 /* 机甲详情弹窗：横屏时左右布局 */

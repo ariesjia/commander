@@ -20,7 +20,7 @@ export async function GET(request: Request) {
   }
 
   const tasks = await prisma.task.findMany({
-    where: { parentId: auth.parentId },
+    where: { parentId: auth.parentId, deletedAt: null },
     orderBy: { createdAt: "desc" },
   });
 

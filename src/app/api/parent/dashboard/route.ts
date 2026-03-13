@@ -22,7 +22,7 @@ export async function GET(request: Request) {
       where: { id: studentId },
       include: { studentMechas: true, primaryMecha: true },
     }),
-    prisma.task.findMany({ where: { parentId: auth.parentId, isActive: true } }),
+    prisma.task.findMany({ where: { parentId: auth.parentId, isActive: true, deletedAt: null } }),
     prisma.taskLog.findMany({
       where: { studentId },
       orderBy: { completedAt: "desc" },

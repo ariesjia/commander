@@ -31,7 +31,7 @@ export async function POST(
   }
 
   const task = await prisma.task.findFirst({
-    where: { id: taskId, parentId: auth.parentId },
+    where: { id: taskId, parentId: auth.parentId, deletedAt: null },
   });
 
   if (!task) {
