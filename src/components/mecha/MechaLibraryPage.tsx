@@ -156,7 +156,7 @@ function EvolutionModal({
                         <p className="text-xs text-s-text-secondary">{formatDateFriendly(m.reachedAt!)}</p>
                         <p className="text-sm font-medium text-s-text">
                           {label}
-                          <TextWithPinyin text={m.name} showPinyin={!!showPinyin} />
+                          {m.name}
                         </p>
                       </div>
                     </div>
