@@ -30,33 +30,44 @@ export async function POST(
     return NextResponse.json({ error: "该兑换已处理" }, { status: 400 });
   }
 
-  const student = await prisma.student.findUniqueOrThrow({ where: { id: studentId } });
+  try {
+    await prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM "Student" WHERE id = ${studentId} FOR UPDATE`;
+      const student = await tx.student.findUniqueOrThrow({ where: { id: studentId } });
 
-  if (student.frozenPoints < exchange.pointsCost) {
-    return NextResponse.json({ error: "冻结积分不足" }, { status: 400 });
+      if (student.balance < exchange.pointsCost) {
+        throw new Error("INSUFFICIENT_BALANCE");
+      }
+
+      // frozenPoints 可能因历史数据不一致而不足，以 balance 为准
+      const newFrozenPoints = Math.max(0, student.frozenPoints - exchange.pointsCost);
+
+      await tx.exchange.update({
+        where: { id: exchangeId },
+        data: { status: "CONFIRMED", confirmedAt: new Date() },
+      });
+      await tx.student.update({
+        where: { id: studentId },
+        data: {
+          balance: student.balance - exchange.pointsCost,
+          frozenPoints: newFrozenPoints,
+        },
+      });
+      await tx.pointsLog.create({
+        data: {
+          studentId,
+          amount: -exchange.pointsCost,
+          type: PointsLogType.EXCHANGE_COST,
+          description: `兑换"${exchange.reward.name}"`,
+        },
+      });
+    });
+  } catch (e) {
+    if (e instanceof Error && e.message === "INSUFFICIENT_BALANCE") {
+      return NextResponse.json({ error: "积分不足" }, { status: 400 });
+    }
+    throw e;
   }
-
-  await prisma.$transaction([
-    prisma.exchange.update({
-      where: { id: exchangeId },
-      data: { status: "CONFIRMED", confirmedAt: new Date() },
-    }),
-    prisma.student.update({
-      where: { id: studentId },
-      data: {
-        balance: student.balance - exchange.pointsCost,
-        frozenPoints: student.frozenPoints - exchange.pointsCost,
-      },
-    }),
-    prisma.pointsLog.create({
-      data: {
-        studentId,
-        amount: -exchange.pointsCost,
-        type: PointsLogType.EXCHANGE_COST,
-        description: `兑换"${exchange.reward.name}"`,
-      },
-    }),
-  ]);
 
   return NextResponse.json({ success: true });
 }
