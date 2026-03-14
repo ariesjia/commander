@@ -113,7 +113,7 @@ export function ImagePreviewModal({
         </div>
       </div>
 
-      <div className="shrink-0 p-4 pt-2 pb-[max(1rem,env(safe-area-inset-bottom,0px))] flex justify-center">
+      <div className="shrink-0 p-4 pt-2 flex justify-center">
         <button
           onClick={onClose}
           className="rounded-full bg-white/10 px-5 py-2.5 text-sm text-s-text hover:bg-white/20"

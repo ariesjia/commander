@@ -21,7 +21,7 @@ export function TextWithPinyin({ text, showPinyin, withTone = true, className = 
   const html = toPinyinHtml(text, withTone);
   return (
     <span
-      className={`text-with-pinyin inline-block align-top ${className}`}
+      className={`text-with-pinyin inline-block max-w-full align-top ${className}`}
       dangerouslySetInnerHTML={{ __html: html }}
     />
   );

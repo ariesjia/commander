@@ -53,7 +53,7 @@ export function ParentNav() {
       </header>
 
       {/* Bottom tab bar (mobile) */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 flex min-h-16 items-center justify-around border-t border-p-border bg-white sm:hidden">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 flex min-h-16 items-center justify-around border-t border-p-border bg-white sm:hidden pb-[env(safe-area-inset-bottom,0px)]">
         {links.map(({ href, label, icon: Icon }) => {
           const active = pathname === href;
           return (

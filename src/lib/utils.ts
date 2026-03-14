@@ -75,6 +75,35 @@ export function toChinaDateStr(date: Date): string {
   return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
 }
 
+/** 报告用：根据 dateStr (YYYY-MM-DD) 和 period，用中国时区计算 [start, end)，返回 UTC Date */
+export function getDateRangeChina(period: "week" | "month", dateStr: string): { start: Date; end: Date } {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const date = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
+  const dayOfWeek = date.getUTCDay();
+
+  if (period === "week") {
+    const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    const monday = new Date(date);
+    monday.setUTCDate(date.getUTCDate() + diff);
+    const my = monday.getUTCFullYear();
+    const mm = String(monday.getUTCMonth() + 1).padStart(2, "0");
+    const md = String(monday.getUTCDate()).padStart(2, "0");
+    const start = new Date(`${my}-${mm}-${md}T00:00:00+08:00`);
+    const endDate = new Date(monday);
+    endDate.setUTCDate(monday.getUTCDate() + 7);
+    const ey = endDate.getUTCFullYear();
+    const em = String(endDate.getUTCMonth() + 1).padStart(2, "0");
+    const ed = String(endDate.getUTCDate()).padStart(2, "0");
+    const end = new Date(`${ey}-${em}-${ed}T00:00:00+08:00`);
+    return { start, end };
+  }
+  const start = new Date(`${y}-${String(m).padStart(2, "0")}-01T00:00:00+08:00`);
+  const nextMonth = m === 12 ? 1 : m + 1;
+  const nextYear = m === 12 ? y + 1 : y;
+  const end = new Date(`${nextYear}-${String(nextMonth).padStart(2, "0")}-01T00:00:00+08:00`);
+  return { start, end };
+}
+
 /** 使用中国时区的本周一日期 */
 export function getWeekStartStr(): string {
   const todayStr = getTodayStr();
