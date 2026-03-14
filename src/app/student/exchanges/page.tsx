@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Fragment } from "react";
 import Link from "next/link";
 import { useData } from "@/contexts/DataContext";
 import { Badge } from "@/components/ui/Badge";
@@ -81,10 +81,17 @@ export default function StudentExchangesPage() {
                     <span className="text-sm md:text-base text-s-accent">{ex.pointsCost} 积分</span>
                   </div>
                   {ex.rejectReason && (
-                    <p className="text-sm md:text-base text-s-danger mt-1.5">
-                      <TextWithPinyin text="拒绝原因" showPinyin={showPinyin} />:{" "}
-                      <TextWithPinyin text={ex.rejectReason} showPinyin={showPinyin} />
-                    </p>
+                    <div className="text-sm md:text-base text-s-danger mt-1.5">
+                      <TextWithPinyin text="拒绝原因" showPinyin={showPinyin} />:
+                      <div className="mt-0.5">
+                        {ex.rejectReason.split("\n").map((line, i) => (
+                          <Fragment key={i}>
+                            {i > 0 && <br />}
+                            <TextWithPinyin text={line} showPinyin={showPinyin} />
+                          </Fragment>
+                        ))}
+                      </div>
+                    </div>
                   )}
                 </div>
                 <div className="flex gap-2 shrink-0">
