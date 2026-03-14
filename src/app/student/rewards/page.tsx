@@ -52,10 +52,17 @@ export default function StudentRewardsPage() {
         <h1 className="font-display text-xl md:text-2xl font-bold text-s-text">
           <TextWithPinyin text="奖励商城" showPinyin={showPinyin} />
         </h1>
-        <div className="flex items-center gap-1.5 text-s-accent">
-          <Coins size={20} className="md:w-6 md:h-6" />
-          <span className="font-display text-base md:text-lg font-bold">{available}</span>
-          <span className="text-sm md:text-base text-s-text-secondary">可用</span>
+        <div className="flex flex-col items-end gap-0.5">
+          <div className="flex items-center gap-1.5 text-s-accent">
+            <Coins size={20} className="md:w-6 md:h-6" />
+            <span className="font-display text-base md:text-lg font-bold">{available}</span>
+            <span className="text-sm md:text-base text-s-text-secondary">可用</span>
+          </div>
+          {student.frozenPoints > 0 && (
+            <p className="text-xs text-s-text-secondary">
+              总 {student.balance} · 冻结 {student.frozenPoints}（待审核）
+            </p>
+          )}
         </div>
       </div>
 

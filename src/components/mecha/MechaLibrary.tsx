@@ -333,7 +333,7 @@ export function MechaLibrary({ adoptedMechas, mechaPointsBySlug, showPinyin = fa
               onClick={() => setOpen(false)}
             />
             <motion.div
-              className="fixed inset-y-0 left-0 z-50 flex w-full max-w-sm flex-col rounded-r-2xl bg-[#0c1222] border-r border-s-primary/20 shadow-[4px_0_24px_rgba(0,0,0,0.3)]"
+              className="fixed left-0 top-[env(safe-area-inset-top,0px)] bottom-0 z-50 flex w-full max-w-sm flex-col rounded-r-2xl bg-[#0c1222] border-r border-s-primary/20 shadow-[4px_0_24px_rgba(0,0,0,0.3)] overflow-hidden"
               initial={{ x: "-100%" }}
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
@@ -349,7 +349,7 @@ export function MechaLibrary({ adoptedMechas, mechaPointsBySlug, showPinyin = fa
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-4">
+              <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 min-w-0">
                 <div className="grid grid-cols-3 gap-3">
                   {adoptedMechas.map((m) => (
                     <MechaCard

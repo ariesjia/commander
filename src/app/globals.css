@@ -183,6 +183,10 @@ body {
 /* ── 拼音注音 (ruby)：默认加大拼音与文字间距 ── */
 .text-with-pinyin {
   line-height: 3;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  min-width: 0;
 }
 .text-with-pinyin ruby {
   ruby-position: over;

@@ -270,7 +270,7 @@ function MechaDrawer({
         <div className="absolute inset-0 bg-black/60" />
       </motion.div>
       <motion.div
-        className="fixed inset-y-0 left-0 z-[61] w-full max-w-lg rounded-r-2xl bg-[#0c1222] border-r border-s-primary/20 shadow-[4px_0_24px_rgba(0,0,0,0.3)] overflow-hidden flex flex-col"
+        className="fixed left-0 z-[61] w-full max-w-lg rounded-r-2xl bg-[#0c1222] border-r border-s-primary/20 shadow-[4px_0_24px_rgba(0,0,0,0.3)] overflow-hidden flex flex-col top-[env(safe-area-inset-top,0px)] bottom-0"
         initial={{ x: "-100%" }}
         animate={{ x: 0 }}
         exit={{ x: "-100%" }}
@@ -287,7 +287,7 @@ function MechaDrawer({
             <X size={20} />
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto p-4 pt-12 pb-4 min-h-0">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 pt-12 pb-4 min-h-0 min-w-0">
           {/* 机甲名称 */}
           {mecha && (
             <h3 className="text-lg font-semibold text-s-primary text-center mb-4">
@@ -318,8 +318,8 @@ function MechaDrawer({
 
           {/* 介绍 */}
           {mecha?.intro && (
-            <div className="mb-4">
-              <p className="text-s-text text-sm leading-relaxed">
+            <div className="mb-4 min-w-0">
+              <p className="text-s-text text-sm leading-relaxed break-words">
                 <TextWithPinyin text={mecha.intro} showPinyin={!!showPinyin} />
               </p>
             </div>
