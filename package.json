@@ -10,7 +10,8 @@
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:seed": "npx tsx prisma/seed.ts",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "db:fix-mecha-points": "npx tsx prisma/fix-mecha-points.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.19.2",

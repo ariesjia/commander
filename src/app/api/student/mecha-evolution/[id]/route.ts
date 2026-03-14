@@ -63,8 +63,16 @@ export async function GET(
   }
 
   // 从 TaskLog 推算各级别达成时间
+  // studentMechaId 可能为空（历史数据或领养前确认的任务），若学生仅有一台机甲则视为归属该机甲
+  const studentMechaCount = await prisma.studentMecha.count({ where: { studentId } });
   const taskLogs = await prisma.taskLog.findMany({
-    where: { studentMechaId: studentMecha.id },
+    where: {
+      studentId,
+      OR: [
+        { studentMechaId: studentMecha.id },
+        ...(studentMechaCount === 1 ? [{ studentMechaId: null }] : []),
+      ],
+    },
     orderBy: { completedAt: "asc" },
   });
 
@@ -81,11 +89,37 @@ export async function GET(
     }
   }
 
+  // 兜底：StudentMecha.points 为权威来源，TaskLog 推算可能因时序等原因未命中
+  const mechaPoints = studentMecha.points;
+  const lastLogAt = taskLogs.length > 0 ? taskLogs[taskLogs.length - 1]!.completedAt : null;
+  const fallbackDate = lastLogAt ?? studentMecha.adoptedAt;
+  for (let i = 1; i < levels.length; i++) {
+    const th = levels[i]!.threshold;
+    if (mechaPoints >= th && !milestones[i]!.reachedAt) {
+      milestones[i]!.reachedAt = fallbackDate.toISOString();
+    }
+  }
+
   const dto: MechaEvolutionDto = {
     adoptedAt: studentMecha.adoptedAt.toISOString(),
     mechaName: mecha.name,
     milestones,
   };
+
+  // ?debug=1 时返回调试信息（开发排查用）
+  const url = new URL(_req.url);
+  if (url.searchParams.get("debug") === "1") {
+    return NextResponse.json({
+      ...dto,
+      _debug: {
+        studentMechaId: studentMecha.id,
+        mechaPoints: studentMecha.points,
+        taskLogCount: taskLogs.length,
+        cumulativeFromLogs: cumulative,
+        taskLogIds: taskLogs.map((l) => ({ id: l.id, pointsAwarded: l.pointsAwarded, completedAt: l.completedAt.toISOString() })),
+      },
+    });
+  }
 
   return NextResponse.json(dto);
 }

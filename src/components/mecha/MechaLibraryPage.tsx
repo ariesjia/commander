@@ -135,7 +135,7 @@ function EvolutionModal({
               <div className="space-y-0">
                 {reached.map((m, i) => {
                   const isLast = i === reached.length - 1;
-                  const label = m.level === 0 ? "领养 · " : "达到 ";
+                  const eventLabel = m.level === 0 ? "领养" : "升级至";
                   return (
                     <div key={m.level} className="flex items-start gap-3">
                       <div className="flex flex-col items-center shrink-0">
@@ -153,10 +153,13 @@ function EvolutionModal({
                         {!isLast && <div className="w-0.5 flex-1 min-h-[1.5rem] bg-s-primary/40" />}
                       </div>
                       <div className="flex-1 min-w-0 pb-4">
-                        <p className="text-xs text-s-text-secondary">{formatDateFriendly(m.reachedAt!)}</p>
                         <p className="text-sm font-medium text-s-text">
-                          {label}
-                          {m.name}
+                          <TextWithPinyin text={eventLabel} showPinyin={!!showPinyin} />
+                          <span> </span>
+                          <TextWithPinyin text={m.name} showPinyin={!!showPinyin} />
+                        </p>
+                        <p className="text-xs text-s-text-secondary mt-0.5">
+                          {formatDateFriendly(m.reachedAt!)}
                         </p>
                       </div>
                     </div>

@@ -233,9 +233,9 @@ function MechaDetailModal({
                       const isLast = i === evolution.milestones.length - 1;
                       return (
                         <div key={m.level} className="flex items-start gap-3">
-                          {/* 左侧：日期 */}
-                          <div className="w-16 shrink-0 pt-0.5">
-                            <p className="text-xs text-s-text-secondary">
+                          {/* 左侧：升级时间 */}
+                          <div className="w-20 shrink-0 pt-0.5">
+                            <p className="text-xs text-s-text-secondary" title={m.reachedAt ?? undefined}>
                               {m.reachedAt ? formatDateFriendly(m.reachedAt) : "未解锁"}
                             </p>
                           </div>
@@ -267,8 +267,19 @@ function MechaDetailModal({
                               />
                               <div className="flex-1 min-w-0">
                                 <p className={`text-sm font-medium ${isReached ? "text-s-text" : "text-s-text-secondary"}`}>
-                                  {m.level === 0 ? "领养 · " : "达到 "}
-                                  <TextWithPinyin text={m.name} showPinyin={!!showPinyin} />
+                                  {m.level === 0 ? (
+                                    <>
+                                      <TextWithPinyin text="领养" showPinyin={!!showPinyin} />
+                                      <span> · </span>
+                                      <TextWithPinyin text={m.name} showPinyin={!!showPinyin} />
+                                    </>
+                                  ) : (
+                                    <>
+                                      <TextWithPinyin text="升级至" showPinyin={!!showPinyin} />
+                                      <span> </span>
+                                      <TextWithPinyin text={m.name} showPinyin={!!showPinyin} />
+                                    </>
+                                  )}
                                 </p>
                                 {!isReached && m.threshold > 0 && (
                                   <p className="text-xs text-s-text-secondary mt-0.5 flex items-center gap-1">

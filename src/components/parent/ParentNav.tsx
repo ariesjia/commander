@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, ListChecks, Gift, ScrollText, Settings, Bot } from "lucide-react";
+import { LayoutDashboard, ListChecks, Gift, ScrollText, Settings, Bot, BarChart3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMode } from "@/contexts/ModeContext";
 import { useRouter } from "next/navigation";
@@ -14,6 +14,7 @@ const links = [
   { href: "/parent/tasks", label: "任务", icon: ListChecks },
   { href: "/parent/rewards", label: "奖励", icon: Gift },
   { href: "/parent/points-log", label: "积分", icon: ScrollText },
+  { href: "/parent/reports", label: "报告", icon: BarChart3 },
   { href: "/parent/settings", label: "设置", icon: Settings },
 ];
 
