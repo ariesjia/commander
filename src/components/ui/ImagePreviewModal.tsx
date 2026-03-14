@@ -12,7 +12,7 @@ interface ImagePreviewModalProps {
   onClose: () => void;
 }
 
-function getDistance(t1: Touch, t2: Touch) {
+function getDistance(t1: { clientX: number; clientY: number }, t2: { clientX: number; clientY: number }) {
   return Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
 }
 

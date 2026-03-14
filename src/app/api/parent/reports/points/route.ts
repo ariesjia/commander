@@ -63,7 +63,7 @@ export async function GET(request: Request) {
     const startBalance = logsBeforeStart.reduce((sum, l) => sum + l.amount, 0);
     const endBalance = startBalance + logsInPeriod.reduce((sum, l) => sum + l.amount, 0);
 
-    const taskTypes = [
+    const taskTypes: PointsLogType[] = [
       PointsLogType.TASK_REWARD,
       PointsLogType.TASK_REWARD_UNDO,
       PointsLogType.TASK_PENALTY,
