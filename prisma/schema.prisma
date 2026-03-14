@@ -105,6 +105,7 @@ enum ExchangeStatus {
   PENDING
   CONFIRMED
   REJECTED
+  CANCELLED  // 学生自己取消
 }
 
 model Exchange {

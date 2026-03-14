@@ -1,20 +1,26 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useData } from "@/contexts/DataContext";
 import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
 import { TextWithPinyin } from "@/components/ui/TextWithPinyin";
-import { Clock, Check, X, Coins, ArrowLeft } from "lucide-react";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { Clock, Check, X, Coins, ArrowLeft, XCircle } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 
 const statusMap = {
   PENDING: { label: "待确认", icon: Clock, variant: "neon" as const },
   CONFIRMED: { label: "已兑换", icon: Check, variant: "orange" as const },
   REJECTED: { label: "已拒绝", icon: X, variant: "danger" as const },
+  CANCELLED: { label: "已取消", icon: XCircle, variant: "default" as const },
 };
 
 export default function StudentExchangesPage() {
-  const { exchanges, isLoading, showPinyin } = useData();
+  const { exchanges, isLoading, showPinyin, cancelExchange } = useData();
+  const [cancelId, setCancelId] = useState<string | null>(null);
+  const [cancelling, setCancelling] = useState(false);
   const sorted = [...exchanges].sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
   );
@@ -39,7 +45,7 @@ export default function StudentExchangesPage() {
           <ArrowLeft size={20} />
         </Link>
         <h1 className="font-display text-xl md:text-2xl font-bold text-s-text">
-          我的兑换
+          <TextWithPinyin text="我的兑换" showPinyin={showPinyin} />
         </h1>
       </div>
 
@@ -56,7 +62,7 @@ export default function StudentExchangesPage() {
 
       <div className="flex flex-col gap-2 md:gap-3">
         {sorted.map((ex) => {
-          const cfg = statusMap[ex.status];
+          const cfg = statusMap[ex.status as keyof typeof statusMap] ?? statusMap.PENDING;
           return (
             <div key={ex.id} className="glass-card p-4 md:p-5">
               <div className="flex items-start justify-between gap-3 md:gap-4">
@@ -76,18 +82,55 @@ export default function StudentExchangesPage() {
                   </div>
                   {ex.rejectReason && (
                     <p className="text-sm md:text-base text-s-danger mt-1.5">
-                      拒绝原因: {ex.rejectReason}
+                      <TextWithPinyin text="拒绝原因" showPinyin={showPinyin} />:{" "}
+                      <TextWithPinyin text={ex.rejectReason} showPinyin={showPinyin} />
                     </p>
                   )}
                 </div>
-                <span className="text-sm md:text-base text-s-text-secondary shrink-0">
-                  {formatDate(ex.createdAt)}
-                </span>
+                <div className="flex gap-2 shrink-0">
+                  <span className="text-sm md:text-base text-s-text-secondary">
+                    {formatDate(ex.createdAt)}
+                  </span>
+                  {ex.status === "PENDING" && (
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => setCancelId(ex.id)}
+                    >
+                      取消申请
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
           );
         })}
       </div>
+
+      <ConfirmDialog
+        open={!!cancelId}
+        onClose={() => setCancelId(null)}
+        onConfirm={async () => {
+          if (cancelId) {
+            setCancelling(true);
+            try {
+              await cancelExchange(cancelId);
+              setCancelId(null);
+            } finally {
+              setCancelling(false);
+            }
+          }
+        }}
+        title="取消兑换申请"
+        message={
+          <span>
+            <TextWithPinyin text="确定要取消该兑换申请吗？积分将退回可用余额。" showPinyin={showPinyin} />
+          </span>
+        }
+        confirmLabel="确定取消"
+        variant="danger"
+        loading={cancelling}
+      />
     </div>
   );
 }

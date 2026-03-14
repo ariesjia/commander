@@ -36,7 +36,7 @@ export interface Reward {
   createdAt: string;
 }
 
-export type ExchangeStatus = "PENDING" | "CONFIRMED" | "REJECTED";
+export type ExchangeStatus = "PENDING" | "CONFIRMED" | "REJECTED" | "CANCELLED";
 
 export interface Exchange {
   id: string;

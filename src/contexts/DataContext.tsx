@@ -40,6 +40,7 @@ interface DataState {
   deleteReward: (id: string) => Promise<void>;
 
   requestExchange: (rewardId: string) => Promise<boolean>;
+  cancelExchange: (exchangeId: string) => Promise<void>;
   confirmExchange: (exchangeId: string) => Promise<void>;
   rejectExchange: (exchangeId: string, reason?: string) => Promise<void>;
 
@@ -224,6 +225,11 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     }
   }, [refetch]);
 
+  const cancelExchange = useCallback(async (exchangeId: string) => {
+    await api.post(`/api/student/exchanges/${exchangeId}/cancel`);
+    await refetch();
+  }, [refetch]);
+
   const confirmExchange = useCallback(async (exchangeId: string) => {
     await api.post(`/api/parent/exchanges/${exchangeId}/confirm`);
     await refetch();
@@ -265,6 +271,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         updateReward,
         deleteReward,
         requestExchange,
+        cancelExchange,
         confirmExchange,
         rejectExchange,
         getTasksWithStatus,

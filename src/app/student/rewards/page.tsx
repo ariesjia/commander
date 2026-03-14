@@ -5,6 +5,7 @@ import { useData } from "@/contexts/DataContext";
 import { Button } from "@/components/ui/Button";
 import { TextWithPinyin } from "@/components/ui/TextWithPinyin";
 import { ImagePreviewModal } from "@/components/ui/ImagePreviewModal";
+import { ExchangeConfirmModal } from "@/components/student/ExchangeConfirmModal";
 import { Coins, ShoppingCart, ArrowRight, History } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -12,19 +13,25 @@ import Link from "next/link";
 
 export default function StudentRewardsPage() {
   const { rewards, student, requestExchange, showPinyin, isLoading } = useData();
-  const [confirmId, setConfirmId] = useState<string | null>(null);
+  const [confirmReward, setConfirmReward] = useState<{ id: string; name: string; description?: string; imageUrl?: string; points: number } | null>(null);
+  const [exchanging, setExchanging] = useState(false);
   const [successId, setSuccessId] = useState<string | null>(null);
   const [previewImage, setPreviewImage] = useState<{ url: string; name: string } | null>(null);
 
   const activeRewards = rewards.filter((r) => r.isActive).sort((a, b) => a.points - b.points);
 
-
-  const handleExchange = async (rewardId: string) => {
-    const ok = await requestExchange(rewardId);
-    if (ok) {
-      setConfirmId(null);
-      setSuccessId(rewardId);
-      setTimeout(() => setSuccessId(null), 2000);
+  const handleExchange = async () => {
+    if (!confirmReward) return;
+    setExchanging(true);
+    try {
+      const ok = await requestExchange(confirmReward.id);
+      if (ok) {
+        setConfirmReward(null);
+        setSuccessId(confirmReward.id);
+        setTimeout(() => setSuccessId(null), 2000);
+      }
+    } finally {
+      setExchanging(false);
     }
   };
 
@@ -43,7 +50,7 @@ export default function StudentRewardsPage() {
     <div className="flex flex-col gap-4 pt-2 pb-6">
       <div className="flex items-center justify-between">
         <h1 className="font-display text-xl md:text-2xl font-bold text-s-text">
-        奖励商城
+          <TextWithPinyin text="奖励商城" showPinyin={showPinyin} />
         </h1>
         <div className="flex items-center gap-1.5 text-s-accent">
           <Coins size={20} className="md:w-6 md:h-6" />
@@ -59,7 +66,9 @@ export default function StudentRewardsPage() {
       >
         <div className="flex items-center gap-2">
           <History size={20} className="text-s-primary md:w-6 md:h-6" />
-          <span className="text-base md:text-lg text-s-text">我的兑换记录</span>
+          <span className="text-base md:text-lg text-s-text">
+            <TextWithPinyin text="我的兑换记录" showPinyin={showPinyin} />
+          </span>
         </div>
         <ArrowRight size={18} className="text-s-text-secondary md:w-5 md:h-5" />
       </Link>
@@ -131,29 +140,7 @@ export default function StudentRewardsPage() {
                         animate={{ scale: 1, opacity: 1 }}
                         className="rounded-lg bg-s-success/20 px-3 py-2 text-xs font-medium text-s-success"
                       >
-                        已提交!
-                      </motion.div>
-                    ) : confirmId === reward.id ? (
-                      <motion.div
-                        key="confirm"
-                        initial={{ scale: 0.9, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        className="flex gap-1.5"
-                      >
-                        <Button
-                          size="sm"
-                          variant="neon-orange"
-                          onClick={() => handleExchange(reward.id)}
-                        >
-                          确定
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="neon"
-                          onClick={() => setConfirmId(null)}
-                        >
-                          取消
-                        </Button>
+                        <TextWithPinyin text="已提交!" showPinyin={showPinyin} />
                       </motion.div>
                     ) : (
                       <motion.div key="idle">
@@ -161,7 +148,7 @@ export default function StudentRewardsPage() {
                           size="sm"
                           variant="neon-orange"
                           disabled={!canAfford}
-                          onClick={() => setConfirmId(reward.id)}
+                          onClick={() => setConfirmReward(reward)}
                         >
                           兑换
                           <ArrowRight size={14} className="ml-1" />
@@ -186,6 +173,16 @@ export default function StudentRewardsPage() {
           </div>
         )}
       </div>
+
+      {/* 兑换确认弹窗 */}
+      <ExchangeConfirmModal
+        open={!!confirmReward}
+        reward={confirmReward}
+        showPinyin={showPinyin}
+        loading={exchanging}
+        onConfirm={handleExchange}
+        onCancel={() => setConfirmReward(null)}
+      />
 
       {/* 图片预览大图 */}
       <AnimatePresence>
