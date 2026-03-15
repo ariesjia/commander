@@ -311,9 +311,16 @@ function MechaDrawer({
           </div>
 
           {levelInfo && (
-            <p className="text-s-text-secondary text-sm text-center mb-4">
-              <TextWithPinyin text={levelInfo.name} showPinyin={!!showPinyin} />
-            </p>
+            <div className="mb-4">
+              <p className="text-s-text-secondary text-sm text-center">
+                <TextWithPinyin text={levelInfo.name} showPinyin={!!showPinyin} />
+              </p>
+              {levelInfo.description && (
+                <p className="text-s-text-secondary text-sm text-center mt-1.5 leading-relaxed">
+                  <TextWithPinyin text={levelInfo.description} showPinyin={!!showPinyin} />
+                </p>
+              )}
+            </div>
           )}
 
           {/* 介绍 */}

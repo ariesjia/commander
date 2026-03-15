@@ -182,6 +182,11 @@ function MechaDetailModal({
               <p className="text-s-text-secondary text-sm mt-0.5 text-center">
                 <TextWithPinyin text={levelInfo.name} showPinyin={!!showPinyin} />
               </p>
+              {levelInfo.description && (
+                <p className="text-s-text-secondary text-sm mt-1.5 text-center leading-relaxed">
+                  <TextWithPinyin text={levelInfo.description} showPinyin={!!showPinyin} />
+                </p>
+              )}
               {mecha.intro && (
                 <div className="mt-3 min-w-0">
                   <p className="mecha-detail-story text-s-text text-sm md:text-base text-left break-words">

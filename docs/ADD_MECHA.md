@@ -15,13 +15,13 @@
 
 ```
 public/mecha/<slug>/
-├── level-0.png   # 初识
-├── level-1.png   # 觉醒
-├── level-2.png   # 成型
-├── level-3.png   # 强化
-├── level-4.png   # 进阶/自定义
-├── level-5.png   # 突破/自定义
-├── level-6.png   # 升华
+├── level-0.png   # 量产型
+├── level-1.png   # 改良型
+├── level-2.png   # 特装型
+├── level-3.png   # 强化型
+├── level-4.png   # 进阶型（如装甲型、光铠型）
+├── level-5.png   # 突破型（如火力型、雷霆型）
+├── level-6.png   # 完全型（如开眼型、锋芒型）
 └── level-7.png   # 完整体
 ```
 
@@ -39,13 +39,13 @@ public/mecha/<slug>/
   intro: "完整介绍文案。它在历练中不断觉醒，解锁更强形态...",  // 详情页展示
   sortOrder: 3,               // 排序，数字越大越靠后
   levels: [
-    { level: 0, name: "初识", threshold: 0, imageUrl: "/mecha/my-mecha/level-0.png", description: "..." },
-    { level: 1, name: "觉醒", threshold: 20, imageUrl: "/mecha/my-mecha/level-1.png", description: "..." },
-    { level: 2, name: "成型", threshold: 50, imageUrl: "/mecha/my-mecha/level-2.png", description: "..." },
-    { level: 3, name: "强化", threshold: 100, imageUrl: "/mecha/my-mecha/level-3.png", description: "..." },
-    { level: 4, name: "进阶", threshold: 200, imageUrl: "/mecha/my-mecha/level-4.png", description: "..." },
-    { level: 5, name: "突破", threshold: 350, imageUrl: "/mecha/my-mecha/level-5.png", description: "..." },
-    { level: 6, name: "升华", threshold: 500, imageUrl: "/mecha/my-mecha/level-6.png", description: "..." },
+    { level: 0, name: "量产型", threshold: 0, imageUrl: "/mecha/my-mecha/level-0.png", description: "..." },
+    { level: 1, name: "改良型", threshold: 20, imageUrl: "/mecha/my-mecha/level-1.png", description: "..." },
+    { level: 2, name: "特装型", threshold: 50, imageUrl: "/mecha/my-mecha/level-2.png", description: "..." },
+    { level: 3, name: "强化型", threshold: 100, imageUrl: "/mecha/my-mecha/level-3.png", description: "..." },
+    { level: 4, name: "装甲型", threshold: 200, imageUrl: "/mecha/my-mecha/level-4.png", description: "..." },
+    { level: 5, name: "火力型", threshold: 350, imageUrl: "/mecha/my-mecha/level-5.png", description: "..." },
+    { level: 6, name: "完全型", threshold: 500, imageUrl: "/mecha/my-mecha/level-6.png", description: "..." },
     { level: 7, name: "完整体", threshold: 800, imageUrl: "/mecha/my-mecha/level-7.png", description: "..." },
   ],
 },
@@ -67,7 +67,7 @@ public/mecha/<slug>/
 | 字段 | 说明 |
 |------|------|
 | `level` | 等级序号，0～7 |
-| `name` | 等级名称（可自定义，如「光之铠甲」「雷霆锋芒」） |
+| `name` | 等级名称，统一用「xxx型」格式，不含机甲本名。0-3 用「量产型」「改良型」「特装型」「强化型」，4-6 参考定位自定义（如「装甲型」「光铠型」「破甲型」） |
 | `threshold` | 升级所需积分，建议与现有机甲一致：0, 20, 50, 100, 200, 350, 500, 800 |
 | `imageUrl` | 图片路径，以 `/mecha/<slug>/level-N.png` 形式 |
 | `description` | 该等级的文案描述 |

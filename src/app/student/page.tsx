@@ -111,6 +111,9 @@ export default function StudentHome() {
           MotiMech · {user?.childNickname ?? "---"}
         </p>
         <h1 className="font-display text-lg font-bold text-s-text mt-1">{displayTitle}</h1>
+        {levelInfo?.description && (
+          <p className="text-sm text-s-text-secondary mt-1 max-w-md">{levelInfo.description}</p>
+        )}
 
         <button
           onClick={() => setPinOpen(true)}

@@ -50,6 +50,10 @@ export function XuanjiaProgress({ slug, mechaPoints }: XuanjiaProgressProps) {
         {!next && <span className="text-s-accent">完整体!</span>}
       </div>
 
+      {current.description && (
+        <p className="mt-1.5 text-xs text-s-text-secondary leading-relaxed">{current.description}</p>
+      )}
+
       {next && (
         <div className="mt-2 h-1.5 rounded-full bg-white/10 overflow-hidden">
           <div
