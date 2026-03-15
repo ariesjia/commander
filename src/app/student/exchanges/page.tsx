@@ -17,11 +17,15 @@ const statusMap = {
   CANCELLED: { label: "已取消", icon: XCircle, variant: "default" as const },
 };
 
+type TabFilter = "CONFIRMED" | "REJECTED";
+
 export default function StudentExchangesPage() {
   const { exchanges, isLoading, showPinyin, cancelExchange } = useData();
+  const [tab, setTab] = useState<TabFilter>("CONFIRMED");
   const [cancelId, setCancelId] = useState<string | null>(null);
   const [cancelling, setCancelling] = useState(false);
-  const sorted = [...exchanges].sort(
+  const filtered = exchanges.filter((ex) => ex.status === tab);
+  const sorted = [...filtered].sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
   );
 
@@ -45,18 +49,45 @@ export default function StudentExchangesPage() {
           <ArrowLeft size={20} />
         </Link>
         <h1 className="font-display text-xl md:text-2xl font-bold text-s-text">
-          <TextWithPinyin text="我的兑换" showPinyin={showPinyin} />
+        我的兑换
         </h1>
+      </div>
+
+      <div className="flex rounded-lg border border-s-primary/20 bg-white/5 p-0.5">
+        {(
+          [
+            { key: "CONFIRMED" as const, label: "成功" },
+            { key: "REJECTED" as const, label: "拒绝" },
+          ] as const
+        ).map(({ key, label }) => (
+          <button
+            key={key}
+            type="button"
+            onClick={() => setTab(key)}
+            className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+              tab === key
+                ? "bg-s-primary/20 text-s-primary"
+                : "text-s-text-secondary hover:text-s-text"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
       </div>
 
       {sorted.length === 0 && (
         <div className="glass-card p-8 md:p-10 text-center">
           <p className="text-base md:text-lg text-s-text-secondary">
-            <TextWithPinyin text="暂无兑换记录" showPinyin={showPinyin} />
+            <TextWithPinyin
+              text={tab === "CONFIRMED" ? "暂无成功的兑换" : "暂无被拒绝的兑换"}
+              showPinyin={showPinyin}
+            />
           </p>
-          <p className="text-sm md:text-base text-s-text-secondary mt-1">
-            <TextWithPinyin text="去奖励商城看看吧" showPinyin={showPinyin} />
-          </p>
+          {tab === "CONFIRMED" && (
+            <p className="text-sm md:text-base text-s-text-secondary mt-1">
+              <TextWithPinyin text="去奖励商城看看吧" showPinyin={showPinyin} />
+            </p>
+          )}
         </div>
       )}
 

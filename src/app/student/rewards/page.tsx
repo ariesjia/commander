@@ -50,7 +50,7 @@ export default function StudentRewardsPage() {
     <div className="flex flex-col gap-4 pt-2 pb-6">
       <div className="flex items-center justify-between">
         <h1 className="font-display text-xl md:text-2xl font-bold text-s-text">
-          <TextWithPinyin text="奖励商城" showPinyin={showPinyin} />
+          奖励商城
         </h1>
         <div className="flex flex-col items-end gap-0.5">
           <div className="flex items-center gap-1.5 text-s-accent">
