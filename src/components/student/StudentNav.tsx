@@ -16,7 +16,7 @@ export function StudentNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="theme-student fixed bottom-0 left-0 right-0 z-50 flex min-h-16 items-center justify-around border-t border-[rgba(0,212,255,0.15)] bg-[#0c1222]/95 backdrop-blur-lg">
+    <nav className="theme-student fixed bottom-0 left-0 right-0 z-50 flex min-h-16 items-center justify-around border-t border-[rgba(0,212,255,0.15)] bg-[#0c1222]/95 backdrop-blur-lg pb-[env(safe-area-inset-bottom,0px)]">
       {links.map(({ href, label, icon: Icon }) => {
         const active = pathname === href;
         return (

@@ -20,7 +20,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
 
   return (
     <>
-      <div className="h-dvh student-bg theme-student flex flex-col overflow-hidden">
+      <div className="min-h-dvh student-bg theme-student flex flex-col">
         <PullToRefresh
           onRefresh={refetch}
           className="flex-1 min-h-0 overscroll-contain"
