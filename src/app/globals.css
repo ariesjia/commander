@@ -76,7 +76,9 @@
 /* iOS PWA：全屏背景延伸至灵动岛/刘海区域，内容在安全区内 */
 html {
   background: var(--color-s-bg-from, #0f172a);
+  height: 100%;
   min-height: 100dvh;
+  min-height: 100vh;
   min-height: -webkit-fill-available;
 }
 
@@ -84,8 +86,21 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  min-height: 100%;
   min-height: 100dvh;
+  min-height: 100vh;
   min-height: -webkit-fill-available;
+}
+
+/* 学生端底部导航：iOS PWA 加载时确保贴底，避免 viewport 未就绪时浮动 */
+.student-nav-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
 }
 
 
