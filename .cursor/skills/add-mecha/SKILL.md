@@ -70,7 +70,7 @@ ls public/mecha/<slug>/
 1. 编辑 `prisma/seed-data/mechas.ts`，在 `MECHA_SEED_DATA` 数组末尾追加新机甲配置
 2. `sortOrder` = 现有最大 sortOrder + 1
 3. `description` 缺省时用 intro 首句或定位描述
-4. levels 使用标准阈值：0, 20, 50, 100, 200, 350, 500, 800
+4. levels 使用标准阈值：0, 20, 50, 80, 120, 160,200,250
 5. 等级文案可参考现有机甲风格，结合 intro 生成
 6. 编辑 `docs/MECHA_CHARACTERS.md`，在文档末尾追加新机甲人物设定（格式参考现有条目，英文名用 slug 转 Title Case，如 `star-shield` → Star Shield）：
 
