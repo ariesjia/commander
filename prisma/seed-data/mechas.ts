@@ -206,4 +206,21 @@ export const MECHA_SEED_DATA: MechaConfig[] = [
       { level: 7, name: "完整体", threshold: 250, imageUrl: "/mecha/ark/level-7.png", description: "与你心意相通，每一次蜕变都让后勤之力更强。" },
     ],
   },
+  {
+    slug: "medecac",
+    name: "济世",
+    description: "医疗运输载具机甲，擅长伤员转运与战场急救",
+    intro: "济世，医疗运输载具机甲，以医疗与救援为核心，配备生命维持舱与快速部署系统，可在战场中快速转运伤员并实施急救。负责伤员转运、战场急救、医疗物资投送、撤离掩护。它在历练中不断觉醒，解锁更强形态、生命维持舱与护佑之力，每一次蜕变都让医疗之力更强。",
+    sortOrder: 11,
+    levels: [
+      { level: 0, name: "量产型", threshold: 0, imageUrl: "/mecha/medecac/level-0.png", description: "基础伤员转运能力，可执行战场急救任务。" },
+      { level: 1, name: "改良型", threshold: 20, imageUrl: "/mecha/medecac/level-1.png", description: "快速部署能力增强，医疗物资投送效率提升。" },
+      { level: 2, name: "特装型", threshold: 50, imageUrl: "/mecha/medecac/level-2.png", description: "生命维持舱初显，可承担撤离掩护重任。" },
+      { level: 3, name: "强化型", threshold: 80, imageUrl: "/mecha/medecac/level-3.png", description: "急救能力成型，能在战火中快速抵达伤员位置。" },
+      { level: 4, name: "急救型", threshold: 120, imageUrl: "/mecha/medecac/level-4.png", description: "紧急医疗无人机加身，转运与急救能力大幅增强。" },
+      { level: 5, name: "复苏型", threshold: 160, imageUrl: "/mecha/medecac/level-5.png", description: "医疗核心觉醒，保障小队生存之威尽显。" },
+      { level: 6, name: "护佑型", threshold: 200, imageUrl: "/mecha/medecac/level-6.png", description: "医疗之力臻于完美，伤员转运与急救达到巅峰。" },
+      { level: 7, name: "完整体", threshold: 250, imageUrl: "/mecha/medecac/level-7.png", description: "与你心意相通，每一次蜕变都让医疗之力更强。" },
+    ],
+  },
 ];
