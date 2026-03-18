@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>高达机甲成长系统</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,sans-serif}
+  body{background:#050714;color:#e6f0ff;padding:16px}
+  .container{max-width:420px;margin:0 auto}
+  .lock{padding:50px 20px;text-align:center}
+  .lock h2{color:#00ccff;margin-bottom:12px}
+  .pwd-row{display:flex;gap:8px;justify-content:center;margin:20px 0}
+  .pwd-row input{width:50px;height:50px;text-align:center;font-size:22px;background:#121a29;border:1px solid #00ccff66;border-radius:10px;color:#fff}
+  .keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:240px;margin:0 auto}
+  .key{padding:16px;background:#182237;color:#fff;border:none;border-radius:10px;font-size:18px}
+  .main{display:none}
+  .mecha{background:#121a29;border-radius:20px;padding:24px;text-align:center;margin-bottom:24px;border:1px solid #00ccff33}
+  .mecha-icon{font-size:70px;margin-bottom:12px}
+  .mecha-name{font-size:22px;color:#00eeff;font-weight:bold}
+  .mecha-level{color:#9cc9ff;margin:6px 0 14px}
+  .progress{width:100%;height:12px;background:#1e2a3f;border-radius:6px;overflow:hidden;margin-bottom:12px}
+  .bar{height:100%;background:linear-gradient(90deg,#00ccff,#00ffdd);width:0%}
+  .total{font-size:32px;color:#00ffcc}
+  .tabs{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+  .tab{flex:1;padding:12px;background:#182237;color:#c0dfff;border:none;border-radius:12px}
+  .tab.active{background:#0066cc;color:#fff}
+  .task{display:flex;justify-content:space-between;align-items:center;padding:14px;background:#182237;border-radius:12px;margin-bottom:10px}
+  .task button{padding:8px 12px;background:#0066cc;color:#fff;border:none;border-radius:8px}
+  .task .neg{background:#cc2255}
+  .stats{background:#182237;border-radius:16px;padding:18px;margin-top:20px}
+  .stats-row{display:flex;justify-content:space-between;margin-bottom:8px}
+</style>
+</head>
+<body>
+<div class="container">
+  <!-- 锁屏 -->
+  <div class="lock" id="lockView">
+    <h2>🤖 高达机甲成长系统</h2>
+    <p>请输入管理员密码</p>
+    <div class="pwd-row">
+      <input id="p1" readonly>
+      <input id="p2" readonly>
+      <input id="p3" readonly>
+      <input id="p4" readonly>
+    </div>
+    <div class="keypad">
+      <button class="key" onclick="key(1)">1</button>
+      <button class="key" onclick="key(2)">2</button>
+      <button class="key" onclick="key(3)">3</button>
+      <button class="key" onclick="key(4)">4</button>
+      <button class="key" onclick="key(5)">5</button>
+      <button class="key" onclick="key(6)">6</button>
+      <button class="key" onclick="key(7)">7</button>
+      <button class="key" onclick="key(8)">8</button>
+      <button class="key" onclick="key(9)">9</button>
+      <button class="key" onclick="key(0)">0</button>
+      <button class="key" onclick="del()">←</button>
+    </div>
+  </div>
+
+  <!-- 主界面 -->
+  <div class="main" id="mainView">
+    <div class="mecha">
+      <div id="mechaIcon" class="mecha-icon">🤖</div>
+      <div id="mechaName" class="mecha-name">元祖高达</div>
+      <div id="mechaLevel" class="mecha-level">等级 1 / 10</div>
+      <div class="progress"><div id="progressBar" class="bar"></div></div>
+      <div>总能量：<span id="totalPoints" class="total">0.0</span></div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="show('learn')">学习</button>
+      <button class="tab" onclick="show('habit')">习惯</button>
+      <button class="tab" onclick="show('emotion')">情绪</button>
+      <button class="tab" onclick="show('house')">家务</button>
+      <button class="tab" onclick="show('minus')">扣分</button>
+    </div>
+
+    <div id="taskList"></div>
+
+    <div class="stats">
+      <div class="stats-row"><span>今日积分</span><span id="today">0.0</span></div>
+      <div class="stats-row"><span>本周积分</span><span id="week">0.0</span></div>
+      <div class="stats-row"><span>本月积分</span><span id="month">0.0</span></div>
+      <div class="stats-row"><span>环比趋势</span><span id="trend">平稳</span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ================= 配置 =================
+const PASSWORD = "1234";
+let pwdInput = "";
+
+// 10台高达，每50分一级
+const gundams = [
+  { name: "元祖高达",       icon: "🤖", need: 0 },
+  { name: "马克Ⅱ",         icon: "⚙️", need: 50 },
+  { name: "Z高达",          icon: "✈️", need: 100 },
+  { name: "ZZ高达",         icon: "💫", need: 150 },
+  { name: "牛高达",         icon: "⭐", need: 200 },
+  { name: "沙扎比",         icon: "🔥", need: 250 },
+  { name: "独角兽高达",     icon: "🦄", need: 300 },
+  { name: "报丧女妖",       icon: "⚡", need: 350 },
+  { name: "强袭自由",       icon: "✨", need: 400 },
+  { name: "无限正义",       icon: "⚖️", need: 450 },
+];
+
+// 任务
+const tasks = {
+  learn: [
+    { name: "作业 A",            p: 0.5 },
+    { name: "作业 A+",           p: 1 },
+    { name: "获得奖状",          p: 10 },
+    { name: "老师表扬",          p: 5 },
+    { name: "英语阅读",          p: 0.3 },
+    { name: "语文扩展阅读",      p: 0.3 },
+  ],
+  habit: [
+    { name: "收纳玩具",          p: 0.2 },
+    { name: "垃圾归类",          p: 0.2 },
+    { name: "饭后整理卫生",      p: 0.2 },
+  ],
+  emotion: [
+    { name: "及时管理不良情绪",  p: 2 },
+  ],
+  house: [
+    { name: "打扫卫生",          p: 0.2 },
+    { name: "自己整理书包",      p: 0.1 },
+  ],
+  minus: [
+    { name: "乱发脾气",          p: -3 },
+    { name: "提醒超过3次未收纳", p: -3 },
+  ],
+};
+
+// 数据存储
+let data = JSON.parse(localStorage.getItem("gundamData")) || {
+  total: 0,
+  today: 0,
+  week: 0,
+  month: 0,
+  lastWeek: 0,
+  lastMonth: 0,
+  date: "",
+  weekKey: "",
+  monthKey: "",
+};
+
+// 日期自动重置
+function syncDate() {
+  const now = new Date();
+  const today = now.toISOString().split("T")[0];
+  const weekKey = now.getFullYear() + "-W" + Math.floor((now - new Date(now.getFullYear(),0,1)) / 86400000 / 7);
+  const monthKey = now.toISOString().slice(0,7);
+
+  if (data.date !== today)    { data.today = 0; data.date = today; }
+  if (data.weekKey !== weekKey) { data.lastWeek = data.week; data.week = 0; data.weekKey = weekKey; }
+  if (data.monthKey !== monthKey) { data.lastMonth = data.month; data.month = 0; data.monthKey = monthKey; }
+  save();
+}
+
+function save() {
+  localStorage.setItem("gundamData", JSON.stringify(data));
+}
+
+// 加分/扣分
+function add(p) {
+  syncDate();
+  data.total = Math.max(0, data.total + p);
+  data.today = Math.max(0, data.today + p);
+  data.week  = Math.max(0, data.week  + p);
+  data.month = Math.max(0, data.month + p);
+  save();
+  render();
+}
+
+// 渲染界面
+function render() {
+  syncDate();
+  document.getElementById("totalPoints").innerText = data.total.toFixed(1);
+  document.getElementById("today").innerText = data.today.toFixed(1);
+  document.getElementById("week").innerText = data.week.toFixed(1);
+  document.getElementById("month").innerText = data.month.toFixed(1);
+
+  // 机甲等级
+  let level = 0;
+  for (let i = gundams.length-1; i >= 0; i--) {
+    if (data.total >= gundams[i].need) { level = i; break; }
+  }
+  const cur = gundams[level];
+  const next = gundams[level+1];
+  let per = next ? ((data.total - cur.need) / (next.need - cur.need)) * 100 : 100;
+
+  document.getElementById("mechaIcon").innerText = cur.icon;
+  document.getElementById("mechaName").innerText = cur.name;
+  document.getElementById("mechaLevel").innerText = `等级 ${level+1} / 10`;
+  document.getElementById("progressBar").style.width = per + "%";
+
+  // 环比趋势
+  let trend = "平稳";
+  if (data.week > data.lastWeek * 1.2) trend = "📈 上升";
+  if (data.week < data.lastWeek * 0.8) trend = "📉 下降";
+  document.getElementById("trend").innerText = trend;
+}
+
+// 切换任务栏
+function show(key) {
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  event.target.classList.add("active");
+  const list = document.getElementById("taskList");
+  list.innerHTML = "";
+  tasks[key].forEach(t => {
+    const div = document.createElement("div");
+    div.className = "task";
+    div.innerHTML = `
+      <span>${t.name}</span>
+      <span>${t.p > 0 ? "+" : ""}${t.p}</span>
+      <button class="${t.p < 0 ? "neg" : ""}" onclick="add(${t.p})">记录</button>
+    `;
+    list.appendChild(div);
+  });
+}
+
+// 密码键盘
+function key(n) {
+  if (pwdInput.length >=4) return;
+  pwdInput += n;
+  showPwd();
+  if (pwdInput.length ===4) checkPwd();
+}
+function del() {
+  pwdInput = pwdInput.slice(0,-1);
+  showPwd();
+}
+function showPwd() {
+  for(let i=1;i<=4;i++) document.getElementById("p"+i).value = pwdInput[i-1] || "";
+}
+function checkPwd() {
+  if(pwdInput === PASSWORD){
+    document.getElementById("lockView").style.display = "none";
+    document.getElementById("mainView").style.display = "block";
+    show("learn");
+    render();
+  } else {
+    alert("密码错误");
+    pwdInput = "";
+    showPwd();
+  }
+}
+</script>
+</body>
+</html>
