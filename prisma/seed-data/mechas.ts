@@ -223,4 +223,21 @@ export const MECHA_SEED_DATA: MechaConfig[] = [
       { level: 7, name: "完整体", threshold: 250, imageUrl: "/mecha/medecac/level-7.png", description: "医疗救援的终极形态，生命维持舱与护佑之力全开，成为战火中抢救生命的关键力量。" },
     ],
   },
+  {
+    slug: "iron-dragon",
+    name: "铁龙",
+    description: "多节列车载具机甲，车厢可拆分重组，兼具运输与火力",
+    intro: "铁龙，多节列车载具机甲，车厢可拆分重组，兼具运输与火力。负责大规模投送、编队火力、铁路封锁，是陆上重型轨道单位。它在历练中不断觉醒，解锁更强形态、可拆分车厢与编队协调之力，每一次蜕变都让轨道之力更强。",
+    sortOrder: 12,
+    levels: [
+      { level: 0, name: "量产型", threshold: 0, imageUrl: "/mecha/iron-dragon/level-0.png", description: "基础轨道运输能力，可执行多节运输任务。" },
+      { level: 1, name: "改良型", threshold: 20, imageUrl: "/mecha/iron-dragon/level-1.png", description: "编队协调能力增强，车厢衔接更加稳固。" },
+      { level: 2, name: "特装型", threshold: 50, imageUrl: "/mecha/iron-dragon/level-2.png", description: "多联装轨道炮初显，可承担阵地压制重任。" },
+      { level: 3, name: "强化型", threshold: 80, imageUrl: "/mecha/iron-dragon/level-3.png", description: "可拆分车厢能力成型，编队火力与机动显著提升。" },
+      { level: 4, name: "多节型", threshold: 120, imageUrl: "/mecha/iron-dragon/level-4.png", description: "多节编队加身，大规模投送与铁路封锁能力大幅增强。" },
+      { level: 5, name: "编队型", threshold: 160, imageUrl: "/mecha/iron-dragon/level-5.png", description: "编队协调系统觉醒，陆上重型轨道之威尽显。" },
+      { level: 6, name: "铁龙型", threshold: 200, imageUrl: "/mecha/iron-dragon/level-6.png", description: "轨道之力臻于完美，多节运输与阵地压制达到巅峰。" },
+      { level: 7, name: "完整体", threshold: 250, imageUrl: "/mecha/iron-dragon/level-7.png", description: "多节列车的终极形态，可拆分车厢与编队协调之力全开，成为陆上重型轨道单位。" },
+    ],
+  },
 ];
