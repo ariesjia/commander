@@ -257,4 +257,21 @@ export const MECHA_SEED_DATA: MechaConfig[] = [
       { level: 7, name: "完整体", threshold: 250, imageUrl: "/mecha/hound/level-7.png", description: "四足突击的终极形态，等离子利齿与冲刺推进器全开，成为战场追击与歼灭的猎手。" },
     ],
   },
+  {
+    slug: "dive",
+    name: "俯冲",
+    description: "仿生猛禽突击型机甲，擅长高速俯冲攻击与精准打击",
+    intro: "俯冲，猛禽仿生机甲，空中对地突击单位，以高速俯冲与精准打击压制地面目标，一击即离。负责俯冲打击、对地突袭、精确轰炸、快速撤离。它在历练中不断觉醒，解锁更强形态、俯冲加速翼与动能穿甲弹，每一次蜕变都让俯冲之力更强。",
+    sortOrder: 14,
+    levels: [
+      { level: 0, name: "量产型", threshold: 0, imageUrl: "/mecha/dive/level-0.png", description: "基础俯冲与动能穿甲弹，可执行对地突袭任务。" },
+      { level: 1, name: "改良型", threshold: 20, imageUrl: "/mecha/dive/level-1.png", description: "俯冲轨迹稳定性增强，命中率提升。" },
+      { level: 2, name: "特装型", threshold: 50, imageUrl: "/mecha/dive/level-2.png", description: "俯冲加速翼初显，末端速度提升。" },
+      { level: 3, name: "强化型", threshold: 80, imageUrl: "/mecha/dive/level-3.png", description: "动能穿甲弹强化，穿透力显著增强。" },
+      { level: 4, name: "疾风型", threshold: 120, imageUrl: "/mecha/dive/level-4.png", description: "俯冲加速翼加身，俯冲速度与机动性大幅提升。" },
+      { level: 5, name: "掠影型", threshold: 160, imageUrl: "/mecha/dive/level-5.png", description: "一击即离战术成型，快速撤离之威尽显。" },
+      { level: 6, name: "天罚型", threshold: 200, imageUrl: "/mecha/dive/level-6.png", description: "俯冲之力臻于完美，对地突击达到巅峰。" },
+      { level: 7, name: "完整体", threshold: 250, imageUrl: "/mecha/dive/level-7.png", description: "空中突击的终极形态，俯冲加速翼与动能穿甲弹全开，成为对地打击的空中猎手。" },
+    ],
+  },
 ];
