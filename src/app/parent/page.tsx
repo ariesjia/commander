@@ -9,14 +9,18 @@ import { Bot, ChevronRight } from "lucide-react";
 import { toDisplay } from "@/lib/score-display";
 
 export default function ParentDashboard() {
-  const { student, mechaName, mechaLevelName, pendingExchanges, weeklyCompletedCount, weeklyTotalCount, getTasksWithStatus, baseScore } = useData();
+  const { student, mechaName, mechaLevelName, pendingExchanges, weeklyCompletedCount, weeklyTotalCount, getTasksWithStatus, baseScore, isLoading } = useData();
   const { user } = useAuth();
   const { switchToStudent, setTransitioning } = useMode();
   const router = useRouter();
 
   const pendingTasks = getTasksWithStatus().filter((t) => t.status === "pending").length;
   const pendingCount = pendingExchanges.length + pendingTasks;
-  const mechaDisplay = mechaName && mechaLevelName ? `${mechaName} · ${mechaLevelName}` : mechaName ?? "未领养机甲";
+  const mechaDisplay = isLoading
+    ? "加载中..."
+    : mechaName && mechaLevelName
+      ? `${mechaName} · ${mechaLevelName}`
+      : mechaName ?? "未领养机甲";
 
   const handleSwitch = async () => {
     try {
