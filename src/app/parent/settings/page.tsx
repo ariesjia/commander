@@ -165,7 +165,7 @@ export default function SettingsPage() {
           <h2 className="text-base font-medium text-p-text">基准分</h2>
         </div>
         <p className="text-sm text-p-text-secondary mb-4">
-          选择 0.1 分时，任务加分步进为 0.1，所有积分显示按比例缩小；选择 10 分时按比例放大。数据库始终以 1 分为单位存储。
+          选择 0.1 分时，任务加分步进为 0.1，所有积分显示按比例缩小；选择 10 分时按比例放大。
         </p>
         <div className="flex gap-2">
           {([0.1, 1, 10] as const).map((v) => (
