@@ -6,9 +6,10 @@ import { useMode } from "@/contexts/ModeContext";
 import { useRouter } from "next/navigation";
 import { DashboardStats } from "@/components/parent/DashboardStats";
 import { Bot, ChevronRight } from "lucide-react";
+import { toDisplay } from "@/lib/score-display";
 
 export default function ParentDashboard() {
-  const { student, mechaName, mechaLevelName, pendingExchanges, weeklyCompletedCount, weeklyTotalCount, getTasksWithStatus } = useData();
+  const { student, mechaName, mechaLevelName, pendingExchanges, weeklyCompletedCount, weeklyTotalCount, getTasksWithStatus, baseScore } = useData();
   const { user } = useAuth();
   const { switchToStudent, setTransitioning } = useMode();
   const router = useRouter();
@@ -44,7 +45,7 @@ export default function ParentDashboard() {
 
       {/* Stats */}
       <DashboardStats
-        balance={student.balance}
+        balance={toDisplay(student.balance, baseScore)}
         weeklyCompleted={weeklyCompletedCount}
         weeklyTotal={weeklyTotalCount}
         pendingCount={pendingCount}
@@ -63,7 +64,7 @@ export default function ParentDashboard() {
               {mechaDisplay}
             </p>
             <p className="text-sm text-p-text-secondary mt-0.5">
-              累计积分 {student.totalPoints}
+              累计积分 {toDisplay(student.totalPoints, baseScore)}
             </p>
           </div>
           <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50">

@@ -1,13 +1,16 @@
 "use client";
 
 import { useMecha, getNextLevelProgress } from "@/hooks/useMecha";
+import { toDisplay } from "@/lib/score-display";
+import type { BaseScore } from "@/lib/score-display";
 
 interface XuanjiaProgressProps {
   slug: string;
   mechaPoints: number;
+  baseScore?: BaseScore;
 }
 
-export function XuanjiaProgress({ slug, mechaPoints }: XuanjiaProgressProps) {
+export function XuanjiaProgress({ slug, mechaPoints, baseScore = 1 }: XuanjiaProgressProps) {
   const { data: mecha } = useMecha(slug);
   const progress = getNextLevelProgress(mecha, mechaPoints);
 
@@ -44,7 +47,7 @@ export function XuanjiaProgress({ slug, mechaPoints }: XuanjiaProgressProps) {
         <span className="text-s-text">{current.name}</span>
         {next && (
           <span className="text-s-text-secondary">
-            → {next.name} ({next.threshold}分)
+            → {next.name} ({toDisplay(next.threshold, baseScore)}分)
           </span>
         )}
         {!next && <span className="text-s-accent">完整体!</span>}

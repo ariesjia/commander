@@ -15,10 +15,12 @@ import { PinDialog } from "@/components/mode-switch/PinDialog";
 import Image from "next/image";
 import { Coins, Flame, Snowflake, Lock, Library } from "lucide-react";
 import { MECHA_STAGES, STREAK_EFFECTS } from "@/lib/mecha-config";
+import { toDisplay } from "@/lib/score-display";
+
 import { useMecha, getLevelFromMecha } from "@/hooks/useMecha";
 
 export default function StudentHome() {
-  const { student, mechaStage, adoptedMechaIds, adoptedMechas, mechaPointsBySlug, showPinyin, isLoading, refetch } = useData();
+  const { student, mechaStage, adoptedMechaIds, adoptedMechas, mechaPointsBySlug, showPinyin, isLoading, refetch, baseScore } = useData();
   const hasMechas = adoptedMechas.length > 0;
   const { user } = useAuth();
   const { switchToParent, setTransitioning } = useMode();
@@ -151,7 +153,7 @@ export default function StudentHome() {
           <Coins size={18} className="text-s-accent" />
           <div>
             <p className="text-xs text-s-text-secondary">可用积分</p>
-            <p className="font-display text-xl font-bold text-s-text">{student.balance}</p>
+            <p className="font-display text-xl font-bold text-s-text">{toDisplay(student.balance, baseScore)}</p>
           </div>
         </div>
         {student.frozenPoints > 0 && (
@@ -159,21 +161,21 @@ export default function StudentHome() {
             <Snowflake size={16} className="text-blue-400" />
             <div>
               <p className="text-xs text-s-text-secondary">冻结</p>
-              <p className="text-sm font-bold text-blue-400">{student.frozenPoints}</p>
+              <p className="text-sm font-bold text-blue-400">{toDisplay(student.frozenPoints, baseScore)}</p>
             </div>
           </div>
         )}
         <div>
           <p className="text-xs text-s-text-secondary">累计</p>
-          <p className="text-sm font-semibold text-s-text-secondary">{student.totalPoints}</p>
+          <p className="text-sm font-semibold text-s-text-secondary">{toDisplay(student.totalPoints, baseScore)}</p>
         </div>
       </div>
 
       {/* Progress */}
       {primarySlug ? (
-        <XuanjiaProgress slug={primarySlug} mechaPoints={primaryMechaPoints} />
+        <XuanjiaProgress slug={primarySlug} mechaPoints={primaryMechaPoints} baseScore={baseScore} />
       ) : (
-        <MechaProgress totalPoints={student.totalPoints} stage={mechaStage} />
+        <MechaProgress totalPoints={student.totalPoints} stage={mechaStage} baseScore={baseScore} />
       )}
 
       <PinDialog

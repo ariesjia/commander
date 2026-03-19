@@ -12,6 +12,7 @@ import {
 import { api } from "@/lib/api";
 import { useMode } from "@/contexts/ModeContext";
 import { getCurrentStage, getEvolutionLevel } from "@/lib/mecha-config";
+import type { BaseScore } from "@/lib/score-display";
 
 interface DataState {
   tasks: Task[];
@@ -28,6 +29,8 @@ interface DataState {
   mechaLevelName: string | null;
   showPinyin: boolean;
   updateShowPinyin: (show: boolean) => Promise<void>;
+  baseScore: BaseScore;
+  updateBaseScore: (v: BaseScore) => Promise<void>;
 
   addTask: (t: Omit<Task, "id" | "createdAt">) => Promise<void>;
   updateTask: (id: string, t: Partial<Task>) => Promise<void>;
@@ -81,6 +84,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const [mechaName, setMechaName] = useState<string | null>(null);
   const [mechaLevelName, setMechaLevelName] = useState<string | null>(null);
   const [showPinyin, setShowPinyin] = useState(false);
+  const [baseScore, setBaseScore] = useState<BaseScore>(1);
   const [isLoading, setIsLoading] = useState(true);
 
   const refetch = useCallback(async () => {
@@ -99,6 +103,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
             adoptedMechas?: { id: string; slug: string; points: number }[];
             mechaPointsBySlug?: Record<string, number>;
             showPinyin?: boolean;
+            baseScore?: number;
           }>("/api/parent/dashboard"),
           api.get<Array<Task & { status: string; completedAt?: string }>>("/api/parent/tasks"),
           api.get<Reward[]>("/api/parent/rewards"),
@@ -128,13 +133,14 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         setAdoptedMechas(dashboard.adoptedMechas ?? []);
         setMechaPointsBySlug(dashboard.mechaPointsBySlug ?? {});
         setShowPinyin(dashboard.showPinyin ?? false);
+        setBaseScore((dashboard.baseScore ?? 1) as BaseScore);
       } catch {
         // not logged in or error
       }
     } else {
       try {
         const [profile, tasksRes, rewardsRes, exchangesRes, pointsRes] = await Promise.all([
-          api.get<StudentData & { mechaStage: number; evolutionLevel: number; adoptedMechaIds?: string[]; adoptedMechas?: { id: string; slug: string; points: number }[]; mechaPointsBySlug?: Record<string, number>; showPinyin?: boolean }>("/api/student/profile"),
+          api.get<StudentData & { mechaStage: number; evolutionLevel: number; adoptedMechaIds?: string[]; adoptedMechas?: { id: string; slug: string; points: number }[]; mechaPointsBySlug?: Record<string, number>; showPinyin?: boolean; baseScore?: number }>("/api/student/profile"),
           api.get<TaskWithStatus[]>("/api/student/tasks"),
           api.get<Array<Reward & { canRedeem?: boolean; pointsNeeded?: number }>>("/api/student/rewards"),
           api.get<Exchange[]>("/api/student/exchanges"),
@@ -159,6 +165,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         setAdoptedMechas(profile.adoptedMechas ?? []);
         setMechaPointsBySlug(profile.mechaPointsBySlug ?? {});
         setShowPinyin(profile.showPinyin ?? false);
+        setBaseScore((profile.baseScore ?? 1) as BaseScore);
         setWeeklyCompletedCount(0);
         setWeeklyTotalCount(0);
       } catch {
@@ -245,6 +252,12 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     setShowPinyin(show);
   }, []);
 
+  const updateBaseScore = useCallback(async (v: BaseScore) => {
+    await api.put("/api/parent/settings", { baseScore: v });
+    setBaseScore(v);
+    await refetch();
+  }, [refetch]);
+
   return (
     <DataContext.Provider
       value={{
@@ -262,6 +275,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         mechaLevelName,
         showPinyin,
         updateShowPinyin,
+        baseScore,
+        updateBaseScore,
         addTask,
         updateTask,
         deleteTask,

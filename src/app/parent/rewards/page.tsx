@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/Badge";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Plus, Pencil, Trash2, Check, X, Coins } from "lucide-react";
 import { Reward } from "@/types";
+import { toDisplay, toDb } from "@/lib/score-display";
 
 export default function RewardsPage() {
   const {
@@ -19,6 +20,7 @@ export default function RewardsPage() {
     pendingExchanges,
     confirmExchange,
     rejectExchange,
+    baseScore,
   } = useData();
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -40,7 +42,7 @@ export default function RewardsPage() {
     setName("");
     setDescription("");
     setImageUrl("");
-    setPoints("30");
+    setPoints(String(toDisplay(30, baseScore)));
     setModalOpen(true);
   };
 
@@ -49,22 +51,22 @@ export default function RewardsPage() {
     setName(r.name);
     setDescription(r.description ?? "");
     setImageUrl(r.imageUrl ?? "");
-    setPoints(String(r.points));
+    setPoints(String(toDisplay(r.points, baseScore)));
     setModalOpen(true);
   };
 
   const handleSave = async () => {
     if (!name.trim()) return;
-    const pts = parseInt(points) || 0;
-    if (pts <= 0) return;
+    const ptsDb = toDb(parseFloat(points) || 0, baseScore);
+    if (ptsDb <= 0) return;
 
     const trimmedImage = imageUrl.trim() || undefined;
     setSaving(true);
     try {
       if (editing) {
-        await updateReward(editing.id, { name: name.trim(), description: description.trim() || undefined, imageUrl: trimmedImage, points: pts });
+        await updateReward(editing.id, { name: name.trim(), description: description.trim() || undefined, imageUrl: trimmedImage, points: ptsDb });
       } else {
-        await addReward({ name: name.trim(), description: description.trim() || undefined, imageUrl: trimmedImage, points: pts, isActive: true });
+        await addReward({ name: name.trim(), description: description.trim() || undefined, imageUrl: trimmedImage, points: ptsDb, isActive: true });
       }
       setModalOpen(false);
     } catch {
@@ -143,7 +145,7 @@ export default function RewardsPage() {
                   <p className="font-medium text-p-text">{ex.rewardName}</p>
                   <p className="text-xs text-p-text-secondary flex items-center gap-1 mt-0.5">
                     <Coins size={12} />
-                    {ex.pointsCost} 积分
+                    {toDisplay(ex.pointsCost, baseScore)} 积分
                   </p>
                 </div>
                 <div className="flex gap-1.5 shrink-0">
@@ -191,7 +193,7 @@ export default function RewardsPage() {
                 {reward.description && (
                   <p className="text-xs text-p-text-secondary mt-0.5 truncate">{reward.description}</p>
                 )}
-                <p className="text-xs text-amber-600 font-medium mt-0.5">{reward.points} 积分</p>
+                <p className="text-xs text-amber-600 font-medium mt-0.5">{toDisplay(reward.points, baseScore)} 积分</p>
               </div>
               <div className="flex items-center gap-1.5 shrink-0">
                 <button
@@ -228,7 +230,7 @@ export default function RewardsPage() {
               <span className="text-xs text-p-text-secondary">图片预览</span>
             </div>
           )}
-          <Input label="所需积分" type="number" min={1} placeholder="30" value={points} onChange={(e) => setPoints(e.target.value)} />
+          <Input label="所需积分" type="number" min={baseScore} step={baseScore} placeholder={String(toDisplay(30, baseScore))} value={points} onChange={(e) => setPoints(e.target.value)} />
           <div className="flex gap-3 mt-2">
             <Button variant="secondary" onClick={() => setModalOpen(false)} className="flex-1" disabled={saving}>
               取消

@@ -11,9 +11,10 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Plus, Check, Pencil, Trash2, CalendarDays, CalendarRange } from "lucide-react";
 import { Task, TaskType } from "@/types";
 import { cn } from "@/lib/utils";
+import { toDisplay, toDb, getSliderStep } from "@/lib/score-display";
 
 export default function TasksPage() {
-  const { addTask, updateTask, deleteTask, confirmTask, getTasksWithStatus, isLoading } = useData();
+  const { addTask, updateTask, deleteTask, confirmTask, getTasksWithStatus, isLoading, baseScore } = useData();
   const { toast } = useToast();
   const tasksWithStatus = getTasksWithStatus();
 
@@ -63,8 +64,8 @@ export default function TasksPage() {
     setDescription("");
     setType("DAILY");
     setRuleKind("reward");
-    setMaxPoints("10");
-    setPenaltyPoints("5");
+    setMaxPoints(String(toDisplay(10, baseScore)));
+    setPenaltyPoints(String(toDisplay(5, baseScore)));
     setModalOpen(true);
   };
 
@@ -75,8 +76,8 @@ export default function TasksPage() {
     setType(task.type);
     const pen = task.penaltyPoints ?? 0;
     setRuleKind(pen > 0 ? "penalty" : "reward");
-    setMaxPoints(String(task.maxPoints));
-    setPenaltyPoints(pen > 0 ? String(pen) : "5");
+    setMaxPoints(String(toDisplay(task.maxPoints, baseScore)));
+    setPenaltyPoints(pen > 0 ? String(toDisplay(pen, baseScore)) : String(toDisplay(5, baseScore)));
     setModalOpen(true);
   };
 
@@ -85,30 +86,30 @@ export default function TasksPage() {
       toast("请输入任务名称", "error");
       return;
     }
-    const pts = parseInt(maxPoints) || 0;
-    const penalty = Math.max(0, parseInt(penaltyPoints) || 0);
+    const ptsDb = toDb(parseFloat(maxPoints) || 0, baseScore);
+    const penaltyDb = toDb(parseFloat(penaltyPoints) || 0, baseScore);
 
     if (type === "RULE") {
       if (ruleKind === "reward") {
-        if (pts <= 0) {
+        if (ptsDb <= 0) {
           toast("奖励积分需大于 0", "error");
           return;
         }
       } else {
-        if (penalty <= 0) {
+        if (penaltyDb <= 0) {
           toast("惩罚扣分需大于 0", "error");
           return;
         }
       }
     } else {
-      if (pts <= 0) {
+      if (ptsDb <= 0) {
         toast("最大得分需大于 0", "error");
         return;
       }
     }
 
-    const finalMaxPoints = type === "RULE" && ruleKind === "penalty" ? 0 : pts;
-    const finalPenalty = type === "RULE" && ruleKind === "penalty" ? penalty : 0;
+    const finalMaxPoints = type === "RULE" && ruleKind === "penalty" ? 0 : ptsDb;
+    const finalPenalty = type === "RULE" && ruleKind === "penalty" ? penaltyDb : 0;
 
     setSaving(true);
     try {
@@ -159,8 +160,8 @@ export default function TasksPage() {
       setConfirming(true);
       try {
         await confirmTask(confirmTaskId, {
-          pointsAwarded: confirmIsPenalty ? undefined : confirmPoints,
-          penaltyAmount: confirmIsPenalty ? confirmPenaltyAmount : undefined,
+          pointsAwarded: confirmIsPenalty ? undefined : toDb(confirmPoints, baseScore),
+          penaltyAmount: confirmIsPenalty ? toDb(confirmPenaltyAmount, baseScore) : undefined,
           isPenalty: confirmIsPenalty,
         });
         toast(confirmIsPenalty ? "已记录惩罚" : "任务已确认完成");
@@ -177,8 +178,8 @@ export default function TasksPage() {
     const task = tasksWithStatus.find((t) => t.id === taskId);
     const isPenaltyOnly = task?.type === "RULE" && (task.penaltyPoints ?? 0) > 0 && (task.maxPoints ?? 0) === 0;
     setConfirmTaskId(taskId);
-    setConfirmPoints(task?.maxPoints ?? 10);
-    setConfirmPenaltyAmount(task?.penaltyPoints ?? 5);
+    setConfirmPoints(toDisplay(task?.maxPoints ?? 10, baseScore));
+    setConfirmPenaltyAmount(toDisplay(task?.penaltyPoints ?? 5, baseScore));
     setConfirmIsPenalty(!!isPenaltyOnly);
   };
 
@@ -247,9 +248,9 @@ export default function TasksPage() {
                     )}
                     <p className="text-xs font-medium mt-1">
                       {task.type === "RULE" && (task.penaltyPoints ?? 0) > 0 ? (
-                        <span className="text-red-600">扣分 · 违反扣 {task.penaltyPoints} 分</span>
+                        <span className="text-red-600">扣分 · 违反扣 {toDisplay(task.penaltyPoints ?? 0, baseScore)} 分</span>
                       ) : (
-                        <span className="text-green-600">加分 · 完成可得 {task.maxPoints} 分</span>
+                        <span className="text-green-600">加分 · 完成可得 {toDisplay(task.maxPoints ?? 0, baseScore)} 分</span>
                       )}
                     </p>
                   </div>
@@ -301,9 +302,9 @@ export default function TasksPage() {
                     )}
                     <p className="text-xs font-medium mt-1">
                       {task.type === "RULE" && (task.penaltyPoints ?? 0) > 0 ? (
-                        <span className="text-red-600">扣分 · 违反扣 {task.penaltyPoints} 分</span>
+                        <span className="text-red-600">扣分 · 违反扣 {toDisplay(task.penaltyPoints ?? 0, baseScore)} 分</span>
                       ) : (
-                        <span className="text-green-600">加分 · 完成可得 {task.maxPoints} 分</span>
+                        <span className="text-green-600">加分 · 完成可得 {toDisplay(task.maxPoints ?? 0, baseScore)} 分</span>
                       )}
                     </p>
                   </div>
@@ -411,8 +412,9 @@ export default function TasksPage() {
             <Input
               label="最大得分"
               type="number"
-              min={1}
-              placeholder="10"
+              min={baseScore}
+              step={baseScore}
+              placeholder={String(toDisplay(10, baseScore))}
               value={maxPoints}
               onChange={(e) => setMaxPoints(e.target.value)}
             />
@@ -421,8 +423,9 @@ export default function TasksPage() {
             <Input
               label="奖励积分"
               type="number"
-              min={1}
-              placeholder="10"
+              min={baseScore}
+              step={baseScore}
+              placeholder={String(toDisplay(10, baseScore))}
               value={maxPoints}
               onChange={(e) => setMaxPoints(e.target.value)}
             />
@@ -431,8 +434,9 @@ export default function TasksPage() {
             <Input
               label="惩罚扣分"
               type="number"
-              min={1}
-              placeholder="5"
+              min={baseScore}
+              step={baseScore}
+              placeholder={String(toDisplay(5, baseScore))}
               value={penaltyPoints}
               onChange={(e) => setPenaltyPoints(e.target.value)}
             />
@@ -461,20 +465,24 @@ export default function TasksPage() {
           const isPenaltyOnlyRule = task.type === "RULE" && (task.penaltyPoints ?? 0) > 0 && (task.maxPoints ?? 0) === 0;
 
           if (isPenaltyOnlyRule) {
+            const step = getSliderStep(baseScore);
+            const maxDisplay = toDisplay(task.penaltyPoints, baseScore);
+            const minDisplay = toDisplay(1, baseScore);
             return (
               <div className="flex flex-col gap-4">
                 <p className="text-sm text-p-text-secondary">
-                  规则「{task.name}」违反最多可扣 {task.penaltyPoints} 分
+                  规则「{task.name}」违反最多可扣 {maxDisplay} 分
                 </p>
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-sm font-medium text-p-text">扣分 (1~{task.penaltyPoints})</label>
+                  <label className="text-sm font-medium text-p-text">扣分 ({minDisplay}~{maxDisplay})</label>
                   <div className="flex items-center gap-2">
                     <input
                       type="range"
-                      min={1}
-                      max={task.penaltyPoints}
+                      min={minDisplay}
+                      max={maxDisplay}
+                      step={step}
                       value={confirmPenaltyAmount}
-                      onChange={(e) => setConfirmPenaltyAmount(parseInt(e.target.value, 10))}
+                      onChange={(e) => setConfirmPenaltyAmount(parseFloat(e.target.value))}
                       className="flex-1"
                     />
                     <span className="text-sm font-medium w-10">-{confirmPenaltyAmount}</span>
@@ -492,21 +500,24 @@ export default function TasksPage() {
             );
           }
 
+          const step = getSliderStep(baseScore);
+          const maxDisplay = toDisplay(task.maxPoints, baseScore);
           return (
             <div className="flex flex-col gap-4">
               <p className="text-sm text-p-text-secondary">
-                任务「{task.name}」最大可得 {task.maxPoints} 积分
+                任务「{task.name}」最大可得 {maxDisplay} 积分
               </p>
               {!confirmIsPenalty && (
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-sm font-medium text-p-text">给予积分 (0~{task.maxPoints})</label>
+                  <label className="text-sm font-medium text-p-text">给予积分 (0~{maxDisplay})</label>
                   <div className="flex items-center gap-2">
                     <input
                       type="range"
                       min={0}
-                      max={task.maxPoints}
+                      max={maxDisplay}
+                      step={step}
                       value={confirmPoints}
-                      onChange={(e) => setConfirmPoints(parseInt(e.target.value, 10))}
+                      onChange={(e) => setConfirmPoints(parseFloat(e.target.value))}
                       className="flex-1"
                     />
                     <span className="text-sm font-medium w-10">{confirmPoints}</span>

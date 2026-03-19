@@ -21,6 +21,7 @@ interface MechaLibraryPageProps {
   adoptedMechas: AdoptedMecha[];
   mechaPointsBySlug: Record<string, number>;
   showPinyin?: boolean;
+  baseScore?: import("@/lib/score-display").BaseScore;
 }
 
 function MechaCard({
@@ -389,6 +390,7 @@ export function MechaLibraryPage({
   adoptedMechas,
   mechaPointsBySlug,
   showPinyin = false,
+  baseScore = 1,
 }: MechaLibraryPageProps) {
   const [selected, setSelected] = useState<AdoptedMecha | null>(null);
 

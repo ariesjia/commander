@@ -1,13 +1,16 @@
 "use client";
 
 import { getNextStageProgress, MECHA_STAGES } from "@/lib/mecha-config";
+import { toDisplay } from "@/lib/score-display";
+import type { BaseScore } from "@/lib/score-display";
 
 interface MechaProgressProps {
   totalPoints: number;
   stage: number;
+  baseScore?: BaseScore;
 }
 
-export function MechaProgress({ totalPoints, stage }: MechaProgressProps) {
+export function MechaProgress({ totalPoints, stage, baseScore = 1 }: MechaProgressProps) {
   const { current, next, progress } = getNextStageProgress(totalPoints);
 
   return (
@@ -38,7 +41,7 @@ export function MechaProgress({ totalPoints, stage }: MechaProgressProps) {
         <span className="text-s-text">{current.name}</span>
         {next && (
           <span className="text-s-text-secondary">
-            → {next.name} ({next.threshold}分)
+            → {next.name} ({toDisplay(next.threshold, baseScore)}分)
           </span>
         )}
         {!next && <span className="text-s-accent">组装完成!</span>}

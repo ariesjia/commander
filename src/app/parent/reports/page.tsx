@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
+import { useData } from "@/contexts/DataContext";
 import { BarChart3, TrendingUp, TrendingDown, Wallet, ListChecks, ChevronLeft, ChevronRight } from "lucide-react";
+import { toDisplay } from "@/lib/score-display";
 
 interface PointsReport {
   period: "week" | "month";
@@ -61,6 +63,7 @@ function addPeriod(period: "week" | "month", dateStr: string, delta: number): st
 }
 
 export default function ParentReportsPage() {
+  const { baseScore } = useData();
   const today = new Date().toISOString().slice(0, 10);
   const [period, setPeriod] = useState<"week" | "month">("week");
   const [dateStr, setDateStr] = useState(today);
@@ -171,7 +174,7 @@ export default function ParentReportsPage() {
                     获得积分
                   </div>
                   <p className={`mt-1 text-xl font-bold ${pointsReport.taskEarned >= 0 ? "text-green-600" : "text-red-500"}`}>
-                    {pointsReport.taskEarned >= 0 ? "+" : ""}{pointsReport.taskEarned}
+                    {pointsReport.taskEarned >= 0 ? "+" : ""}{toDisplay(pointsReport.taskEarned, baseScore)}
                   </p>
                   <p className="text-xs text-p-text-secondary mt-0.5">任务奖励合计</p>
                 </div>
@@ -181,7 +184,7 @@ export default function ParentReportsPage() {
                     消耗积分
                   </div>
                   <p className="mt-1 text-xl font-bold text-red-500">
-                    -{pointsReport.exchangeCost}
+                    -{toDisplay(pointsReport.exchangeCost, baseScore)}
                   </p>
                   <p className="text-xs text-p-text-secondary mt-0.5">兑换奖励消耗</p>
                 </div>
@@ -190,20 +193,20 @@ export default function ParentReportsPage() {
                     <Wallet size={14} />
                     期初余额
                   </div>
-                  <p className="mt-1 text-xl font-bold text-p-text">{pointsReport.startBalance}</p>
+                  <p className="mt-1 text-xl font-bold text-p-text">{toDisplay(pointsReport.startBalance, baseScore)}</p>
                 </div>
                 <div className="rounded-lg bg-white/80 p-4">
                   <div className="flex items-center gap-2 text-p-text-secondary text-sm">
                     <Wallet size={14} />
                     期末余额
                   </div>
-                  <p className="mt-1 text-xl font-bold text-p-text">{pointsReport.endBalance}</p>
+                  <p className="mt-1 text-xl font-bold text-p-text">{toDisplay(pointsReport.endBalance, baseScore)}</p>
                 </div>
               </div>
               {pointsReport.exchangeRefund > 0 && (
                 <div className="mt-3 rounded-lg bg-white/80 px-4 py-2 text-sm">
                   <span className="text-p-text-secondary">兑换退款：</span>
-                  <span className="font-medium text-blue-600">+{pointsReport.exchangeRefund}</span>
+                  <span className="font-medium text-blue-600">+{toDisplay(pointsReport.exchangeRefund, baseScore)}</span>
                 </div>
               )}
             </div>
@@ -224,7 +227,7 @@ export default function ParentReportsPage() {
                 <div className="rounded-lg bg-white/80 p-4">
                   <div className="text-p-text-secondary text-sm">获得积分</div>
                   <p className={`mt-1 text-xl font-bold ${taskReport.pointsAwarded >= 0 ? "text-green-600" : "text-red-500"}`}>
-                    {taskReport.pointsAwarded >= 0 ? "+" : ""}{taskReport.pointsAwarded}
+                    {taskReport.pointsAwarded >= 0 ? "+" : ""}{toDisplay(taskReport.pointsAwarded, baseScore)}
                   </p>
                 </div>
                 <div className="rounded-lg bg-white/80 p-4">

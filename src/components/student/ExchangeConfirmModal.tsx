@@ -4,11 +4,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/Button";
 import { TextWithPinyin } from "@/components/ui/TextWithPinyin";
 import { Coins, X } from "lucide-react";
+import { toDisplay } from "@/lib/score-display";
+import type { BaseScore } from "@/lib/score-display";
 
 interface ExchangeConfirmModalProps {
   open: boolean;
   reward: { id: string; name: string; description?: string; imageUrl?: string; points: number } | null;
   showPinyin?: boolean;
+  baseScore?: BaseScore;
   loading?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
@@ -19,6 +22,7 @@ export function ExchangeConfirmModal({
   open,
   reward,
   showPinyin = false,
+  baseScore = 1,
   loading = false,
   onConfirm,
   onCancel,
@@ -77,7 +81,7 @@ export function ExchangeConfirmModal({
                   )}
                   <div className="flex items-center gap-1 mt-1">
                     <Coins size={14} className="text-s-accent" />
-                    <span className="text-sm font-bold text-s-accent">{reward.points} 积分</span>
+                    <span className="text-sm font-bold text-s-accent">{toDisplay(reward.points, baseScore)} 积分</span>
                   </div>
                 </div>
               </div>

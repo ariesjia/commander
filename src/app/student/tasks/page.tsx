@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/Badge";
 import { TextWithPinyin } from "@/components/ui/TextWithPinyin";
 import { Check, Clock, CalendarDays, CalendarRange } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toDisplay } from "@/lib/score-display";
 
 const statusConfig: Record<string, { label: string; icon: typeof Clock; variant: "neon" | "orange"; color: string }> = {
   pending: { label: "待完成", icon: Clock, variant: "neon", color: "text-s-primary" },
@@ -12,7 +13,7 @@ const statusConfig: Record<string, { label: string; icon: typeof Clock; variant:
 };
 
 export default function StudentTasksPage() {
-  const { getTasksWithStatus, showPinyin, isLoading } = useData();
+  const { getTasksWithStatus, showPinyin, isLoading, baseScore } = useData();
   const tasks = getTasksWithStatus();
 
   if (isLoading) {
@@ -74,9 +75,9 @@ export default function StudentTasksPage() {
                 <Badge variant={cfg.variant}>{cfg.label}</Badge>
                 <span className="flex items-center gap-1 text-sm md:text-base">
                   {task.type === "RULE" && (task.penaltyPoints ?? 0) > 0 ? (
-                    <span className="text-s-danger">扣分 · 违反扣 {task.penaltyPoints} 分</span>
+                    <span className="text-s-danger">扣分 · 违反扣 {toDisplay(task.penaltyPoints ?? 0, baseScore)} 分</span>
                   ) : (
-                    <span className="text-s-success">加分 · 完成可得 {task.maxPoints} 分</span>
+                    <span className="text-s-success">加分 · 完成可得 {toDisplay(task.maxPoints ?? 0, baseScore)} 分</span>
                   )}
                 </span>
               </div>

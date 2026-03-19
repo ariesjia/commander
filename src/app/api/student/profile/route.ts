@@ -14,7 +14,7 @@ export async function GET(request: Request) {
 
   const student = await prisma.student.findUniqueOrThrow({
     where: { id: studentId },
-    include: { parent: { select: { showPinyin: true } }, studentMechas: true, primaryMecha: true },
+    include: { parent: { select: { showPinyin: true, baseScore: true } }, studentMechas: true, primaryMecha: true },
   });
 
   // primaryMechaId 可能未回填（迁移前领养），有 studentMechas 时用第一个并回填
@@ -48,6 +48,7 @@ export async function GET(request: Request) {
 
   return NextResponse.json({
     showPinyin: student.parent.showPinyin,
+    baseScore: (student.parent.baseScore ?? 1) as 0.1 | 1 | 10,
     nickname: student.nickname,
     adoptedMechaIds,
     adoptedMechas: adoptedMechas.map((sm) => ({ id: sm.id, slug: sm.mechaSlug, points: sm.points })),

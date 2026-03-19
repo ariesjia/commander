@@ -2,7 +2,9 @@
 
 import { useState, useEffect, useRef } from "react";
 import { api } from "@/lib/api";
+import { useData } from "@/contexts/DataContext";
 import { Bot, X } from "lucide-react";
+import { toDisplay } from "@/lib/score-display";
 
 interface MechaLevel {
   level: number;
@@ -35,9 +37,11 @@ function getCurrentLevel(levels: MechaLevel[], points: number): MechaLevel | nul
 
 function MechaDetailModal({
   mecha,
+  baseScore,
   onClose,
 }: {
   mecha: ParentMechaItem;
+  baseScore: import("@/lib/score-display").BaseScore;
   onClose: () => void;
 }) {
   const currentLevel = getCurrentLevel(mecha.levels, mecha.points);
@@ -159,7 +163,7 @@ function MechaDetailModal({
                       <div className="min-w-0 flex-1">
                         <p className="font-medium text-p-text">{l.name}</p>
                         <p className="break-words text-xs text-p-text-secondary">
-                          {l.threshold} 积分 · {l.description}
+                          {toDisplay(l.threshold, baseScore)} 积分 · {l.description}
                         </p>
                       </div>
                       {isUnlocked && (
@@ -216,6 +220,7 @@ function MechaCard({
 }
 
 export default function ParentMechaPage() {
+  const { baseScore } = useData();
   const [mechas, setMechas] = useState<ParentMechaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<ParentMechaItem | null>(null);
@@ -268,7 +273,7 @@ export default function ParentMechaPage() {
       </div>
 
       {selected && (
-        <MechaDetailModal mecha={selected} onClose={() => setSelected(null)} />
+        <MechaDetailModal mecha={selected} baseScore={baseScore} onClose={() => setSelected(null)} />
       )}
     </div>
   );

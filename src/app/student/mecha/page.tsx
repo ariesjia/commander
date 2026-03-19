@@ -5,7 +5,7 @@ import { useData } from "@/contexts/DataContext";
 import { MechaLibraryPage } from "@/components/mecha/MechaLibraryPage";
 
 export default function StudentMechaLibraryPage() {
-  const { adoptedMechas, mechaPointsBySlug, showPinyin, isLoading } = useData();
+  const { adoptedMechas, mechaPointsBySlug, showPinyin, isLoading, baseScore } = useData();
   const router = useRouter();
 
   if (isLoading) {
@@ -50,6 +50,7 @@ export default function StudentMechaLibraryPage() {
         adoptedMechas={adoptedMechas}
         mechaPointsBySlug={mechaPointsBySlug}
         showPinyin={showPinyin}
+        baseScore={baseScore}
       />
     </div>
   );

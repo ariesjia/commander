@@ -4,6 +4,7 @@ import { useData } from "@/contexts/DataContext";
 import { TextWithPinyin } from "@/components/ui/TextWithPinyin";
 import { formatDate } from "@/lib/utils";
 import { TrendingUp, TrendingDown, RotateCcw, Coins } from "lucide-react";
+import { toDisplay } from "@/lib/score-display";
 
 const typeIcons: Record<string, typeof TrendingUp> = {
   TASK_REWARD: TrendingUp,
@@ -33,7 +34,7 @@ const typeLabels: Record<string, string> = {
 };
 
 export default function StudentPointsPage() {
-  const { pointsLogs, student, showPinyin, isLoading } = useData();
+  const { pointsLogs, student, showPinyin, isLoading, baseScore } = useData();
   const sorted = [...pointsLogs].sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
   );
@@ -56,7 +57,7 @@ export default function StudentPointsPage() {
         <div className="flex items-center gap-1.5">
           <Coins size={20} className="text-s-accent md:w-6 md:h-6" />
           <span className="font-display text-base md:text-lg font-bold text-s-accent">
-            {student.balance}
+            {toDisplay(student.balance, baseScore)}
           </span>
         </div>
       </div>
@@ -103,7 +104,7 @@ export default function StudentPointsPage() {
                   }`}
                 >
                   {isAdd ? "+" : ""}
-                  {log.amount}
+                  {toDisplay(log.amount, baseScore)}
                 </span>
               </div>
             </div>

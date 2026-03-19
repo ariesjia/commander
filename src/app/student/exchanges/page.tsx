@@ -9,6 +9,7 @@ import { TextWithPinyin } from "@/components/ui/TextWithPinyin";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Clock, Check, X, Coins, ArrowLeft, XCircle } from "lucide-react";
 import { formatDate } from "@/lib/utils";
+import { toDisplay } from "@/lib/score-display";
 
 const statusMap = {
   PENDING: { label: "待确认", icon: Clock, variant: "neon" as const },
@@ -20,7 +21,7 @@ const statusMap = {
 type TabFilter = "CONFIRMED" | "REJECTED";
 
 export default function StudentExchangesPage() {
-  const { exchanges, isLoading, showPinyin, cancelExchange } = useData();
+  const { exchanges, isLoading, showPinyin, cancelExchange, baseScore } = useData();
   const [tab, setTab] = useState<TabFilter>("CONFIRMED");
   const [cancelId, setCancelId] = useState<string | null>(null);
   const [cancelling, setCancelling] = useState(false);
@@ -109,7 +110,7 @@ export default function StudentExchangesPage() {
                   </div>
                   <div className="flex items-center gap-1 mt-1.5 md:mt-2">
                     <Coins size={16} className="text-s-accent md:w-5 md:h-5" />
-                    <span className="text-sm md:text-base text-s-accent">{ex.pointsCost} 积分</span>
+                    <span className="text-sm md:text-base text-s-accent">{toDisplay(ex.pointsCost, baseScore)} 积分</span>
                   </div>
                   {ex.rejectReason && (
                     <div className="text-sm md:text-base text-s-danger mt-1.5">

@@ -7,12 +7,13 @@ import { TextWithPinyin } from "@/components/ui/TextWithPinyin";
 import { ImagePreviewModal } from "@/components/ui/ImagePreviewModal";
 import { ExchangeConfirmModal } from "@/components/student/ExchangeConfirmModal";
 import { Coins, ShoppingCart, ArrowRight, History } from "lucide-react";
+import { toDisplay } from "@/lib/score-display";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
 export default function StudentRewardsPage() {
-  const { rewards, student, requestExchange, showPinyin, isLoading } = useData();
+  const { rewards, student, requestExchange, showPinyin, isLoading, baseScore } = useData();
   const [confirmReward, setConfirmReward] = useState<{ id: string; name: string; description?: string; imageUrl?: string; points: number } | null>(null);
   const [exchanging, setExchanging] = useState(false);
   const [successId, setSuccessId] = useState<string | null>(null);
@@ -44,7 +45,7 @@ export default function StudentRewardsPage() {
     );
   }
 
-  const available = student.balance - student.frozenPoints;
+  const available = toDisplay(student.balance - student.frozenPoints, baseScore);
 
   return (
     <div className="flex flex-col gap-4 pt-2 pb-6">
@@ -60,7 +61,7 @@ export default function StudentRewardsPage() {
           </div>
           {student.frozenPoints > 0 && (
             <p className="text-xs text-s-text-secondary">
-              总 {student.balance} · 冻结 {student.frozenPoints}（待审核）
+              总 {toDisplay(student.balance, baseScore)} · 冻结 {toDisplay(student.frozenPoints, baseScore)}（待审核）
             </p>
           )}
         </div>
@@ -82,8 +83,9 @@ export default function StudentRewardsPage() {
 
       <div className="flex flex-col gap-3">
         {activeRewards.map((reward) => {
-          const canAfford = available >= reward.points;
-          const deficit = reward.points - available;
+          const rewardPointsDisplay = toDisplay(reward.points, baseScore);
+          const canAfford = available >= rewardPointsDisplay;
+          const deficit = rewardPointsDisplay - available;
           const isSuccess = successId === reward.id;
 
           return (
@@ -129,7 +131,7 @@ export default function StudentRewardsPage() {
                   )}
                   <div className="flex items-center gap-1 mt-1.5 md:mt-2">
                     <Coins size={16} className="text-s-accent md:w-5 md:h-5" />
-                    <span className="text-sm md:text-base font-bold text-s-accent">{reward.points} 积分</span>
+                    <span className="text-sm md:text-base font-bold text-s-accent">{rewardPointsDisplay} 积分</span>
                     {!canAfford && (
                       <span className="text-sm md:text-base text-s-text-secondary ml-1">
                         (还差 {deficit} 积分)
@@ -186,6 +188,7 @@ export default function StudentRewardsPage() {
         open={!!confirmReward}
         reward={confirmReward}
         showPinyin={showPinyin}
+        baseScore={baseScore}
         loading={exchanging}
         onConfirm={handleExchange}
         onCancel={() => setConfirmReward(null)}

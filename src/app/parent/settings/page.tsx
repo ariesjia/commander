@@ -5,12 +5,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useData } from "@/contexts/DataContext";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
-import { User, KeyRound, LogOut, Check, BookOpen } from "lucide-react";
+import { User, KeyRound, LogOut, Check, BookOpen, Coins } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function SettingsPage() {
   const { user, updateNickname, updatePin, logout } = useAuth();
-  const { showPinyin, updateShowPinyin } = useData();
+  const { showPinyin, updateShowPinyin, baseScore, updateBaseScore } = useData();
   const router = useRouter();
 
   const [nickname, setNickname] = useState(user?.childNickname ?? "");
@@ -21,6 +21,7 @@ export default function SettingsPage() {
   const [savingPinyin, setSavingPinyin] = useState(false);
   const [savingNickname, setSavingNickname] = useState(false);
   const [savingPin, setSavingPin] = useState(false);
+  const [savingBaseScore, setSavingBaseScore] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
   useEffect(() => {
@@ -155,6 +156,42 @@ export default function SettingsPage() {
             />
           </div>
         </button>
+      </div>
+
+      {/* 基准分 */}
+      <div className="rounded-xl border border-p-border bg-p-card p-5">
+        <div className="flex items-center gap-2 mb-4">
+          <Coins size={18} className="text-p-accent" />
+          <h2 className="text-base font-medium text-p-text">基准分</h2>
+        </div>
+        <p className="text-sm text-p-text-secondary mb-4">
+          选择 0.1 分时，任务加分步进为 0.1，所有积分显示按比例缩小；选择 10 分时按比例放大。数据库始终以 1 分为单位存储。
+        </p>
+        <div className="flex gap-2">
+          {([0.1, 1, 10] as const).map((v) => (
+            <button
+              key={v}
+              type="button"
+              onClick={async () => {
+                if (baseScore === v) return;
+                setSavingBaseScore(true);
+                try {
+                  await updateBaseScore(v);
+                } finally {
+                  setSavingBaseScore(false);
+                }
+              }}
+              disabled={savingBaseScore}
+              className={`flex-1 rounded-lg border-2 px-4 py-3 text-sm font-medium transition-colors ${
+                baseScore === v
+                  ? "border-p-accent bg-p-accent/10 text-p-accent"
+                  : "border-p-border bg-white hover:bg-gray-50 text-p-text"
+              }`}
+            >
+              {v} 分
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* PIN */}

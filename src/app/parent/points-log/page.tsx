@@ -7,6 +7,7 @@ import { formatDate } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { TrendingUp, TrendingDown, RotateCcw, Coins, Undo2 } from "lucide-react";
+import { toDisplay } from "@/lib/score-display";
 
 const typeIcons: Record<string, typeof TrendingUp> = {
   TASK_REWARD: TrendingUp,
@@ -36,7 +37,7 @@ const typeLabels: Record<string, string> = {
 };
 
 export default function ParentPointsLogPage() {
-  const { pointsLogs, student, undoPointsLog } = useData();
+  const { pointsLogs, student, undoPointsLog, baseScore } = useData();
   const { toast } = useToast();
   const [undoLogId, setUndoLogId] = useState<string | null>(null);
   const [undoing, setUndoing] = useState(false);
@@ -72,7 +73,7 @@ export default function ParentPointsLogPage() {
         <h1 className="text-xl font-semibold text-p-text">积分记录</h1>
         <div className="flex items-center gap-1.5 rounded-lg bg-amber-50 px-3 py-1.5 text-sm">
           <Coins size={14} className="text-amber-500" />
-          <span className="font-semibold text-amber-700">{student.balance}</span>
+          <span className="font-semibold text-amber-700">{toDisplay(student.balance, baseScore)}</span>
           <span className="text-amber-600/70">可用</span>
         </div>
       </div>
@@ -117,9 +118,9 @@ export default function ParentPointsLogPage() {
                       }`}
                     >
                       {isAdd ? "+" : ""}
-                      {log.amount}
+                      {toDisplay(log.amount, baseScore)}
                     </span>
-                    <p className="text-xs text-p-text-secondary mt-0.5">余额 {log.balance}</p>
+                    <p className="text-xs text-p-text-secondary mt-0.5">余额 {toDisplay(log.balance, baseScore)}</p>
                   </div>
                 )}
                 {canUndo(log.type) && (
