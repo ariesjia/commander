@@ -63,10 +63,8 @@
 ## 4. 依赖与风险
 
 - **依赖**：
-  - `docs/MECHA_SQUAD_ACHIEVEMENTS.md` 中成就 5～12 涉及 hound、dive、reticle、hive、net-weaver、sand-stalker，若未入 seed，对应成就始终为未解锁（逻辑正确，仅无学生可达成）
-  - 文档中 mechaSlugs 与 `prisma/seed-data/mechas.ts` 的 slug 需一致
-- **风险**：
-  - 成就 1 文档写 `["xuanjia", "razor"]`，文档示例写 `["xuanjia", "razor", "hound"]`，以 MECHA_SQUAD_ACHIEVEMENTS.md 正文为准
+  - `docs/MECHA_SQUAD_ACHIEVEMENTS.md` 成就均使用 `prisma/seed-data/mechas.ts` 中已有机甲，可直接生效
+  - 文档中 mechaSlugs 与 seed 的 slug 需一致
 
 ---
 
