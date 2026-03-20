@@ -10,7 +10,7 @@ export default function StudentMechaLibraryPage() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col min-h-[50vh] items-center justify-center gap-3">
+      <div className="flex flex-col min-h-[50vh] items-center justify-center gap-3 pb-6">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-s-primary border-t-transparent" />
         <p className="text-sm text-s-text-secondary">加载中...</p>
       </div>
@@ -19,7 +19,7 @@ export default function StudentMechaLibraryPage() {
 
   if (adoptedMechas.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center gap-4 py-16">
+      <div className="flex flex-col items-center justify-center gap-4 py-16 pb-6">
         <p className="text-s-text-secondary">暂无机甲，快去领养吧</p>
         <button
           onClick={() => router.push("/student")}
@@ -32,7 +32,7 @@ export default function StudentMechaLibraryPage() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 pb-6">
       <div className="relative flex items-center justify-center">
         <button
           onClick={() => router.back()}
