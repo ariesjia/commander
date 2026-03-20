@@ -8,7 +8,7 @@ import { MechaBattle, type ServerBattlePayload } from "@/components/battle/Mecha
 import { useMecha, getLevelFromMecha } from "@/hooks/useMecha";
 import { api } from "@/lib/api";
 import { registerBattleBgmEl } from "@/lib/battle-bgm-bridge";
-import type { BattleStatus } from "@/types";
+import type { BattleStatus, TodayBattleReplay } from "@/types";
 
 type BattlePostResponse = {
   outcome: "WIN" | "LOSE";
@@ -27,6 +27,19 @@ type BattlePostResponse = {
 
 const BATTLE_BGM_SRC = "/sounds/battle.mp3";
 
+function mapReplayToServerPayload(r: TodayBattleReplay): ServerBattlePayload {
+  return {
+    outcome: r.outcome,
+    narrative: r.narrative,
+    enemy: {
+      name: r.enemy.name,
+      imageUrl: r.enemy.imageUrl,
+      skills: r.enemy.skills,
+    },
+    pointsAwarded: r.pointsAwarded > 0 ? r.pointsAwarded : undefined,
+  };
+}
+
 export default function StudentBattlePage() {
   const router = useRouter();
   const { adoptedMechaIds, mechaPointsBySlug, refetch } = useData();
@@ -43,6 +56,8 @@ export default function StudentBattlePage() {
   const [battleResult, setBattleResult] = useState<ServerBattlePayload | null>(null);
   const [postError, setPostError] = useState<string | null>(null);
   const [posting, setPosting] = useState(false);
+  const [replayInProgress, setReplayInProgress] = useState(false);
+  const [battleMountKey, setBattleMountKey] = useState(0);
   const [battleBgmStopped, setBattleBgmStopped] = useState(false);
   const battleBgmRef = useRef<HTMLAudioElement | null>(null);
   const postBattleBgmStopTimerRef = useRef<number | null>(null);
@@ -121,6 +136,7 @@ export default function StudentBattlePage() {
   }, [loadStatus]);
 
   const handleBattlePresentationComplete = useCallback(() => {
+    setReplayInProgress(false);
     clearPostBattleBgmTimer();
     postBattleBgmStopTimerRef.current = window.setTimeout(() => {
       postBattleBgmStopTimerRef.current = null;
@@ -144,6 +160,8 @@ export default function StudentBattlePage() {
         typeof data.pointsAwarded === "number" && data.pointsAwarded > 0
           ? data.pointsAwarded
           : undefined;
+      setReplayInProgress(true);
+      setBattleMountKey((k) => k + 1);
       setBattleResult({
         outcome: data.outcome,
         narrative: data.narrative,
@@ -160,8 +178,20 @@ export default function StudentBattlePage() {
     } catch (e) {
       setPostError(e instanceof Error ? e.message : "战斗请求失败");
       setPosting(false);
+      setReplayInProgress(false);
     }
   };
+
+  const startReplay = useCallback(() => {
+    const r = status?.todayReplay;
+    if (!r) return;
+    setBattleBgmStopped(false);
+    clearPostBattleBgmTimer();
+    setPostError(null);
+    setReplayInProgress(true);
+    setBattleMountKey((k) => k + 1);
+    setBattleResult(mapReplayToServerPayload(r));
+  }, [status?.todayReplay, clearPostBattleBgmTimer]);
 
   const canStart =
     status?.canFight === true && !posting && battleResult === null && !status?.foughtToday;
@@ -205,14 +235,25 @@ export default function StudentBattlePage() {
         </div>
       )}
 
-      {status && !status.foughtToday && (
+      {status && !status.foughtToday && battleResult === null && (
         <button
           type="button"
           disabled={!canStart}
           onClick={startBattle}
           className="w-full rounded-xl border-2 border-s-primary bg-s-primary/15 py-3 min-h-[48px] text-base font-bold text-s-primary shadow-[0_0_16px_rgba(0,212,255,0.2)] disabled:opacity-45 disabled:cursor-not-allowed touch-manipulation active:scale-[0.99] transition-transform"
         >
-          {posting ? "加载中…" : battleResult ? "本场已结束" : "开始战斗"}
+          {posting ? "加载中…" : "开始战斗"}
+        </button>
+      )}
+
+      {status?.foughtToday && status.todayReplay && (
+        <button
+          type="button"
+          disabled={posting || replayInProgress}
+          onClick={startReplay}
+          className="w-full rounded-xl border-2 border-amber-500/45 bg-amber-500/10 py-3 min-h-[48px] text-base font-bold text-amber-100/95 shadow-[0_0_14px_rgba(245,158,11,0.15)] disabled:opacity-45 disabled:cursor-not-allowed touch-manipulation active:scale-[0.99] transition-transform"
+        >
+          {replayInProgress ? "播放中…" : battleResult ? "再看一遍" : "回放今日战斗"}
         </button>
       )}
 
@@ -231,6 +272,7 @@ export default function StudentBattlePage() {
 
       {showBattlePanel && !posting && (
         <MechaBattle
+          key={battleMountKey}
           playerMechaName={playerMechaName}
           playerSlug={primarySlug}
           playerMechaPoints={pts}

@@ -58,6 +58,22 @@ export type PointsLogType =
   | "EXCHANGE_REFUND"
   | "BATTLE_REWARD";
 
+/** 今日战斗重放（与 GET /api/student/battle 中 todayReplay 一致） */
+export interface TodayBattleReplay {
+  outcome: "WIN" | "LOSE";
+  narrative: string;
+  enemy: {
+    id: string;
+    slug: string;
+    name: string;
+    description: string;
+    imageUrl: string;
+    skills: string[];
+  };
+  pointsAwarded: number;
+  rewards: { kind: string; amount?: number; itemSlug?: string; quantity?: number }[];
+}
+
 /** 与 GET /api/student/battle、profile.battleStatus 一致 */
 export interface BattleStatus {
   timezone: string;
@@ -68,6 +84,7 @@ export interface BattleStatus {
   foughtToday: boolean;
   reasonCode: "THRESHOLD_NOT_MET" | "ALREADY_FOUGHT_TODAY" | null;
   message: string;
+  todayReplay: TodayBattleReplay | null;
 }
 
 export interface PointsLog {

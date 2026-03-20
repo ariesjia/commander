@@ -1,10 +1,27 @@
 import { prisma } from "@/lib/db";
-import { PointsLogType, Prisma } from "@prisma/client";
+import { BattleOutcome, PointsLogType, Prisma } from "@prisma/client";
 import { battleSettings } from "@/lib/battle-settings";
 import { getChinaDayBounds } from "@/lib/battle";
 import { getTodayStr } from "@/lib/utils";
+import { BATTLE_ENEMIES } from "@/lib/battle-enemies";
 
 export type BattleReasonCode = "THRESHOLD_NOT_MET" | "ALREADY_FOUGHT_TODAY" | null;
+
+/** 今日已战时可拉取此结构，供前端重放演出（与 POST 响应字段对齐） */
+export type TodayBattleReplayPayload = {
+  outcome: "WIN" | "LOSE";
+  narrative: string;
+  enemy: {
+    id: string;
+    slug: string;
+    name: string;
+    description: string;
+    imageUrl: string;
+    skills: string[];
+  };
+  pointsAwarded: number;
+  rewards: { kind: string; amount?: number; itemSlug?: string; quantity?: number }[];
+};
 
 export type BattleStatusPayload = {
   timezone: string;
@@ -15,7 +32,60 @@ export type BattleStatusPayload = {
   foughtToday: boolean;
   reasonCode: BattleReasonCode;
   message: string;
+  /** 有今日战斗记录且能解析对手时为非 null，用于重放 */
+  todayReplay: TodayBattleReplayPayload | null;
 };
+
+function parseBattleRewardsJson(
+  json: Prisma.JsonValue | null,
+): { kind: string; amount?: number; itemSlug?: string; quantity?: number }[] {
+  if (json == null || !Array.isArray(json)) return [];
+  const out: { kind: string; amount?: number; itemSlug?: string; quantity?: number }[] = [];
+  for (const item of json) {
+    if (!item || typeof item !== "object") continue;
+    const o = item as Record<string, unknown>;
+    const kind = typeof o.kind === "string" ? o.kind : "";
+    if (kind === "points" && typeof o.amount === "number") {
+      out.push({ kind: "points", amount: o.amount });
+    } else if (kind === "item" && typeof o.itemSlug === "string") {
+      out.push({
+        kind: "item",
+        itemSlug: o.itemSlug,
+        quantity: typeof o.quantity === "number" ? o.quantity : undefined,
+      });
+    }
+  }
+  return out;
+}
+
+function buildTodayBattleReplay(log: {
+  outcome: BattleOutcome;
+  narrative: string;
+  enemyId: string;
+  rewardsJson: Prisma.JsonValue | null;
+}): TodayBattleReplayPayload | null {
+  const enemyConfig =
+    BATTLE_ENEMIES.find((e) => e.id === log.enemyId) ?? BATTLE_ENEMIES[0];
+  if (!enemyConfig) return null;
+  const rewards = parseBattleRewardsJson(log.rewardsJson);
+  const pointsAwarded = rewards
+    .filter((r): r is { kind: "points"; amount: number } => r.kind === "points" && typeof r.amount === "number")
+    .reduce((s, r) => s + r.amount, 0);
+  return {
+    outcome: log.outcome === BattleOutcome.WIN ? "WIN" : "LOSE",
+    narrative: log.narrative,
+    enemy: {
+      id: enemyConfig.id,
+      slug: enemyConfig.slug,
+      name: enemyConfig.name,
+      description: enemyConfig.description,
+      imageUrl: enemyConfig.imageUrl,
+      skills: [...enemyConfig.skills],
+    },
+    pointsAwarded,
+    rewards,
+  };
+}
 
 function statusMessage(
   foughtToday: boolean,
@@ -32,7 +102,7 @@ function statusMessage(
     return {
       canFight: false,
       reasonCode: "THRESHOLD_NOT_MET",
-      message: `今日完成任务获得的积分需达到 ${battleSettings.minPointsEarnedToday} 分后才可战斗。`,
+      message: `战胜敌人可以获得积分，道具等奖励，每日新增积分需达到 ${battleSettings.minPointsEarnedToday} 分后才可战斗。`,
     };
   }
   return {
@@ -78,6 +148,7 @@ export async function getBattleStatusForStudent(
   const thresholdMet = taskPointsToday >= minPointsRequired;
   const foughtToday = Boolean(fought);
   const { canFight, reasonCode, message } = statusMessage(foughtToday, thresholdMet);
+  const todayReplay = fought ? buildTodayBattleReplay(fought) : null;
 
   return {
     timezone: battleSettings.timezone,
@@ -88,6 +159,7 @@ export async function getBattleStatusForStudent(
     foughtToday,
     reasonCode,
     message,
+    todayReplay,
   };
 }
 
