@@ -101,9 +101,19 @@ export async function POST() {
       });
       const primarySm = student.primaryMecha;
 
+      let mechaId: string | null = null;
+      if (primarySm) {
+        const mechaRow = await tx.mecha.findUnique({
+          where: { slug: primarySm.mechaSlug },
+          select: { id: true },
+        });
+        mechaId = mechaRow?.id ?? null;
+      }
+
       const battleLog = await tx.studentBattleLog.create({
         data: {
           studentId,
+          mechaId,
           foughtOn,
           outcome: prismaOutcome,
           enemyId: enemy.id,
