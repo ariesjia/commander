@@ -86,3 +86,4 @@
 |------|------|
 | [ADMIN.md](./ADMIN.md) | 管理后台说明：Admin 模型、创建方式、独立仓库对接 |
 | [VERCEL_DEPLOY.md](./VERCEL_DEPLOY.md) | Vercel 部署指南：数据库、环境变量、构建配置 |
+| [PWA.md](./PWA.md) | PWA / Service Worker：预缓存 public、机甲与音效运行时缓存 |

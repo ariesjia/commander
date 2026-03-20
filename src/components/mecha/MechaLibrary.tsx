@@ -8,6 +8,7 @@ import { TextWithPinyin } from "@/components/ui/TextWithPinyin";
 import { api } from "@/lib/api";
 import { formatDateFriendly } from "@/lib/utils";
 import type { MechaEvolutionDto } from "@/app/api/student/mecha-evolution/[id]/route";
+import { buildMechaReadAloudText } from "@/lib/mecha-speech";
 
 interface AdoptedMecha {
   id: string;
@@ -106,8 +107,9 @@ function MechaDetailModal({
   }, []);
 
   const handleSpeak = () => {
-    const text = mecha?.intro;
-    if (!text || !speechSupported) return;
+    if (!mecha || !levelInfo || !speechSupported) return;
+    const text = buildMechaReadAloudText(mecha, levelInfo);
+    if (!text.trim()) return;
 
     if (isSpeaking) {
       window.speechSynthesis.cancel();
@@ -195,29 +197,29 @@ function MechaDetailModal({
                       showPinyin={!!showPinyin}
                     />
                   </p>
-                  {speechSupported && (
-                    <button
-                      type="button"
-                      onClick={handleSpeak}
-                      className={
-                        "mt-4 flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm transition-colors " +
-                        (isSpeaking ? "bg-s-primary/30 text-s-primary" : "bg-s-primary/10 text-s-primary hover:bg-s-primary/20")
-                      }
-                    >
-                      {isSpeaking ? (
-                        <span className="flex items-center gap-1.5">
-                          <Square size={14} />
-                          停止朗读
-                        </span>
-                      ) : (
-                        <span className="flex items-center gap-1.5">
-                          <Volume2 size={14} />
-                          朗读故事
-                        </span>
-                      )}
-                    </button>
-                  )}
                 </div>
+              )}
+              {speechSupported && mecha && levelInfo && (
+                <button
+                  type="button"
+                  onClick={handleSpeak}
+                  className={
+                    "mt-4 flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm transition-colors " +
+                    (isSpeaking ? "bg-s-primary/30 text-s-primary" : "bg-s-primary/10 text-s-primary hover:bg-s-primary/20")
+                  }
+                >
+                  {isSpeaking ? (
+                    <span className="flex items-center gap-1.5">
+                      <Square size={14} />
+                      停止朗读
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1.5">
+                      <Volume2 size={14} />
+                      朗读故事
+                    </span>
+                  )}
+                </button>
               )}
 
               {/* 进化历程：垂直时间轴 - 左侧日期、中间时间线+圆点、右侧等级图+名称 */}

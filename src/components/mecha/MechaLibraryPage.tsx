@@ -10,6 +10,7 @@ import { ImagePreviewModal } from "@/components/ui/ImagePreviewModal";
 import { api } from "@/lib/api";
 import { formatDateFriendly } from "@/lib/utils";
 import type { MechaEvolutionDto } from "@/app/api/student/mecha-evolution/[id]/route";
+import { buildMechaReadAloudText } from "@/lib/mecha-speech";
 
 interface AdoptedMecha {
   id: string;
@@ -226,8 +227,9 @@ function MechaDrawer({
   }, []);
 
   const handleSpeak = () => {
-    const text = mecha?.intro;
-    if (!text || !speechSupported) return;
+    if (!mecha || !levelInfo || !speechSupported) return;
+    const text = buildMechaReadAloudText(mecha, levelInfo);
+    if (!text.trim()) return;
     if (isSpeaking) {
       window.speechSynthesis.cancel();
       setIsSpeaking(false);
@@ -336,7 +338,7 @@ function MechaDrawer({
 
         {/* 固定底部：朗读和历程按钮 */}
         <div className="shrink-0 px-4 pt-6 pb-[max(1.5rem,env(safe-area-inset-bottom,0px))] border-t border-s-primary/20 flex flex-col gap-4">
-          {mecha?.intro && speechSupported && (
+          {mecha && levelInfo && speechSupported && (
             <button
               type="button"
               onClick={handleSpeak}

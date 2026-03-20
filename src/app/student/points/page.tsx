@@ -85,8 +85,12 @@ export default function StudentPointsPage() {
                 <Icon size={18} className="md:w-5 md:h-5" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-base md:text-lg text-s-text truncate">
-                  <TextWithPinyin text={log.description} showPinyin={showPinyin} />
+                <p className="text-base md:text-lg text-s-text break-words whitespace-normal">
+                  <TextWithPinyin
+                    text={log.description}
+                    showPinyin={showPinyin}
+                    className="break-words [word-break:break-word]"
+                  />
                 </p>
                 <p className="text-sm md:text-base text-s-text-secondary">{formatDate(log.createdAt)}</p>
               </div>
