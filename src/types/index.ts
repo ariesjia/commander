@@ -49,7 +49,26 @@ export interface Exchange {
   confirmedAt?: string;
 }
 
-export type PointsLogType = "TASK_REWARD" | "TASK_REWARD_UNDO" | "TASK_PENALTY" | "TASK_PENALTY_UNDO" | "EXCHANGE_COST" | "EXCHANGE_REFUND";
+export type PointsLogType =
+  | "TASK_REWARD"
+  | "TASK_REWARD_UNDO"
+  | "TASK_PENALTY"
+  | "TASK_PENALTY_UNDO"
+  | "EXCHANGE_COST"
+  | "EXCHANGE_REFUND"
+  | "BATTLE_REWARD";
+
+/** 与 GET /api/student/battle、profile.battleStatus 一致 */
+export interface BattleStatus {
+  timezone: string;
+  date: string;
+  taskPointsToday: number;
+  minPointsRequired: number;
+  canFight: boolean;
+  foughtToday: boolean;
+  reasonCode: "THRESHOLD_NOT_MET" | "ALREADY_FOUGHT_TODAY" | null;
+  message: string;
+}
 
 export interface PointsLog {
   id: string;

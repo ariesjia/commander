@@ -3,7 +3,7 @@
 import { useData } from "@/contexts/DataContext";
 import { TextWithPinyin } from "@/components/ui/TextWithPinyin";
 import { formatDate } from "@/lib/utils";
-import { TrendingUp, TrendingDown, RotateCcw, Coins } from "lucide-react";
+import { TrendingUp, TrendingDown, RotateCcw, Coins, Swords } from "lucide-react";
 import { toDisplay } from "@/lib/score-display";
 
 const typeIcons: Record<string, typeof TrendingUp> = {
@@ -13,6 +13,7 @@ const typeIcons: Record<string, typeof TrendingUp> = {
   TASK_PENALTY_UNDO: RotateCcw,
   EXCHANGE_COST: TrendingDown,
   EXCHANGE_REFUND: RotateCcw,
+  BATTLE_REWARD: Swords,
 };
 
 const typeColors: Record<string, string> = {
@@ -22,6 +23,7 @@ const typeColors: Record<string, string> = {
   TASK_PENALTY_UNDO: "text-s-primary bg-s-primary/10",
   EXCHANGE_COST: "text-s-danger bg-s-danger/10",
   EXCHANGE_REFUND: "text-s-primary bg-s-primary/10",
+  BATTLE_REWARD: "text-violet-600 bg-violet-50",
 };
 
 const typeLabels: Record<string, string> = {
@@ -31,6 +33,7 @@ const typeLabels: Record<string, string> = {
   TASK_PENALTY_UNDO: "加分",
   EXCHANGE_COST: "扣分",
   EXCHANGE_REFUND: "加分",
+  BATTLE_REWARD: "战斗奖励",
 };
 
 export default function StudentPointsPage() {

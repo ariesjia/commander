@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireStudent, getStudentId } from "@/lib/api-auth";
 import { getCurrentStage, getEvolutionLevel } from "@/lib/mecha-config";
+import { getBattleStatusForStudent } from "@/lib/battle-server";
 
 export async function GET(request: Request) {
   const auth = await requireStudent();
@@ -46,6 +47,8 @@ export async function GET(request: Request) {
     mechaPointsBySlug[sm.mechaSlug] = sm.points;
   }
 
+  const battleStatus = await getBattleStatusForStudent(studentId);
+
   return NextResponse.json({
     showPinyin: student.parent.showPinyin,
     baseScore: (student.parent.baseScore ?? 1) as 0.1 | 1 | 10,
@@ -59,5 +62,6 @@ export async function GET(request: Request) {
     streakDays: student.streakDays,
     mechaStage,
     evolutionLevel,
+    battleStatus,
   });
 }

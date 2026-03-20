@@ -13,7 +13,7 @@ import { XuanjiaProgress } from "@/components/mecha/XuanjiaProgress";
 import Link from "next/link";
 import { PinDialog } from "@/components/mode-switch/PinDialog";
 import Image from "next/image";
-import { Coins, Flame, Snowflake, Lock, Library } from "lucide-react";
+import { Coins, Flame, Snowflake, Lock, Library, Swords } from "lucide-react";
 import { MECHA_STAGES, STREAK_EFFECTS } from "@/lib/mecha-config";
 import { toDisplay } from "@/lib/score-display";
 
@@ -97,7 +97,7 @@ export default function StudentHome() {
     <div className="flex flex-col gap-4 pt-2 pb-6">
       {/* Header with lock button + 机甲库 */}
       <div className="relative flex flex-col items-center text-center">
-        <div className="absolute left-0 top-0">
+        <div className="absolute left-0 top-0 flex flex-col gap-2">
           {hasMechas && (
             <Link
               href="/student/mecha"
@@ -176,6 +176,18 @@ export default function StudentHome() {
         <XuanjiaProgress slug={primarySlug} mechaPoints={primaryMechaPoints} baseScore={baseScore} />
       ) : (
         <MechaProgress totalPoints={student.totalPoints} stage={mechaStage} baseScore={baseScore} />
+      )}
+
+      {hasMechas && (
+        <div className="flex justify-center">
+          <Link
+            href="/student/battle"
+            className="flex w-full max-w-sm items-center justify-center gap-2 rounded-xl border border-amber-500/35 bg-amber-500/10 px-4 py-3 min-h-[44px] text-sm font-medium text-amber-200/95 transition-colors hover:bg-amber-500/15 touch-manipulation"
+          >
+            <Swords size={18} />
+            战斗
+          </Link>
+        </div>
       )}
 
       <PinDialog

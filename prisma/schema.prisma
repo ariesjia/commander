@@ -46,6 +46,7 @@ model Student {
   exchanges  Exchange[]
   pointsLogs PointsLog[]
   studentMechas StudentMecha[]
+  studentBattleLogs StudentBattleLog[]
 }
 
 // 学生领养的机甲及积分：积分仅来自领养后完成的任务，兑换奖励不扣
@@ -134,8 +135,32 @@ model PointsLog {
   student     Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
   taskLogId   String?
   taskLog     TaskLog? @relation(fields: [taskLogId], references: [id], onDelete: SetNull)
+  studentBattleLog StudentBattleLog?
 
   @@index([studentId])
+}
+
+/// 学生每日战斗记录（每自然日最多一条，与 Asia/Shanghai 日历日对齐）
+model StudentBattleLog {
+  id          String        @id @default(cuid())
+  studentId   String
+  student     Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  foughtOn    DateTime      @db.Date
+  outcome     BattleOutcome
+  enemyId     String
+  narrative   String
+  rewardsJson Json?
+  pointsLogId String?       @unique
+  pointsLog   PointsLog?    @relation(fields: [pointsLogId], references: [id], onDelete: SetNull)
+  createdAt   DateTime      @default(now())
+
+  @@unique([studentId, foughtOn])
+  @@index([studentId])
+}
+
+enum BattleOutcome {
+  WIN
+  LOSE
 }
 
 model TaskLog {
@@ -193,4 +218,5 @@ enum PointsLogType {
   TASK_PENALTY_UNDO
   EXCHANGE_COST
   EXCHANGE_REFUND
+  BATTLE_REWARD
 }
