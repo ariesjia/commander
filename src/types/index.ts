@@ -71,7 +71,14 @@ export interface TodayBattleReplay {
     skills: string[];
   };
   pointsAwarded: number;
-  rewards: { kind: string; amount?: number; itemSlug?: string; quantity?: number; name?: string }[];
+  rewards: {
+    kind: string;
+    amount?: number;
+    itemSlug?: string;
+    quantity?: number;
+    name?: string;
+    imageUrl?: string;
+  }[];
 }
 
 /** 与 GET /api/student/battle、profile.battleStatus 一致 */

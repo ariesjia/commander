@@ -244,6 +244,7 @@ export type ServerBattleRewardLine = {
   itemSlug?: string;
   quantity?: number;
   name?: string;
+  imageUrl?: string;
 };
 
 export type ServerBattlePayload = {
@@ -862,14 +863,27 @@ export function MechaBattle({
                 itemRewardLines(serverBattle.rewards).map((it, i) => {
                   const label = it.name?.trim() || it.itemSlug;
                   const q = typeof it.quantity === "number" && it.quantity > 0 ? it.quantity : 1;
+                  const src = it.imageUrl?.trim();
                   return (
-                    <p
+                    <div
                       key={`item-reward-${i}-${it.itemSlug}`}
-                      className="w-full text-center text-xs font-bold text-fuchsia-300/95"
+                      className="flex w-full items-center justify-center gap-2 px-1"
                     >
-                      获得道具 {label}
-                      {q > 1 ? ` ×${q}` : ""}
-                    </p>
+                      {src ? (
+                        <img
+                          src={src}
+                          alt=""
+                          className="h-12 w-12 shrink-0 rounded-lg border border-fuchsia-500/30 bg-black/30 object-contain"
+                          onError={(e) => {
+                            e.currentTarget.style.display = "none";
+                          }}
+                        />
+                      ) : null}
+                      <p className="min-w-0 flex-1 text-center text-xs font-bold text-fuchsia-300/95">
+                        获得道具 {label}
+                        {q > 1 ? ` ×${q}` : ""}
+                      </p>
+                    </div>
                   );
                 })}
             </>

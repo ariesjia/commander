@@ -10,6 +10,21 @@ import { api } from "@/lib/api";
 import { registerBattleBgmEl } from "@/lib/battle-bgm-bridge";
 import type { BattleStatus, TodayBattleReplay } from "@/types";
 
+function itemRewardsFromReplay(
+  rewards: TodayBattleReplay["rewards"] | undefined,
+): { label: string; quantity: number; imageUrl?: string }[] {
+  if (!rewards?.length) return [];
+  const out: { label: string; quantity: number; imageUrl?: string }[] = [];
+  for (const r of rewards) {
+    if (r.kind !== "item" || !r.itemSlug) continue;
+    const label = (r.name?.trim() || r.itemSlug) as string;
+    const quantity = typeof r.quantity === "number" && r.quantity > 0 ? r.quantity : 1;
+    const imageUrl = r.imageUrl?.trim() || undefined;
+    out.push({ label, quantity, imageUrl });
+  }
+  return out;
+}
+
 type BattlePostResponse = {
   outcome: "WIN" | "LOSE";
   narrative: string;
@@ -21,7 +36,14 @@ type BattlePostResponse = {
     imageUrl: string;
     skills: string[];
   };
-  rewards: { kind: string; amount?: number; itemSlug?: string; quantity?: number }[];
+  rewards: {
+    kind: string;
+    amount?: number;
+    itemSlug?: string;
+    quantity?: number;
+    name?: string;
+    imageUrl?: string;
+  }[];
   pointsAwarded: number;
 };
 
@@ -62,6 +84,8 @@ export default function StudentBattlePage() {
   const [battleBgmStopped, setBattleBgmStopped] = useState(false);
   const battleBgmRef = useRef<HTMLAudioElement | null>(null);
   const postBattleBgmStopTimerRef = useRef<number | null>(null);
+  /** 本场演出是否来自「回放」按钮（结束时清空 battleResult 以便再次显示今日战果） */
+  const presentationFromReplayRef = useRef(false);
 
   const clearPostBattleBgmTimer = useCallback(() => {
     if (postBattleBgmStopTimerRef.current != null) {
@@ -138,6 +162,10 @@ export default function StudentBattlePage() {
 
   const handleBattlePresentationComplete = useCallback(() => {
     setReplayInProgress(false);
+    if (presentationFromReplayRef.current) {
+      presentationFromReplayRef.current = false;
+      setBattleResult(null);
+    }
     clearPostBattleBgmTimer();
     postBattleBgmStopTimerRef.current = window.setTimeout(() => {
       postBattleBgmStopTimerRef.current = null;
@@ -161,6 +189,7 @@ export default function StudentBattlePage() {
         typeof data.pointsAwarded === "number" && data.pointsAwarded > 0
           ? data.pointsAwarded
           : undefined;
+      presentationFromReplayRef.current = false;
       setReplayInProgress(true);
       setBattleMountKey((k) => k + 1);
       setBattleResult({
@@ -187,6 +216,7 @@ export default function StudentBattlePage() {
   const startReplay = useCallback(() => {
     const r = status?.todayReplay;
     if (!r) return;
+    presentationFromReplayRef.current = true;
     setBattleBgmStopped(false);
     clearPostBattleBgmTimer();
     setPostError(null);
@@ -201,6 +231,11 @@ export default function StudentBattlePage() {
   /** 仅「可开战」或本场已有结果时展示战斗台；已打过或积分不足进页时不占版面 */
   const showBattlePanel =
     battleResult !== null || status?.canFight === true;
+
+  const spoilItems = status?.todayReplay
+    ? itemRewardsFromReplay(status.todayReplay.rewards)
+    : [];
+  const spoilPoints = status?.todayReplay?.pointsAwarded ?? 0;
 
   return (
     <div className="flex flex-col gap-3 pt-2 pb-6">
@@ -258,6 +293,66 @@ export default function StudentBattlePage() {
           {replayInProgress ? "播放中…" : battleResult ? "再看一遍" : "回放今日战斗"}
         </button>
       )}
+
+      {status?.foughtToday &&
+        status.todayReplay &&
+        battleResult === null &&
+        !posting &&
+        !replayInProgress && (
+          <div className="glass-card rounded-xl p-4 text-sm space-y-2 border border-s-primary/15">
+            <p className="font-display font-semibold text-s-text">今日战果</p>
+            <div className="flex flex-wrap items-center gap-2 text-s-text">
+              <span className="text-s-text-secondary">结果</span>
+              <span
+                className={
+                  status.todayReplay.outcome === "WIN"
+                    ? "font-bold text-emerald-400/95"
+                    : "font-bold text-rose-400/95"
+                }
+              >
+                {status.todayReplay.outcome === "WIN" ? "胜利" : "失败"}
+              </span>
+              <span className="text-s-text-secondary">·</span>
+              <span className="text-s-text-secondary">对手</span>
+              <span className="font-medium text-s-text">{status.todayReplay.enemy.name}</span>
+            </div>
+            {spoilPoints > 0 && (
+              <p className="text-s-text">
+                <span className="text-s-text-secondary">积分 </span>
+                <span className="font-bold text-s-success">+{spoilPoints}</span>
+              </p>
+            )}
+            {spoilItems.length > 0 && (
+              <ul className="space-y-2 text-s-text">
+                <li className="text-s-text-secondary list-none">道具</li>
+                {spoilItems.map((it, i) => (
+                  <li
+                    key={`${it.label}-${i}`}
+                    className="flex list-none items-center gap-3 rounded-lg border border-fuchsia-500/20 bg-black/25 py-2 pl-2 pr-3"
+                  >
+                    {it.imageUrl ? (
+                      <img
+                        src={it.imageUrl}
+                        alt=""
+                        className="h-14 w-14 shrink-0 rounded-md border border-fuchsia-500/25 bg-black/40 object-contain"
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none";
+                        }}
+                      />
+                    ) : null}
+                    <span className="min-w-0 flex-1 font-medium text-fuchsia-300/95">
+                      {it.label}
+                      {it.quantity > 1 ? ` ×${it.quantity}` : ""}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {spoilPoints <= 0 && spoilItems.length === 0 && (
+              <p className="text-s-text-secondary text-xs">本场无积分与道具收益。</p>
+            )}
+          </div>
+        )}
 
       {postError && <p className="text-sm text-s-danger px-1">{postError}</p>}
 

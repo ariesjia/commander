@@ -27,5 +27,5 @@ export const battleSettings = {
 
 export type BattleRewardGrant =
   | { kind: "points"; amount: number }
-  /** name 供前端朗读与展示；历史数据可能仅有 itemSlug */
-  | { kind: "item"; itemSlug: string; quantity: number; name?: string };
+  /** name / imageUrl 供前端展示；历史数据可能仅有 itemSlug */
+  | { kind: "item"; itemSlug: string; quantity: number; name?: string; imageUrl?: string };

@@ -20,7 +20,14 @@ export type TodayBattleReplayPayload = {
     skills: string[];
   };
   pointsAwarded: number;
-  rewards: { kind: string; amount?: number; itemSlug?: string; quantity?: number; name?: string }[];
+  rewards: {
+    kind: string;
+    amount?: number;
+    itemSlug?: string;
+    quantity?: number;
+    name?: string;
+    imageUrl?: string;
+  }[];
 };
 
 /**
@@ -37,7 +44,7 @@ export async function resolveWinBattleRewardRoll(
   }
   const items = await tx.item.findMany({
     where: { isActive: true },
-    select: { id: true, slug: true, name: true },
+    select: { id: true, slug: true, name: true, imageUrl: true },
   });
   if (items.length === 0) {
     return [{ kind: "points", amount: 1 }];
@@ -48,7 +55,15 @@ export async function resolveWinBattleRewardRoll(
     create: { studentId, itemId: pick.id, quantity: 1 },
     update: { quantity: { increment: 1 } },
   });
-  return [{ kind: "item", itemSlug: pick.slug, quantity: 1, name: pick.name }];
+  return [
+    {
+      kind: "item",
+      itemSlug: pick.slug,
+      quantity: 1,
+      name: pick.name,
+      imageUrl: pick.imageUrl,
+    },
+  ];
 }
 
 export type BattleStatusPayload = {
@@ -66,9 +81,23 @@ export type BattleStatusPayload = {
 
 function parseBattleRewardsJson(
   json: Prisma.JsonValue | null,
-): { kind: string; amount?: number; itemSlug?: string; quantity?: number; name?: string }[] {
+): {
+  kind: string;
+  amount?: number;
+  itemSlug?: string;
+  quantity?: number;
+  name?: string;
+  imageUrl?: string;
+}[] {
   if (json == null || !Array.isArray(json)) return [];
-  const out: { kind: string; amount?: number; itemSlug?: string; quantity?: number; name?: string }[] = [];
+  const out: {
+    kind: string;
+    amount?: number;
+    itemSlug?: string;
+    quantity?: number;
+    name?: string;
+    imageUrl?: string;
+  }[] = [];
   for (const item of json) {
     if (!item || typeof item !== "object") continue;
     const o = item as Record<string, unknown>;
@@ -81,6 +110,7 @@ function parseBattleRewardsJson(
         itemSlug: o.itemSlug,
         quantity: typeof o.quantity === "number" ? o.quantity : undefined,
         name: typeof o.name === "string" ? o.name : undefined,
+        imageUrl: typeof o.imageUrl === "string" ? o.imageUrl : undefined,
       });
     }
   }
