@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/db";
 import { BattleOutcome, PointsLogType, Prisma } from "@prisma/client";
-import { battleSettings } from "@/lib/battle-settings";
-import { getChinaDayBounds } from "@/lib/battle";
+import { battleSettings, type BattleRewardGrant } from "@/lib/battle-settings";
+import { getChinaDayBounds, type BattleRewardRoll } from "@/lib/battle";
 import { getTodayStr } from "@/lib/utils";
 import { BATTLE_ENEMIES } from "@/lib/battle-enemies";
 
@@ -20,8 +20,36 @@ export type TodayBattleReplayPayload = {
     skills: string[];
   };
   pointsAwarded: number;
-  rewards: { kind: string; amount?: number; itemSlug?: string; quantity?: number }[];
+  rewards: { kind: string; amount?: number; itemSlug?: string; quantity?: number; name?: string }[];
 };
+
+/**
+ * 将胜利随机结果落库为具体奖励（积分直接返回；随机道具在事务内抽 Item 并 upsert StudentItem）
+ */
+export async function resolveWinBattleRewardRoll(
+  tx: Prisma.TransactionClient,
+  studentId: string,
+  roll: BattleRewardRoll,
+  random: () => number = Math.random,
+): Promise<BattleRewardGrant[]> {
+  if (roll.kind === "points") {
+    return [{ kind: "points", amount: roll.amount }];
+  }
+  const items = await tx.item.findMany({
+    where: { isActive: true },
+    select: { id: true, slug: true, name: true },
+  });
+  if (items.length === 0) {
+    return [{ kind: "points", amount: 1 }];
+  }
+  const pick = items[Math.floor(random() * items.length)]!;
+  await tx.studentItem.upsert({
+    where: { studentId_itemId: { studentId, itemId: pick.id } },
+    create: { studentId, itemId: pick.id, quantity: 1 },
+    update: { quantity: { increment: 1 } },
+  });
+  return [{ kind: "item", itemSlug: pick.slug, quantity: 1, name: pick.name }];
+}
 
 export type BattleStatusPayload = {
   timezone: string;
@@ -38,9 +66,9 @@ export type BattleStatusPayload = {
 
 function parseBattleRewardsJson(
   json: Prisma.JsonValue | null,
-): { kind: string; amount?: number; itemSlug?: string; quantity?: number }[] {
+): { kind: string; amount?: number; itemSlug?: string; quantity?: number; name?: string }[] {
   if (json == null || !Array.isArray(json)) return [];
-  const out: { kind: string; amount?: number; itemSlug?: string; quantity?: number }[] = [];
+  const out: { kind: string; amount?: number; itemSlug?: string; quantity?: number; name?: string }[] = [];
   for (const item of json) {
     if (!item || typeof item !== "object") continue;
     const o = item as Record<string, unknown>;
@@ -52,6 +80,7 @@ function parseBattleRewardsJson(
         kind: "item",
         itemSlug: o.itemSlug,
         quantity: typeof o.quantity === "number" ? o.quantity : undefined,
+        name: typeof o.name === "string" ? o.name : undefined,
       });
     }
   }

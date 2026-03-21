@@ -114,28 +114,29 @@ export default function StudentHome() {
         >
           <Lock size={20} />
         </button>
+
+        {/* Mecha display */}
+        <div className="relative flex justify-center">
+          {primarySlug ? (
+            <XuanjiaViewer
+              slug={primarySlug}
+              mechaPoints={primaryMechaPoints}
+              className="w-64 h-80 sm:w-72 sm:h-96"
+            />
+          ) : (
+            <MechaViewer stage={mechaStage} className="w-64 h-80 sm:w-72 sm:h-96" />
+          )}
+          {streakEffect && (
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2">
+              <span className="inline-flex items-center gap-1 rounded-full bg-orange-500/20 px-3 py-1 text-xs text-orange-400 border border-orange-500/30">
+                <Flame size={12} />
+                {streakEffect.name} · {student.streakDays}天
+              </span>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Mecha display */}
-      <div className="relative flex justify-center">
-        {primarySlug ? (
-          <XuanjiaViewer
-            slug={primarySlug}
-            mechaPoints={primaryMechaPoints}
-            className="w-64 h-80 sm:w-72 sm:h-96"
-          />
-        ) : (
-          <MechaViewer stage={mechaStage} className="w-64 h-80 sm:w-72 sm:h-96" />
-        )}
-        {streakEffect && (
-          <div className="absolute bottom-2 left-1/2 -translate-x-1/2">
-            <span className="inline-flex items-center gap-1 rounded-full bg-orange-500/20 px-3 py-1 text-xs text-orange-400 border border-orange-500/30">
-              <Flame size={12} />
-              {streakEffect.name} · {student.streakDays}天
-            </span>
-          </div>
-        )}
-      </div>
 
       {/* Points bar */}
       <div className="flex flex-wrap items-center justify-center gap-6 rounded-xl border border-white/5 bg-black/15 px-4 py-3">

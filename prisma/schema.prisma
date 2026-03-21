@@ -47,6 +47,42 @@ model Student {
   pointsLogs PointsLog[]
   studentMechas StudentMecha[]
   studentBattleLogs StudentBattleLog[]
+  studentItems    StudentItem[]
+}
+
+enum ItemKind {
+  DISPLAY // 展示/纪念
+  MATERIAL // 材料（预留：盲盒碎片等）
+  CONSUMABLE // 消耗品（预留：盲盒等）
+}
+
+/// 全局道具定义（名称、介绍、图片）
+model Item {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  description String   @db.Text
+  imageUrl    String
+  kind        ItemKind @default(DISPLAY)
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  studentItems StudentItem[]
+}
+
+/// 学生持有数量（堆叠）
+model StudentItem {
+  id        String   @id @default(cuid())
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  itemId    String
+  item      Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  quantity  Int      @default(0)
+
+  @@unique([studentId, itemId])
+  @@index([studentId])
 }
 
 // 学生领养的机甲及积分：积分仅来自领养后完成的任务，兑换奖励不扣

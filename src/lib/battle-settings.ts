@@ -11,16 +11,21 @@ export const battleSettings = {
   minPointsEarnedToday: 5,
   /** 计入「当日任务积分门槛」：默认仅家长确认任务后的奖励 */
   eligiblePointsLogTypesForThreshold: ["TASK_REWARD"] as const satisfies readonly PointsLogType[],
-  winProbability: 0.4,
-  /** 胜利后按权重抽一档；未来可插入 weight:0 表示「谢谢参与」 */
-  winPointRewards: [
-    { weight: 0.7, amount: 1 },
-    { weight: 0.2, amount: 2 },
-    { weight: 0.1, amount: 3 },
+  winProbability: 0.6,
+  /**
+   * 胜利后按权重抽一档（权重之和应为 1）。
+   * - points：固定积分
+   * - item_random：从当前启用的 Item 中均匀随机一件，数量 +1
+   */
+  winBattleRewards: [
+    { weight: 0.3, kind: "points" as const, amount: 1 },
+    { weight: 0.15, kind: "points" as const, amount: 2 },
+    { weight: 0.05, kind: "points" as const, amount: 3 },
+    { weight: 0.5, kind: "item_random" as const },
   ] as const,
 };
 
-/** 首期仅实现 points；未来可增加 item 等分支 */
 export type BattleRewardGrant =
   | { kind: "points"; amount: number }
-  | { kind: "item"; itemSlug: string; quantity: number };
+  /** name 供前端朗读与展示；历史数据可能仅有 itemSlug */
+  | { kind: "item"; itemSlug: string; quantity: number; name?: string };

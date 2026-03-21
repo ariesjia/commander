@@ -6,13 +6,14 @@ import {
   pickRandomEnemy,
   rollBattleOutcome,
   pickNarrative,
-  rollWinPointRewards,
+  rollWinBattleRewards,
 } from "@/lib/battle";
 import { battleSettings, type BattleRewardGrant } from "@/lib/battle-settings";
 import {
   chinaDateStrToDbDate,
   getBattleStatusForStudent,
   isPrismaUniqueViolation,
+  resolveWinBattleRewardRoll,
 } from "@/lib/battle-server";
 import { getTodayStr } from "@/lib/utils";
 
@@ -81,14 +82,7 @@ export async function POST() {
   const outcome = rollBattleOutcome(battleSettings.winProbability);
   const narrative = pickNarrative(enemy, outcome);
 
-  let rewards: BattleRewardGrant[] = [];
-  if (outcome === "WIN") {
-    rewards = rollWinPointRewards();
-  }
-
-  const pointsTotal = rewards
-    .filter((r): r is Extract<BattleRewardGrant, { kind: "points" }> => r.kind === "points")
-    .reduce((s, r) => s + r.amount, 0);
+  const winRewardRoll = outcome === "WIN" ? rollWinBattleRewards() : null;
 
   const foughtOn = chinaDateStrToDbDate(todayStr);
   const prismaOutcome = outcome === "WIN" ? BattleOutcome.WIN : BattleOutcome.LOSE;
@@ -100,6 +94,15 @@ export async function POST() {
         include: { primaryMecha: true },
       });
       const primarySm = student.primaryMecha;
+
+      let rewards: BattleRewardGrant[] = [];
+      if (winRewardRoll) {
+        rewards = await resolveWinBattleRewardRoll(tx, studentId, winRewardRoll);
+      }
+
+      const pointsTotal = rewards
+        .filter((r): r is Extract<BattleRewardGrant, { kind: "points" }> => r.kind === "points")
+        .reduce((s, r) => s + r.amount, 0);
 
       let mechaId: string | null = null;
       if (primarySm) {
@@ -157,14 +160,14 @@ export async function POST() {
         });
       }
 
-      return { battleLogId: battleLog.id, pointsLogId, pointsTotal };
+      return { battleLogId: battleLog.id, pointsLogId, pointsTotal, rewards };
     });
 
     return NextResponse.json({
       outcome,
       narrative,
       enemy: publicEnemy(enemy),
-      rewards,
+      rewards: result.rewards,
       pointsAwarded: result.pointsTotal,
     });
   } catch (e) {

@@ -37,6 +37,7 @@ function mapReplayToServerPayload(r: TodayBattleReplay): ServerBattlePayload {
       skills: r.enemy.skills,
     },
     pointsAwarded: r.pointsAwarded > 0 ? r.pointsAwarded : undefined,
+    rewards: r.rewards?.length ? r.rewards : undefined,
   };
 }
 
@@ -171,6 +172,7 @@ export default function StudentBattlePage() {
           skills: data.enemy.skills,
         },
         pointsAwarded: points,
+        rewards: data.rewards?.length ? data.rewards : undefined,
       });
       setPosting(false);
       void refetch();

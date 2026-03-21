@@ -136,12 +136,13 @@ export const battleSettings = {
   minPointsEarnedToday: 5,
   /** 计入「当日任务积分门槛」：默认仅家长确认任务后的奖励 */
   eligiblePointsLogTypesForThreshold: ["TASK_REWARD"] as const,
-  winProbability: 0.4,
-  /** 胜利后按权重抽一档；未来可插入 weight:0 表示「谢谢参与」 */
-  winPointRewards: [
-    { weight: 0.7, amount: 1 },
-    { weight: 0.2, amount: 2 },
-    { weight: 0.1, amount: 3 },
+  winProbability: 0.6,
+  /** 胜利后按权重抽一档：积分或随机道具（见 src/lib/battle-settings.ts） */
+  winBattleRewards: [
+    { weight: 0.3, kind: "points", amount: 1 },
+    { weight: 0.15, kind: "points", amount: 2 },
+    { weight: 0.05, kind: "points", amount: 3 },
+    { weight: 0.5, kind: "item_random" },
   ] as const,
 };
 ```

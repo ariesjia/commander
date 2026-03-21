@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Volume2, Square, History } from "lucide-react";
 import { useMecha, getLevelFromMecha } from "@/hooks/useMecha";
+import { useReadAloud } from "@/hooks/useReadAloud";
+import { StudentSideDrawer } from "@/components/student/StudentSideDrawer";
 import { TextWithPinyin } from "@/components/ui/TextWithPinyin";
 import { ImagePreviewModal } from "@/components/ui/ImagePreviewModal";
 import { api } from "@/lib/api";
@@ -205,46 +206,21 @@ function MechaDrawer({
 }) {
   const { data: mecha } = useMecha(slug);
   const levelInfo = getLevelFromMecha(mecha, mechaPoints);
-  const [speechSupported, setSpeechSupported] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false);
+  const { speechSupported, isSpeaking, speak, cancel } = useReadAloud();
   const [evolution, setEvolution] = useState<MechaEvolutionDto | null>(null);
   const [evolutionLoading, setEvolutionLoading] = useState(false);
   const [evolutionError, setEvolutionError] = useState(false);
   const [showEvolutionModal, setShowEvolutionModal] = useState(false);
-
-  useEffect(() => {
-    const ok =
-      typeof window !== "undefined" &&
-      "speechSynthesis" in window &&
-      "SpeechSynthesisUtterance" in window;
-    setSpeechSupported(ok);
-    if (ok && window.speechSynthesis.getVoices().length === 0) {
-      window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
-    }
-    return () => {
-      if (typeof window !== "undefined") window.speechSynthesis.cancel();
-    };
-  }, []);
 
   const handleSpeak = () => {
     if (!mecha || !levelInfo || !speechSupported) return;
     const text = buildMechaReadAloudText(mecha, levelInfo);
     if (!text.trim()) return;
     if (isSpeaking) {
-      window.speechSynthesis.cancel();
-      setIsSpeaking(false);
+      cancel();
       return;
     }
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "zh-CN";
-    utterance.rate = 1;
-    const voices = window.speechSynthesis.getVoices();
-    const zhVoice = voices.find((v) => v.lang === "zh-CN") ?? voices.find((v) => v.lang.startsWith("zh"));
-    if (zhVoice) utterance.voice = zhVoice;
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
-    window.speechSynthesis.speak(utterance);
-    setIsSpeaking(true);
+    speak(text);
   };
 
   const handleOpenEvolution = async () => {
@@ -261,115 +237,86 @@ function MechaDrawer({
     }
   };
 
-  const drawerContent = (
-    <div className="theme-student">
-      <motion.div
-        className="fixed inset-0 z-[60]"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        onClick={onClose}
-      >
-        <div className="absolute inset-0 bg-black/60" />
-      </motion.div>
-      <motion.div
-        className="fixed left-0 z-[61] w-full max-w-lg rounded-r-2xl bg-[#0c1222] border-r border-s-primary/20 shadow-[4px_0_24px_rgba(0,0,0,0.3)] overflow-hidden flex flex-col top-[env(safe-area-inset-top,0px)] bottom-0"
-        initial={{ x: "-100%" }}
-        animate={{ x: 0 }}
-        exit={{ x: "-100%" }}
-        transition={{ type: "spring", damping: 28, stiffness: 300 }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* 固定右上角关闭按钮 */}
-        <div className="absolute right-3 top-3 z-10 shrink-0">
-          <button
-            onClick={onClose}
-            className="rounded-lg p-1.5 text-s-text-secondary hover:bg-white/10"
-            aria-label="关闭"
-          >
-            <X size={20} />
-          </button>
-        </div>
-        <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 pt-12 pb-4 min-h-0 min-w-0">
-          {/* 机甲名称 */}
-          {mecha && (
-            <h3 className="text-lg font-semibold text-s-primary text-center mb-4">
-              <TextWithPinyin text={mecha.name} showPinyin={!!showPinyin} />
-            </h3>
+  const footer = (
+    <>
+      {mecha && levelInfo && speechSupported && (
+        <button
+          type="button"
+          onClick={handleSpeak}
+          className={
+            "w-full flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm transition-colors " +
+            (isSpeaking ? "bg-s-primary/30 text-s-primary" : "bg-s-primary/10 text-s-primary hover:bg-s-primary/20")
+          }
+        >
+          {isSpeaking ? (
+            <>
+              <Square size={18} />
+              停止朗读
+            </>
+          ) : (
+            <>
+              <Volume2 size={18} />
+              朗读故事
+            </>
           )}
-          {/* 图片 */}
-          <div className="flex justify-center mb-4">
-            {mecha && levelInfo ? (
-              <img
-                src={levelInfo.imageUrl}
-                alt={mecha.name}
-                className="w-40 h-52 object-contain rounded-xl"
-                onError={(e) => (e.currentTarget.style.display = "none")}
-              />
-            ) : (
-              <div className="w-40 h-52 rounded-xl bg-white/5 flex items-center justify-center">
-                <span className="text-sm text-s-text-secondary">加载中...</span>
-              </div>
+        </button>
+      )}
+      <button
+        type="button"
+        onClick={handleOpenEvolution}
+        disabled={evolutionLoading}
+        className="w-full flex items-center justify-center gap-2 rounded-xl border border-s-primary/30 bg-s-primary/5 px-4 py-3 text-sm text-s-primary hover:bg-s-primary/10 transition-colors disabled:opacity-50"
+      >
+        <History size={18} />
+        {evolutionLoading ? "加载中..." : evolutionError ? "加载失败" : "进化历程"}
+      </button>
+    </>
+  );
+
+  return (
+    <>
+      <StudentSideDrawer onClose={onClose} footer={footer}>
+        {mecha && (
+          <h3 className="text-lg font-semibold text-s-primary text-center mb-4">
+            <TextWithPinyin text={mecha.name} showPinyin={!!showPinyin} />
+          </h3>
+        )}
+        <div className="flex justify-center mb-4">
+          {mecha && levelInfo ? (
+            <img
+              src={levelInfo.imageUrl}
+              alt={mecha.name}
+              className="w-40 h-52 object-contain rounded-xl"
+              onError={(e) => (e.currentTarget.style.display = "none")}
+            />
+          ) : (
+            <div className="w-40 h-52 rounded-xl bg-white/5 flex items-center justify-center">
+              <span className="text-sm text-s-text-secondary">加载中...</span>
+            </div>
+          )}
+        </div>
+
+        {levelInfo && (
+          <div className="mb-4">
+            <p className="text-s-text-secondary text-sm text-center">
+              <TextWithPinyin text={levelInfo.name} showPinyin={!!showPinyin} />
+            </p>
+            {levelInfo.description && (
+              <p className="text-s-text-secondary text-sm text-center mt-1.5 leading-relaxed">
+                <TextWithPinyin text={levelInfo.description} showPinyin={!!showPinyin} />
+              </p>
             )}
           </div>
+        )}
 
-          {levelInfo && (
-            <div className="mb-4">
-              <p className="text-s-text-secondary text-sm text-center">
-                <TextWithPinyin text={levelInfo.name} showPinyin={!!showPinyin} />
-              </p>
-              {levelInfo.description && (
-                <p className="text-s-text-secondary text-sm text-center mt-1.5 leading-relaxed">
-                  <TextWithPinyin text={levelInfo.description} showPinyin={!!showPinyin} />
-                </p>
-              )}
-            </div>
-          )}
-
-          {/* 介绍 */}
-          {mecha?.intro && (
-            <div className="mb-4 min-w-0">
-              <p className="text-s-text text-sm leading-relaxed break-words">
-                <TextWithPinyin text={mecha.intro} showPinyin={!!showPinyin} />
-              </p>
-            </div>
-          )}
-        </div>
-
-        {/* 固定底部：朗读和历程按钮 */}
-        <div className="shrink-0 px-4 pt-6 pb-[max(1.5rem,env(safe-area-inset-bottom,0px))] border-t border-s-primary/20 flex flex-col gap-4">
-          {mecha && levelInfo && speechSupported && (
-            <button
-              type="button"
-              onClick={handleSpeak}
-              className={
-                "w-full flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm transition-colors " +
-                (isSpeaking ? "bg-s-primary/30 text-s-primary" : "bg-s-primary/10 text-s-primary hover:bg-s-primary/20")
-              }
-            >
-              {isSpeaking ? (
-                <>
-                  <Square size={18} />
-                  停止朗读
-                </>
-              ) : (
-                <>
-                  <Volume2 size={18} />
-                  朗读故事
-                </>
-              )}
-            </button>
-          )}
-          <button
-            onClick={handleOpenEvolution}
-            disabled={evolutionLoading}
-            className="w-full flex items-center justify-center gap-2 rounded-xl border border-s-primary/30 bg-s-primary/5 px-4 py-3 text-sm text-s-primary hover:bg-s-primary/10 transition-colors disabled:opacity-50"
-          >
-            <History size={18} />
-            {evolutionLoading ? "加载中..." : evolutionError ? "加载失败" : "进化历程"}
-          </button>
-        </div>
-      </motion.div>
+        {mecha?.intro && (
+          <div className="mb-4 min-w-0">
+            <p className="text-s-text text-sm leading-relaxed break-words">
+              <TextWithPinyin text={mecha.intro} showPinyin={!!showPinyin} />
+            </p>
+          </div>
+        )}
+      </StudentSideDrawer>
 
       <AnimatePresence>
         {showEvolutionModal && evolution && (
@@ -380,12 +327,8 @@ function MechaDrawer({
           />
         )}
       </AnimatePresence>
-    </div>
+    </>
   );
-
-  return typeof document !== "undefined"
-    ? createPortal(drawerContent, document.body)
-    : null;
 }
 
 export function MechaLibraryPage({

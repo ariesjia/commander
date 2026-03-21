@@ -71,7 +71,7 @@ export interface TodayBattleReplay {
     skills: string[];
   };
   pointsAwarded: number;
-  rewards: { kind: string; amount?: number; itemSlug?: string; quantity?: number }[];
+  rewards: { kind: string; amount?: number; itemSlug?: string; quantity?: number; name?: string }[];
 }
 
 /** 与 GET /api/student/battle、profile.battleStatus 一致 */
@@ -129,3 +129,10 @@ export interface ParentUser {
 }
 
 export type AppMode = "parent" | "student";
+
+export type {
+  ItemKindDto,
+  StudentInventoryItemDto,
+  StudentItemRow,
+  StudentItemsResponse,
+} from "./items";

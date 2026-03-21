@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { hashPassword } from "../src/lib/auth";
 import { MECHA_SEED_DATA } from "./seed-data/mechas";
+import { ITEM_SEED_DATA } from "./seed-data/items";
 
 const prisma = new PrismaClient();
 
@@ -94,8 +95,65 @@ async function seedMecha(config: (typeof MECHA_SEED_DATA)[number]) {
   console.log("已创建机甲:", mecha.name);
 }
 
+async function seedCatalogItems() {
+  for (const row of ITEM_SEED_DATA) {
+    await prisma.item.upsert({
+      where: { slug: row.slug },
+      create: {
+        slug: row.slug,
+        name: row.name,
+        description: row.description,
+        imageUrl: row.imageUrl,
+        kind: row.kind,
+        sortOrder: row.sortOrder,
+        isActive: true,
+      },
+      update: {
+        name: row.name,
+        description: row.description,
+        imageUrl: row.imageUrl,
+        kind: row.kind,
+        sortOrder: row.sortOrder,
+      },
+    });
+  }
+  console.log(`已同步道具图鉴 ${ITEM_SEED_DATA.length} 条`);
+}
+
+/** 仅当 SEED_STUDENT_ITEMS=1（或 true）时为首个学生写入前 5 条道具各 1～2 件；默认不写 */
+async function seedDemoStudentItems() {
+  const raw = process.env.SEED_STUDENT_ITEMS;
+  const enabled = raw === "1" || raw === "true";
+  if (!enabled) {
+    console.log("跳过 StudentItem 演示种子：未设置 SEED_STUDENT_ITEMS=1");
+    return;
+  }
+  const firstStudent = await prisma.student.findFirst({ orderBy: { createdAt: "asc" } });
+  if (!firstStudent) {
+    console.log("跳过 StudentItem 演示种子：无学生");
+    return;
+  }
+  const items = await prisma.item.findMany({
+    orderBy: { sortOrder: "asc" },
+    take: 5,
+  });
+  const quantities = [1, 2, 1, 2, 1];
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    const quantity = quantities[i] ?? 1;
+    await prisma.studentItem.upsert({
+      where: { studentId_itemId: { studentId: firstStudent.id, itemId: item.id } },
+      create: { studentId: firstStudent.id, itemId: item.id, quantity },
+      update: { quantity },
+    });
+  }
+  console.log(`已为首个学生写入 ${items.length} 条演示道具库存`);
+}
+
 async function main() {
   await seedAdmin();
+  await seedCatalogItems();
+  await seedDemoStudentItems();
 
   // 回填 primaryMechaId：从 studentMechas 取第一个
   const studentsToBackfill = await prisma.student.findMany({

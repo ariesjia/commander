@@ -79,9 +79,9 @@ const ENEMY_HIT_SITUATIONS = [
 
 const ENEMY_OPENING_SITUATIONS = ["抢先动手", "趁我们还没站稳", "来势汹汹", "第一波就压上来"];
 
-/** 我方闪避敌方攻击（体力不变） */
-function randomPlayerDodgeLine(): string {
-  const atk = randomPick(ENEMY_ACTIONS);
+/** 我方闪避敌方攻击（体力不变）；atk 为敌方本回合使用的招式（宜来自其技能表） */
+function randomPlayerDodgeLine(enemyAttack: string): string {
+  const atk = enemyAttack;
   return randomPick([
     `【我方】${atk}擦身而过，我们惊险闪避！`,
     `【我方】急推操纵杆横向滑移，${atk}只打中了空处！`,
@@ -146,6 +146,13 @@ function randomPick<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)]!;
 }
 
+/** 敌方招式文案：优先从对手配置的技能中随机，否则用通用敌方动作池 */
+function randomEnemyAttackLabel(skills: readonly string[]): string {
+  const list = skills.map((s) => s.trim()).filter(Boolean);
+  if (list.length > 0) return randomPick(list);
+  return randomPick(ENEMY_ACTIONS);
+}
+
 function randomFinishWinLine(): string {
   const a = randomPick(PLAYER_ACTIONS);
   return randomPick([
@@ -156,8 +163,8 @@ function randomFinishWinLine(): string {
   ]);
 }
 
-function randomFinishLoseLine(): string {
-  const a = randomPick(ENEMY_ACTIONS);
+function randomFinishLoseLine(enemyAttack: string): string {
+  const a = enemyAttack;
   return randomPick([
     `【敌方】${a}使出致命一击，我们遭到重创！`,
     `【敌方】${a}致命一击落下，我们遭到重创！`,
@@ -183,14 +190,37 @@ function battleSpeechSupported(): boolean {
   );
 }
 
+type SpeakBattleLineOptions = {
+  /** 页面卸载或离开战斗时 abort，避免 Promise 悬挂、BGM 一直压低 */
+  signal?: AbortSignal;
+};
+
 /**
  * 朗读一行战报（仅 cancel 语音队列，不影响 BGM）。
  * 朗读时略压低 BGM，结束后恢复，便于与循环 BGM 同时听清。
  */
-function speakBattleLine(text: string): Promise<void> {
+function speakBattleLine(text: string, opts?: SpeakBattleLineOptions): Promise<void> {
   if (!battleSpeechSupported()) return Promise.resolve();
+  const signal = opts?.signal;
+  if (signal?.aborted) return Promise.resolve();
+
   const synth = window.speechSynthesis;
   return new Promise((resolve) => {
+    let settled = false;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      signal?.removeEventListener("abort", onAbort);
+      setBattleBgmDucked(false);
+      resolve();
+    };
+
+    const onAbort = () => {
+      synth.cancel();
+      finish();
+    };
+    signal?.addEventListener("abort", onAbort);
+
     synth.cancel();
     setBattleBgmDucked(true);
     const u = new SpeechSynthesisUtterance(text);
@@ -200,23 +230,38 @@ function speakBattleLine(text: string): Promise<void> {
     const zh =
       voices.find((v) => v.lang === "zh-CN") ?? voices.find((v) => v.lang.startsWith("zh"));
     if (zh) u.voice = zh;
-    const done = () => {
-      setBattleBgmDucked(false);
-      resolve();
-    };
-    u.onend = done;
-    u.onerror = done;
+    u.onend = finish;
+    u.onerror = finish;
     synth.speak(u);
   });
 }
 
+
+/** 与 POST /api/student/battle、todayReplay.rewards 对齐 */
+export type ServerBattleRewardLine = {
+  kind: string;
+  amount?: number;
+  itemSlug?: string;
+  quantity?: number;
+  name?: string;
+};
 
 export type ServerBattlePayload = {
   outcome: "WIN" | "LOSE";
   narrative: string;
   enemy: { name: string; imageUrl: string; skills: string[] };
   pointsAwarded?: number;
+  /** 胜利奖励明细（积分 + 道具等） */
+  rewards?: ServerBattleRewardLine[];
 };
+
+function itemRewardLines(rewards: ServerBattleRewardLine[] | undefined) {
+  if (!rewards?.length) return [];
+  return rewards.filter(
+    (r): r is ServerBattleRewardLine & { itemSlug: string } =>
+      r.kind === "item" && typeof r.itemSlug === "string",
+  );
+}
 
 type Phase = "ready" | "fighting" | "victory" | "defeat";
 
@@ -329,6 +374,7 @@ export function MechaBattle({
 
     clearTick();
     let cancelled = false;
+    const speechAbort = new AbortController();
     const useSpeech = battleSpeechSupported();
     const paceMs = reduceMotion ? 520 : 880;
     /** 朗读：一句念完再留白，方便小朋友跟上 */
@@ -337,7 +383,7 @@ export function MechaBattle({
     const afterLine = async (line: string) => {
       if (cancelled) return;
       if (useSpeech) {
-        await speakBattleLine(line);
+        await speakBattleLine(line, { signal: speechAbort.signal });
         if (cancelled) return;
         await new Promise<void>((r) => window.setTimeout(r, pauseAfterSpokenLineMs));
       } else {
@@ -392,7 +438,7 @@ export function MechaBattle({
                 side: "enemy",
                 p: 100,
                 e: 72,
-                line: randomPlayerDodgeLine(),
+                line: randomPlayerDodgeLine(randomEnemyAttackLabel(serverBattle.enemy.skills)),
                 dodge: true,
               },
               {
@@ -400,7 +446,7 @@ export function MechaBattle({
                 p: 82,
                 e: 72,
                 line: battleLineEnemyHit(
-                  randomPick(ENEMY_ACTIONS),
+                  randomEnemyAttackLabel(serverBattle.enemy.skills),
                   18,
                   randomPick(ENEMY_HIT_SITUATIONS),
                 ),
@@ -420,7 +466,7 @@ export function MechaBattle({
                 p: 64,
                 e: 38,
                 line: battleLineEnemyHit(
-                  randomPick(ENEMY_ACTIONS),
+                  randomEnemyAttackLabel(serverBattle.enemy.skills),
                   18,
                   randomPick(ENEMY_HIT_SITUATIONS),
                 ),
@@ -439,7 +485,7 @@ export function MechaBattle({
                 p: 78,
                 e: 100,
                 line: battleLineEnemyHit(
-                  randomPick(ENEMY_ACTIONS),
+                  randomEnemyAttackLabel(serverBattle.enemy.skills),
                   22,
                   randomPick(ENEMY_OPENING_SITUATIONS),
                 ),
@@ -466,7 +512,7 @@ export function MechaBattle({
                 p: 52,
                 e: 68,
                 line: battleLineEnemyHit(
-                  randomPick(ENEMY_ACTIONS),
+                  randomEnemyAttackLabel(serverBattle.enemy.skills),
                   26,
                   randomPick(ENEMY_HIT_SITUATIONS),
                 ),
@@ -485,7 +531,7 @@ export function MechaBattle({
                 side: "enemy",
                 p: 0,
                 e: 40,
-                line: randomFinishLoseLine(),
+                line: randomFinishLoseLine(randomEnemyAttackLabel(serverBattle.enemy.skills)),
               },
             ];
 
@@ -504,7 +550,7 @@ export function MechaBattle({
       setPhase(serverBattle.outcome === "WIN" ? "victory" : "defeat");
 
       if (useSpeech) {
-        await speakBattleLine(serverBattle.narrative);
+        await speakBattleLine(serverBattle.narrative, { signal: speechAbort.signal });
         if (cancelled) return;
         await new Promise<void>((r) => window.setTimeout(r, pauseAfterSpokenLineMs));
         if (
@@ -513,15 +559,31 @@ export function MechaBattle({
           serverBattle.pointsAwarded > 0
         ) {
           if (cancelled) return;
-          await speakBattleLine(`获得积分 ${serverBattle.pointsAwarded} 分`);
+          await speakBattleLine(`获得积分 ${serverBattle.pointsAwarded} 分`, {
+            signal: speechAbort.signal,
+          });
           if (cancelled) return;
           await new Promise<void>((r) => window.setTimeout(r, pauseAfterSpokenLineMs));
+        }
+        if (serverBattle.outcome === "WIN") {
+          for (const it of itemRewardLines(serverBattle.rewards)) {
+            if (cancelled) return;
+            const label = it.name?.trim() || it.itemSlug;
+            const q = typeof it.quantity === "number" && it.quantity > 0 ? it.quantity : 1;
+            await speakBattleLine(
+              q > 1 ? `获得道具 ${label}，共 ${q} 件` : `获得道具 ${label}`,
+              { signal: speechAbort.signal },
+            );
+            if (cancelled) return;
+            await new Promise<void>((r) => window.setTimeout(r, pauseAfterSpokenLineMs));
+          }
         }
         if (cancelled) return;
         await speakBattleLine(
           serverBattle.outcome === "WIN"
             ? randomPick(CLOSING_VOICE_WIN)
             : randomPick(CLOSING_VOICE_LOSE),
+          { signal: speechAbort.signal },
         );
       }
       if (!cancelled) onBattlePresentationComplete?.();
@@ -531,10 +593,12 @@ export function MechaBattle({
 
     return () => {
       cancelled = true;
+      speechAbort.abort();
       clearTick();
       if (typeof window !== "undefined" && battleSpeechSupported()) {
         window.speechSynthesis.cancel();
       }
+      setBattleBgmDucked(false);
     };
   }, [serverBattle, externalFlow, reduceMotion, triggerFx, clearTick, onBattlePresentationComplete]);
 
@@ -794,6 +858,20 @@ export function MechaBattle({
                   获得积分 +{serverBattle.pointsAwarded}
                 </p>
               )}
+              {phase === "victory" &&
+                itemRewardLines(serverBattle.rewards).map((it, i) => {
+                  const label = it.name?.trim() || it.itemSlug;
+                  const q = typeof it.quantity === "number" && it.quantity > 0 ? it.quantity : 1;
+                  return (
+                    <p
+                      key={`item-reward-${i}-${it.itemSlug}`}
+                      className="w-full text-center text-xs font-bold text-fuchsia-300/95"
+                    >
+                      获得道具 {label}
+                      {q > 1 ? ` ×${q}` : ""}
+                    </p>
+                  );
+                })}
             </>
           )}
         </div>
