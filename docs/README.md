@@ -28,6 +28,7 @@
 |------|------|
 | [0001-mecha-squad-achievements](./stories/0001-mecha-squad-achievements.md) | 机甲小队成就系统：收集指定机甲组合解锁成就，展示联合技 |
 | [0002-student-battle-system](./stories/0002-student-battle-system.md) | 学生每日战斗：当日任务完成积分门槛、后端裁决、可配置胜率与奖励、流水入账 |
+| [0003-student-item-inventory](./stories/0003-student-item-inventory.md) | 学生道具库：道具名称/介绍/图片 + 库存展示（盲盒与碎片为后续 story，本文仅设计预留） |
 | [stories/](./stories/) | 开发需求文档：`000x-<name>.md` 格式 |
 
 ---
