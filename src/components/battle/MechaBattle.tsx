@@ -225,7 +225,7 @@ function speakBattleLine(text: string, opts?: SpeakBattleLineOptions): Promise<v
     setBattleBgmDucked(true);
     const u = new SpeechSynthesisUtterance(text);
     u.lang = "zh-CN";
-    u.rate = 0.88;
+    u.rate = 1.05;
     const voices = synth.getVoices();
     const zh =
       voices.find((v) => v.lang === "zh-CN") ?? voices.find((v) => v.lang.startsWith("zh"));
@@ -378,8 +378,8 @@ export function MechaBattle({
     const speechAbort = new AbortController();
     const useSpeech = battleSpeechSupported();
     const paceMs = reduceMotion ? 520 : 880;
-    /** 朗读：一句念完再留白，方便小朋友跟上 */
-    const pauseAfterSpokenLineMs = reduceMotion ? 900 : 2000;
+    /** 朗读：一句念完再留白（句间 1 秒） */
+    const pauseAfterSpokenLineMs = 1000;
 
     const afterLine = async (line: string) => {
       if (cancelled) return;
