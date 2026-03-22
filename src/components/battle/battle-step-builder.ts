@@ -161,7 +161,8 @@ export function buildServerBattleSteps(args: {
       ...afterDodge,
     ];
 
-    if (inv.length > 0 && Math.random() < 0.3) {
+    // 有库存道具名时固定插入一条（原 30% 随机导致几乎看不到）
+    if (inv.length > 0) {
       const name = randomPick(inv);
       const itemStep: ServerBattleStep = {
         p: 100,
@@ -246,7 +247,7 @@ export function buildServerBattleSteps(args: {
     ...afterDodge,
   ];
 
-  if (inv.length > 0 && Math.random() < 0.3) {
+  if (inv.length > 0) {
     const name = randomPick(inv);
     const itemStep: ServerBattleStep = {
       p: 78,

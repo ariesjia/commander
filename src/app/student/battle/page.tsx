@@ -179,6 +179,11 @@ export default function StudentBattlePage() {
     loadStatus();
   }, [loadStatus]);
 
+  /** 预拉库存道具名：开战前就有列表，且与 POST 后再拉取形成双保险（战报装饰依赖非空名称） */
+  useEffect(() => {
+    void fetchInventoryNamesForBattle().then(setBattleInventoryNames);
+  }, []);
+
   const handleBattlePresentationComplete = useCallback(() => {
     setReplayInProgress(false);
     if (presentationFromReplayRef.current) {
