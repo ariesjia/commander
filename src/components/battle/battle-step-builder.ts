@@ -44,12 +44,17 @@ function randomItemBurst(): ItemBurst {
 }
 
 function randomBeamVisual(): BeamVisual {
-  return randomPick(["rail", "slash", "bolt", "burst", "sweep"] as const);
+  // 刀光出现率略高，与其它弹道区分更明显
+  return randomPick(
+    ["slash", "slash", "rail", "bolt", "burst", "sweep", "rail"] as const,
+  );
 }
 
 /** 终结技 / 暴击：偏重大范围冲击 */
 function randomBeamVisualHeavy(): BeamVisual {
-  return randomPick(["burst", "slash", "sweep", "bolt", "rail"] as const);
+  return randomPick(
+    ["slash", "slash", "burst", "sweep", "bolt", "rail", "slash"] as const,
+  );
 }
 
 function strikeFx(

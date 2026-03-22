@@ -53,20 +53,41 @@ function StrikeBeamLayer({
       main = (
         <div
           key={`beam-slash-${beamKey}`}
-          className={`pointer-events-none absolute top-[35%] left-[4%] z-[15] h-12 w-[92%] overflow-visible ${
-            ltr ? "-rotate-[7deg]" : "rotate-[7deg]"
+          className={`pointer-events-none absolute top-[31%] left-[2%] z-[15] h-20 w-[96%] overflow-visible ${
+            ltr ? "-rotate-[11deg]" : "rotate-[11deg]"
           }`}
           aria-hidden
         >
           <div
-            className={`h-4 w-full rounded-full blur-[3px] ${
+            className={`relative h-full w-full ${
               ltr ? "animate-battle-beam-slash-ltr" : "animate-battle-beam-slash-rtl"
-            } ${
-              isPlayer
-                ? "bg-gradient-to-r from-cyan-400/30 via-fuchsia-400/95 to-cyan-400/30 shadow-[0_0_28px_rgba(168,85,247,0.8)]"
-                : "bg-gradient-to-r from-amber-500/35 via-rose-500/95 to-amber-500/35 shadow-[0_0_28px_rgba(244,63,94,0.75)]"
             }`}
-          />
+          >
+            {/* 刀光外晕：宽、软，读出挥砍体积 */}
+            <div
+              className={`pointer-events-none absolute inset-0 rounded-[999px] blur-[10px] ${
+                isPlayer
+                  ? "bg-gradient-to-r from-cyan-500/25 via-fuchsia-500/55 to-cyan-400/15 opacity-95"
+                  : "bg-gradient-to-r from-amber-500/30 via-rose-500/60 to-amber-400/15 opacity-95"
+              }`}
+            />
+            {/* 刃芯：亮边 + 色芯，比单条横带更「刃」 */}
+            <div
+              className={`pointer-events-none absolute inset-x-0 top-1/2 h-4 w-full -translate-y-1/2 rounded-full blur-[2px] ${
+                isPlayer
+                  ? "bg-gradient-to-r from-transparent via-white to-cyan-300/75 shadow-[0_0_22px_rgba(255,255,255,0.75),0_0_36px_rgba(168,85,247,0.55)]"
+                  : "bg-gradient-to-r from-transparent via-white to-rose-500/80 shadow-[0_0_22px_rgba(255,255,255,0.72),0_0_34px_rgba(244,63,94,0.5)]"
+              }`}
+            />
+            {/* 刃口细线：提高锐利度 */}
+            <div
+              className={`pointer-events-none absolute inset-x-0 top-1/2 h-px w-full -translate-y-1/2 ${
+                isPlayer
+                  ? "bg-gradient-to-r from-transparent via-white to-cyan-300/90 opacity-95"
+                  : "bg-gradient-to-r from-transparent via-white to-rose-200/90 opacity-95"
+              }`}
+            />
+          </div>
         </div>
       );
       break;

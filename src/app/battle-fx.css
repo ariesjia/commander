@@ -302,12 +302,44 @@
 
 /* ── 攻击弹道变体（与 rail 横条区分） ── */
 
-/* 斜斩：同轨迹，外层倾斜 */
+/* 刀光：更快、略收刃的横斩；与 rail 共用位移幅度，体感更「劈」 */
+@keyframes battle-blade-ltr {
+  0% {
+    transform: translateX(-118%) skewX(-6deg);
+    opacity: 0;
+  }
+  6% {
+    opacity: 1;
+  }
+  92% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(118%) skewX(-1deg);
+    opacity: 0;
+  }
+}
+@keyframes battle-blade-rtl {
+  0% {
+    transform: translateX(118%) skewX(6deg);
+    opacity: 0;
+  }
+  6% {
+    opacity: 1;
+  }
+  92% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-118%) skewX(1deg);
+    opacity: 0;
+  }
+}
 .animate-battle-beam-slash-ltr {
-  animation: battle-beam-ltr 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  animation: battle-blade-ltr 0.34s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
 }
 .animate-battle-beam-slash-rtl {
-  animation: battle-beam-rtl 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  animation: battle-blade-rtl 0.34s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
 }
 
 /* 电浆串：竖条组横向扫过 */
