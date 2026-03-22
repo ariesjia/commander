@@ -9,6 +9,23 @@ import { useMecha, getLevelFromMecha } from "@/hooks/useMecha";
 import { api } from "@/lib/api";
 import { registerBattleBgmEl } from "@/lib/battle-bgm-bridge";
 import type { BattleStatus, TodayBattleReplay } from "@/types";
+import type { StudentItemsResponse } from "@/types/items";
+
+async function fetchInventoryNamesForBattle(): Promise<string[]> {
+  try {
+    const body = await api.get<StudentItemsResponse>("/api/student/items");
+    return [
+      ...new Set(
+        body.items
+          .filter((r) => r.quantity > 0)
+          .map((r) => r.item.name.trim())
+          .filter(Boolean),
+      ),
+    ];
+  } catch {
+    return [];
+  }
+}
 
 function itemRewardsFromReplay(
   rewards: TodayBattleReplay["rewards"] | undefined,
@@ -81,6 +98,8 @@ export default function StudentBattlePage() {
   const [posting, setPosting] = useState(false);
   const [replayInProgress, setReplayInProgress] = useState(false);
   const [battleMountKey, setBattleMountKey] = useState(0);
+  /** 与本场演出同步的道具名（POST/回放前拉取，避免异步补全导致战报重启） */
+  const [battleInventoryNames, setBattleInventoryNames] = useState<string[]>([]);
   const [battleBgmStopped, setBattleBgmStopped] = useState(false);
   const battleBgmRef = useRef<HTMLAudioElement | null>(null);
   const postBattleBgmStopTimerRef = useRef<number | null>(null);
@@ -164,6 +183,7 @@ export default function StudentBattlePage() {
     setReplayInProgress(false);
     if (presentationFromReplayRef.current) {
       presentationFromReplayRef.current = false;
+      setBattleInventoryNames([]);
       setBattleResult(null);
     }
     clearPostBattleBgmTimer();
@@ -191,6 +211,8 @@ export default function StudentBattlePage() {
           : undefined;
       presentationFromReplayRef.current = false;
       setReplayInProgress(true);
+      const invNames = await fetchInventoryNamesForBattle();
+      setBattleInventoryNames(invNames);
       setBattleMountKey((k) => k + 1);
       setBattleResult({
         outcome: data.outcome,
@@ -221,8 +243,11 @@ export default function StudentBattlePage() {
     clearPostBattleBgmTimer();
     setPostError(null);
     setReplayInProgress(true);
-    setBattleMountKey((k) => k + 1);
-    setBattleResult(mapReplayToServerPayload(r));
+    void fetchInventoryNamesForBattle().then((names) => {
+      setBattleInventoryNames(names);
+      setBattleMountKey((k) => k + 1);
+      setBattleResult(mapReplayToServerPayload(r));
+    });
   }, [status?.todayReplay, clearPostBattleBgmTimer]);
 
   const canStart =
@@ -236,6 +261,9 @@ export default function StudentBattlePage() {
     ? itemRewardsFromReplay(status.todayReplay.rewards)
     : [];
   const spoilPoints = status?.todayReplay?.pointsAwarded ?? 0;
+
+  /** 首屏拉取 /api/student/battle 完成前 status 为 null，避免整页空白 */
+  const statusPending = status === null && statusError === null;
 
   return (
     <div className="flex flex-col gap-3 pt-2 pb-6">
@@ -253,6 +281,17 @@ export default function StudentBattlePage() {
 
       {statusError && (
         <p className="text-sm text-s-danger px-1">{statusError}</p>
+      )}
+
+      {statusPending && (
+        <div
+          className="glass-card flex min-h-[200px] flex-col items-center justify-center gap-3 rounded-xl p-8"
+          aria-busy
+          aria-live="polite"
+        >
+          <div className="h-9 w-9 animate-spin rounded-full border-2 border-s-primary border-t-transparent" />
+          <p className="text-sm text-s-text-secondary">加载战斗状态…</p>
+        </div>
       )}
 
       {status && (
@@ -374,11 +413,13 @@ export default function StudentBattlePage() {
           playerSlug={primarySlug}
           playerMechaPoints={pts}
           serverBattle={battleResult}
+          playerInventoryNames={battleInventoryNames}
           externalFlow
           onBattlePresentationComplete={handleBattlePresentationComplete}
           onExit={() => {
             clearPostBattleBgmTimer();
             setBattleBgmStopped(false);
+            setBattleInventoryNames([]);
             setBattleResult(null);
             router.back();
           }}

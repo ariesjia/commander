@@ -7,180 +7,18 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { useReducedMotion } from "framer-motion";
 import { useMecha, getLevelFromMecha } from "@/hooks/useMecha";
 import { setBattleBgmDucked } from "@/lib/battle-bgm-bridge";
+import { SPEECH_SYNTHESIS_RATE } from "@/lib/speech-config";
 
-const PLAYER_ACTIONS = [
-  "光束步枪 射击！",
-  "军刀斩击！",
-  "副武装 连射！",
-  "推进器突进！",
-  "火神炮牵制！",
-  "浮游炮 齐射！",
-  "盾击冲撞！",
-  "霰弹近炸！",
-  "回旋踢与肘击！",
-  "肩炮点射！",
-  "磁轨钉刺！",
-  "导弹巢 扇面覆盖！",
-  "粒子军刀 上段斩！",
-  "膝撞与抓投！",
-  "冷却槽全开的全力齐射！",
-  "侧向滑步后的迎头痛击！",
-  "诱敌深入后的反击！",
-];
-
-const ENEMY_ACTIONS = [
-  "电热鞭扫击！",
-  "火箭筒反击！",
-  "三连射！",
-  "冲撞！",
-  "米加粒子炮 蓄力射击！",
-  "飞弹诱导 夹击！",
-  "链锯横扫！",
-  "压顶重砸！",
-  "扩散光束！",
-  "爪刃连刺！",
-  "尾刃甩击！",
-  "肩炮速射！",
-  "烟幕里突然的近身！",
-  "浮游单元 骚扰射击！",
-  "地脉共振 震波！",
-  "龙颚般的钳咬！",
-];
-
-/** 过程战报：我方命中后的随机旁白（非终结） */
-const PLAYER_HIT_EXTRAS = [
-  "，打得特别准！",
-  "，对手装甲上爆出火花！",
-  "，对手被震得往后退！",
-  "，读数一下子跳了一大截！",
-  "，对手姿态有点乱了！",
-  "，这一下连 HUD 都闪了一下！",
-  "，对手侧甲凹下去一块！",
-];
-
-const PLAYER_HIT_EXTRAS_CRIT = [
-  "，是特别猛的一击！",
-  "，对手差点被掀翻！",
-  "，屏幕上都闪光了！",
-  "，连地面都跟着震了一下！",
-  "，对手武器都握不稳了！",
-];
-
-const ENEMY_HIT_SITUATIONS = [
-  "",
-  "侧翼来袭",
-  "正上方",
-  "烟幕里突然",
-  "读数突然飙红",
-  "雷达上多了好几个红点",
-  "距离一下子被压到很近",
-  "我们刚换弹的空档",
-];
-
-const ENEMY_OPENING_SITUATIONS = ["抢先动手", "趁我们还没站稳", "来势汹汹", "第一波就压上来"];
-
-/** 我方闪避敌方攻击（体力不变）；atk 为敌方本回合使用的招式（宜来自其技能表） */
-function randomPlayerDodgeLine(enemyAttack: string): string {
-  const atk = enemyAttack;
-  return randomPick([
-    `【我方】${atk}擦身而过，我们惊险闪避！`,
-    `【我方】急推操纵杆横向滑移，${atk}只打中了空处！`,
-    `【我方】${atk}来了，我们侧向滑步躲开！`,
-    `【我方】${atk}被我们看穿了，提前闪开！`,
-    `【我方】${atk}掠过装甲外侧，好险！`,
-    `【我方】${atk}贴着座舱盖飞过，我们低头躲过！`,
-    `【我方】推进器短点喷射，${atk}从脚下扫空！`,
-    `【我方】${atk}在掩体上炸开，我们已先一步撤出！`,
-  ]);
-}
-
-/** 敌方闪避我方攻击（体力不变） */
-function randomEnemyDodgeLine(): string {
-  const ours = randomPick(PLAYER_ACTIONS);
-  return randomPick([
-    `【敌方】${ours}被闪掉了，对方溜得很快！`,
-    `【敌方】${ours}落空，对方侧向滑移躲开了！`,
-    `【敌方】${ours}只打中残影，对方已经换位！`,
-    `【敌方】${ours}差一点点，对方急退避开了！`,
-    `【敌方】对方急退加翻滚，${ours}没打中！`,
-    `【敌方】${ours}打在空处，对方像泥鳅一样滑走了！`,
-    `【敌方】对方预判了我们的弹道，${ours}被躲开了！`,
-    `【敌方】${ours}掠过，对方缩进掩体后沿！`,
-  ]);
-}
-
-/** 开战前氛围（随机一条） */
-const COMBAT_ATMOSPHERE_LINES = [
-  "推进器预热完毕，关节液压正常。",
-  "火控锁定目标，弹匣上膛。",
-  "护盾展开，姿态控制切换到战斗模式。",
-  "雷达噪声有点大……但目标轮廓已经清晰。",
-  "座舱里只剩下自己的呼吸和警报的滴答声。",
-  "侧风不小，机体微微晃动，但准星稳稳咬住对方。",
-];
-
-const BATTLE_START_LINES = [
-  "战斗开始啦！",
-  "交火！",
-  "双方开始交火！",
-  "第一回合！",
-  "来吧，别留情！",
-];
-
-/** 语音收尾（与屏幕大字可略有不同，增加听感变化） */
-const CLOSING_VOICE_WIN = [
-  "任务完成，敌机击坠。",
-  "目标沉默，可以收队了。",
-  "敌机信号消失，我们赢了。",
-  "威胁解除，干得漂亮。",
-];
-
-const CLOSING_VOICE_LOSE = [
-  "警告，机体大破。",
-  "损伤过大，先撤！",
-  "座机严重受损，请尽快脱离！",
-  "操纵困难，优先保全驾驶员！",
-];
-
-function randomPick<T>(arr: T[]): T {
-  return arr[Math.floor(Math.random() * arr.length)]!;
-}
-
-/** 敌方招式文案：优先从对手配置的技能中随机，否则用通用敌方动作池 */
-function randomEnemyAttackLabel(skills: readonly string[]): string {
-  const list = skills.map((s) => s.trim()).filter(Boolean);
-  if (list.length > 0) return randomPick(list);
-  return randomPick(ENEMY_ACTIONS);
-}
-
-function randomFinishWinLine(): string {
-  const a = randomPick(PLAYER_ACTIONS);
-  return randomPick([
-    `【我方】${a}使出终结一击，敌人被击落啦！`,
-    `【我方】${a}最后一击命中要害，敌人被击落啦！`,
-    `【我方】${a}补上关键一击，敌机被击落啦！`,
-    `【我方】${a}终结连段，敌机坠落！`,
-  ]);
-}
-
-function randomFinishLoseLine(enemyAttack: string): string {
-  const a = enemyAttack;
-  return randomPick([
-    `【敌方】${a}使出致命一击，我们遭到重创！`,
-    `【敌方】${a}致命一击落下，我们遭到重创！`,
-    `【敌方】${a}抓住破绽，我们遭到重创！`,
-    `【敌方】${a}重击破甲，我们遭到重创！`,
-  ]);
-}
-
-/** 战报用于屏幕与朗读，避免「负 26」等 TTS 难懂说法 */
-function battleLinePlayerHit(action: string, enemyLostHp: number, extra = "") {
-  return `【我方】${action}打中啦，敌人少了${enemyLostHp}点体力${extra}`;
-}
-function battleLineEnemyHit(action: string, weLostHp: number, situation = "") {
-  const lead = situation ? `${situation}，` : "";
-  return `【敌方】${action}${lead}我们少了${weLostHp}点体力`;
-}
+import { BattleArenaFx } from "@/components/battle/BattleArenaFx";
+import { buildServerBattleSteps } from "@/components/battle/battle-step-builder";
+import {
+  BATTLE_START_LINES,
+  CLOSING_VOICE_LOSE,
+  CLOSING_VOICE_WIN,
+  COMBAT_ATMOSPHERE_LINES,
+  randomPick,
+} from "@/components/battle/battle-narrative";
+import { useBattlePresentationFx } from "@/components/battle/useBattlePresentationFx";
 
 function battleSpeechSupported(): boolean {
   return (
@@ -232,7 +70,7 @@ function speakBattleLine(text: string, opts?: SpeakBattleLineOptions): Promise<v
     setBattleBgmDucked(true);
     const u = new SpeechSynthesisUtterance(text);
     u.lang = "zh-CN";
-    u.rate = 1.05;
+    u.rate = SPEECH_SYNTHESIS_RATE;
     const voices = synth.getVoices();
     const zh =
       voices.find((v) => v.lang === "zh-CN") ?? voices.find((v) => v.lang.startsWith("zh"));
@@ -273,8 +111,6 @@ function itemRewardLines(rewards: ServerBattleRewardLine[] | undefined) {
 
 type Phase = "ready" | "fighting" | "victory" | "defeat";
 
-type BeamSide = "none" | "player" | "enemy";
-
 type Props = {
   playerMechaName: string;
   playerSlug: string | null;
@@ -286,6 +122,8 @@ type Props = {
   externalFlow?: boolean;
   /** 服务端演出全部结束（含收尾朗读）后触发，供页面做 BGM 收尾等 */
   onBattlePresentationComplete?: () => void;
+  /** 学生库存道具名（仅战报装饰，不影响服务端战斗结果） */
+  playerInventoryNames?: string[];
 };
 
 export function MechaBattle({
@@ -296,6 +134,7 @@ export function MechaBattle({
   serverBattle = null,
   externalFlow = false,
   onBattlePresentationComplete,
+  playerInventoryNames = [],
 }: Props) {
   const reduceMotionPreferred = useReducedMotion();
   /** 仅 true 视为减少动效；忽略 null→false，避免 triggerFx/战斗 effect 依赖抖动导致演出被 cancel、战报空白 */
@@ -318,10 +157,10 @@ export function MechaBattle({
   const [phase, setPhase] = useState<Phase>("ready");
   const [hp, setHp] = useState({ p: 100, e: 100, eMax: 100 });
   const [log, setLog] = useState<string[]>([]);
-  const [shake, setShake] = useState<"none" | "player" | "enemy">("none");
-  const [flash, setFlash] = useState<"none" | "hit" | "crit">("none");
-  const [beam, setBeam] = useState<BeamSide>("none");
-  const [beamKey, setBeamKey] = useState(0);
+  const { playBattleFx, fx } = useBattlePresentationFx({
+    reducedMotion,
+    reduceMotionPreferred,
+  });
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const logScrollRef = useRef<HTMLDivElement | null>(null);
 
@@ -359,24 +198,6 @@ export function MechaBattle({
       el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
     });
   }, [log]);
-
-  const triggerFx = useCallback(
-    (side: "player" | "enemy", crit: boolean) => {
-      setBeam(side);
-      setBeamKey((k) => k + 1);
-      window.setTimeout(() => setBeam("none"), reducedMotion ? 120 : 450);
-      setShake(side === "player" ? "enemy" : "player");
-      setFlash(crit && side === "player" ? "crit" : "hit");
-      window.setTimeout(
-        () => {
-          setShake("none");
-          setFlash("none");
-        },
-        reducedMotion ? 80 : 220,
-      );
-    },
-    [reducedMotion],
-  );
 
   /** 服务端裁决模式：逐条战报；支持朗读时读完一行再进入下一回合 */
   useEffect(() => {
@@ -423,133 +244,17 @@ export function MechaBattle({
         await afterLine(line);
       }
 
-      const steps: {
-        side: "player" | "enemy";
-        p: number;
-        e: number;
-        line: string;
-        crit?: boolean;
-        dodge?: boolean;
-      }[] =
-        serverBattle.outcome === "WIN"
-          ? [
-              {
-                side: "player",
-                p: 100,
-                e: 72,
-                line: battleLinePlayerHit(
-                  randomPick(PLAYER_ACTIONS),
-                  28,
-                  randomPick(PLAYER_HIT_EXTRAS_CRIT),
-                ),
-                crit: true,
-              },
-              {
-                side: "enemy",
-                p: 100,
-                e: 72,
-                line: randomPlayerDodgeLine(randomEnemyAttackLabel(serverBattle.enemy.skills)),
-                dodge: true,
-              },
-              {
-                side: "enemy",
-                p: 82,
-                e: 72,
-                line: battleLineEnemyHit(
-                  randomEnemyAttackLabel(serverBattle.enemy.skills),
-                  18,
-                  randomPick(ENEMY_HIT_SITUATIONS),
-                ),
-              },
-              {
-                side: "player",
-                p: 82,
-                e: 38,
-                line: battleLinePlayerHit(
-                  randomPick(PLAYER_ACTIONS),
-                  34,
-                  randomPick(PLAYER_HIT_EXTRAS),
-                ),
-              },
-              {
-                side: "enemy",
-                p: 64,
-                e: 38,
-                line: battleLineEnemyHit(
-                  randomEnemyAttackLabel(serverBattle.enemy.skills),
-                  18,
-                  randomPick(ENEMY_HIT_SITUATIONS),
-                ),
-              },
-              {
-                side: "player",
-                p: 64,
-                e: 0,
-                line: randomFinishWinLine(),
-                crit: true,
-              },
-            ]
-          : [
-              {
-                side: "enemy",
-                p: 78,
-                e: 100,
-                line: battleLineEnemyHit(
-                  randomEnemyAttackLabel(serverBattle.enemy.skills),
-                  22,
-                  randomPick(ENEMY_OPENING_SITUATIONS),
-                ),
-              },
-              {
-                side: "player",
-                p: 78,
-                e: 100,
-                line: randomEnemyDodgeLine(),
-                dodge: true,
-              },
-              {
-                side: "player",
-                p: 78,
-                e: 68,
-                line: battleLinePlayerHit(
-                  randomPick(PLAYER_ACTIONS),
-                  32,
-                  randomPick(PLAYER_HIT_EXTRAS),
-                ),
-              },
-              {
-                side: "enemy",
-                p: 52,
-                e: 68,
-                line: battleLineEnemyHit(
-                  randomEnemyAttackLabel(serverBattle.enemy.skills),
-                  26,
-                  randomPick(ENEMY_HIT_SITUATIONS),
-                ),
-              },
-              {
-                side: "player",
-                p: 52,
-                e: 40,
-                line: battleLinePlayerHit(
-                  randomPick(PLAYER_ACTIONS),
-                  28,
-                  randomPick(PLAYER_HIT_EXTRAS),
-                ),
-              },
-              {
-                side: "enemy",
-                p: 0,
-                e: 40,
-                line: randomFinishLoseLine(randomEnemyAttackLabel(serverBattle.enemy.skills)),
-              },
-            ];
+      const steps = buildServerBattleSteps({
+        outcome: serverBattle.outcome,
+        enemySkills: serverBattle.enemy.skills,
+        inventoryNames: playerInventoryNames,
+      });
 
       for (const s of steps) {
         if (cancelled) return;
         setHp({ p: s.p, e: s.e, eMax: 100 });
         setLog((prev) => [...prev.slice(-12), s.line]);
-        triggerFx(s.side, !s.dodge && Boolean(s.crit));
+        playBattleFx(s.fx);
         await afterLine(s.line);
       }
 
@@ -610,7 +315,15 @@ export function MechaBattle({
       }
       setBattleBgmDucked(false);
     };
-  }, [serverBattle, externalFlow, reducedMotion, triggerFx, clearTick, onBattlePresentationComplete]);
+  }, [
+    serverBattle,
+    externalFlow,
+    reducedMotion,
+    playBattleFx,
+    clearTick,
+    onBattlePresentationComplete,
+    playerInventoryNames,
+  ]);
 
   const fightingOrEnd = phase === "fighting" || phase === "victory" || phase === "defeat";
   const showEnemy = externalFlow ? Boolean(serverBattle) : false;
@@ -650,45 +363,7 @@ export function MechaBattle({
             }}
           />
         )}
-        {flash !== "none" && (
-          <div
-            className={`pointer-events-none absolute inset-0 z-20 ${
-              flash === "crit" ? "bg-amber-400/30" : "bg-cyan-400/22"
-            } animate-battle-flash`}
-          />
-        )}
-        {!reduceMotionPreferred && beam !== "none" && (
-          <>
-            <div
-              key={`beam-${beamKey}`}
-              className={`pointer-events-none absolute top-[40%] left-[5%] z-[15] h-4 w-[90%] overflow-hidden ${
-                beam === "player" ? "animate-battle-beam-ltr" : "animate-battle-beam-rtl"
-              }`}
-              aria-hidden
-            >
-              <div
-                className={`h-full w-full rounded-full blur-[2px] ${
-                  beam === "player"
-                    ? "bg-gradient-to-r from-transparent via-cyan-300/90 to-transparent shadow-[0_0_20px_rgba(34,211,238,0.8)]"
-                    : "bg-gradient-to-r from-transparent via-orange-400/85 to-transparent shadow-[0_0_22px_rgba(251,146,60,0.75)]"
-                }`}
-              />
-            </div>
-            <div
-              key={`muzzle-${beamKey}`}
-              className={`pointer-events-none absolute top-[36%] z-[17] h-16 w-16 -translate-x-1/2 -translate-y-1/2 rounded-full animate-battle-muzzle ${
-                beam === "player" ? "left-[22%]" : "left-[78%]"
-              }`}
-              style={{
-                background:
-                  beam === "player"
-                    ? "radial-gradient(circle, rgba(165,243,252,0.95) 0%, rgba(34,211,238,0.4) 45%, transparent 70%)"
-                    : "radial-gradient(circle, rgba(254,215,170,0.95) 0%, rgba(249,115,22,0.45) 45%, transparent 70%)",
-              }}
-              aria-hidden
-            />
-          </>
-        )}
+        <BattleArenaFx reduceMotionPreferred={reduceMotionPreferred} fx={fx} />
         <div className="absolute inset-0 z-[2] overflow-hidden">
           <div
             className="absolute bottom-0 left-1/2 h-[52%] w-[220%] origin-bottom -translate-x-1/2"
@@ -707,18 +382,20 @@ export function MechaBattle({
         <div className="relative z-[5] flex h-full min-h-0 flex-row">
           <div
             className={`relative flex min-w-0 flex-1 flex-col items-center justify-end border-r border-cyan-500/25 bg-gradient-to-br from-cyan-950/40 via-[#0a1628]/80 to-transparent ${arenaPad} ${
-              shake === "player" ? "animate-battle-shake" : ""
+              fx.shake === "player" ? "animate-battle-shake" : ""
             } ${!reduceMotionPreferred && fightingOrEnd && phase === "fighting" ? "animate-battle-threat-pulse" : ""}`}
           >
             <p className="mb-2 rounded bg-cyan-950/70 px-2 py-0.5 text-[10px] font-bold tracking-widest text-cyan-200/90 ring-1 ring-cyan-400/35">
               ALLY
             </p>
             <div
-              className={
-                !reduceMotionPreferred && phase === "fighting" && shake === "none"
-                  ? "animate-battle-idle"
-                  : ""
-              }
+              className={`${
+                fx.dodgeDance === "player"
+                  ? fx.dodgeMotionClassName
+                  : !reduceMotionPreferred && phase === "fighting" && fx.shake === "none"
+                    ? "animate-battle-idle"
+                    : ""
+              }`}
             >
               {playerSlug && playerMechaLoading && !playerLevel ? (
                 <div className="flex h-36 max-w-[9rem] flex-col items-center justify-center gap-2 rounded-lg border border-cyan-500/20 bg-black/30 px-3">
@@ -728,7 +405,7 @@ export function MechaBattle({
               ) : playerImageUrl && !playerImgError ? (
                 <div
                   className={`flex justify-center transition-transform duration-200 ${
-                    shake === "player" ? "scale-95 brightness-125" : ""
+                    fx.shake === "player" ? "scale-95 brightness-125" : ""
                   }`}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element -- 等级立绘 URL */}
@@ -740,7 +417,7 @@ export function MechaBattle({
                   />
                 </div>
               ) : (
-                <PlayerSilhouette hit={shake === "player"} />
+                <PlayerSilhouette hit={fx.shake === "player"} />
               )}
             </div>
             <p className="mt-3 max-w-[95%] truncate px-1 text-center text-[11px] font-bold tracking-wide text-cyan-100/90">
@@ -750,7 +427,7 @@ export function MechaBattle({
 
           <div
             className={`relative flex min-w-0 flex-1 flex-col items-center justify-end bg-gradient-to-bl from-amber-950/25 via-[#0a1628]/80 to-transparent ${arenaPad} ${
-              shake === "enemy" ? "animate-battle-shake" : ""
+              fx.shake === "enemy" ? "animate-battle-shake" : ""
             } ${!reduceMotionPreferred && fightingOrEnd && phase === "fighting" && showEnemy ? "animate-battle-threat-pulse-enemy" : ""}`}
           >
             {showEnemy ? (
@@ -759,17 +436,19 @@ export function MechaBattle({
                   TARGET
                 </p>
                 <div
-                  className={
-                    !reduceMotionPreferred && phase === "fighting" && shake === "none"
-                      ? "animate-battle-idle"
-                      : ""
-                  }
-                  style={{ animationDelay: "0.4s" }}
+                  className={`${
+                    fx.dodgeDance === "enemy"
+                      ? fx.dodgeMotionClassName
+                      : !reduceMotionPreferred && phase === "fighting" && fx.shake === "none"
+                        ? "animate-battle-idle"
+                        : ""
+                  }`}
+                  style={{ animationDelay: fx.dodgeDance === "enemy" ? undefined : "0.4s" }}
                 >
                   {enemyImageUrl && !enemyImgError ? (
                     <div
                       className={`flex justify-center transition-transform duration-200 ${
-                        shake === "enemy" ? "scale-95 brightness-125" : ""
+                        fx.shake === "enemy" ? "scale-95 brightness-125" : ""
                       }`}
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -784,7 +463,7 @@ export function MechaBattle({
                     <EnemySilhouette
                       type="unknown"
                       color="#4a3d5c"
-                      hit={shake === "enemy"}
+                      hit={fx.shake === "enemy"}
                       faceToward="left"
                     />
                   )}

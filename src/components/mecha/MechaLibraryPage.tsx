@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Volume2, Square, History } from "lucide-react";
 import { useMecha, getLevelFromMecha } from "@/hooks/useMecha";
@@ -80,22 +81,25 @@ function EvolutionModal({
     }
   }, [highestLevel, largeImage]);
 
-  return (
-    <>
-      <motion.div
-        className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/80"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        onClick={onClose}
-      >
-        <motion.div
-          className="relative flex flex-col rounded-2xl bg-[#0c1222] border border-s-primary/20 w-full max-w-xl max-h-[90vh] overflow-hidden"
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.9, opacity: 0 }}
-          onClick={(e) => e.stopPropagation()}
-        >
+  /** 挂到 body，z 高于 StudentSideDrawer（z-61），低于 ImagePreviewModal（z-80） */
+  const evolutionLayer =
+    typeof document !== "undefined"
+      ? createPortal(
+          <div className="theme-student">
+            <motion.div
+              className="fixed inset-0 z-[75] flex items-center justify-center p-4 bg-black/80"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={onClose}
+            >
+              <motion.div
+                className="relative flex flex-col rounded-2xl bg-[#0c1222] border border-s-primary/20 w-full max-w-xl max-h-[90vh] overflow-hidden"
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                onClick={(e) => e.stopPropagation()}
+              >
           <div className="flex items-center justify-between p-4 border-b border-s-primary/20">
             <h3 className="text-lg font-semibold text-s-primary">进化历程</h3>
             <button onClick={onClose} className="rounded-lg p-1.5 text-s-text-secondary hover:bg-white/10">
@@ -171,8 +175,16 @@ function EvolutionModal({
               </div>
             </div>
           </div>
-        </motion.div>
-      </motion.div>
+              </motion.div>
+            </motion.div>
+          </div>,
+          document.body,
+        )
+      : null;
+
+  return (
+    <>
+      {evolutionLayer}
 
       {/* 全屏大图 */}
       <AnimatePresence>

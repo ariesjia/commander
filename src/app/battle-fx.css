@@ -1,0 +1,325 @@
+/* 机甲战斗动效（MechaBattle）；由 globals.css @import */
+
+@keyframes battle-shake {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(-5px, 2px);
+  }
+  50% {
+    transform: translate(5px, -2px);
+  }
+  75% {
+    transform: translate(-3px, -1px);
+  }
+}
+@keyframes battle-shake-subtle {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(2px, 0);
+  }
+}
+@keyframes battle-flash {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.animate-battle-shake {
+  animation: battle-shake 0.22s ease-out;
+}
+.animate-battle-shake-subtle {
+  animation: battle-shake-subtle 0.18s ease-out;
+}
+.animate-battle-flash {
+  animation: battle-flash 0.18s ease-out forwards;
+}
+
+@keyframes battle-idle {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+.animate-battle-idle {
+  animation: battle-idle 2.4s ease-in-out infinite;
+}
+@keyframes battle-beam-ltr {
+  0% {
+    transform: translateX(-115%);
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  88% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(115%);
+    opacity: 0;
+  }
+}
+@keyframes battle-beam-rtl {
+  0% {
+    transform: translateX(115%);
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  88% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-115%);
+    opacity: 0;
+  }
+}
+.animate-battle-beam-ltr {
+  animation: battle-beam-ltr 0.42s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+.animate-battle-beam-rtl {
+  animation: battle-beam-rtl 0.42s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+@keyframes battle-beam-ltr-miss {
+  0% {
+    transform: translateX(-115%);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.45;
+  }
+  100% {
+    transform: translateX(40%);
+    opacity: 0;
+  }
+}
+@keyframes battle-beam-rtl-miss {
+  0% {
+    transform: translateX(115%);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.45;
+  }
+  100% {
+    transform: translateX(-40%);
+    opacity: 0;
+  }
+}
+.animate-battle-beam-ltr-miss {
+  animation: battle-beam-ltr-miss 0.26s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+.animate-battle-beam-rtl-miss {
+  animation: battle-beam-rtl-miss 0.26s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes battle-dodge {
+  0%,
+  100% {
+    transform: translateX(0) scale(1);
+  }
+  40% {
+    transform: translateX(-10px) scale(1.03);
+  }
+  70% {
+    transform: translateX(8px) scale(0.98);
+  }
+}
+.animate-battle-dodge {
+  animation: battle-dodge 0.34s ease-out;
+}
+
+@keyframes battle-dodge-drop {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  35% {
+    transform: translateY(12px) scale(0.94);
+  }
+  65% {
+    transform: translateY(-4px) scale(1.04);
+  }
+}
+.animate-battle-dodge-drop {
+  animation: battle-dodge-drop 0.36s ease-out;
+}
+
+@keyframes battle-dodge-snap {
+  0%,
+  100% {
+    transform: translateX(0) rotate(0deg);
+  }
+  30% {
+    transform: translateX(-14px) rotate(-2deg);
+  }
+  55% {
+    transform: translateX(10px) rotate(2deg);
+  }
+}
+.animate-battle-dodge-snap {
+  animation: battle-dodge-snap 0.32s ease-out;
+}
+
+@keyframes battle-explosion {
+  0% {
+    opacity: 0.75;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.08);
+  }
+}
+.animate-battle-explosion {
+  animation: battle-explosion 0.42s ease-out forwards;
+}
+
+/* 大爆炸色调变体 */
+@keyframes battle-explosion-plasma {
+  0% {
+    opacity: 0.72;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.1);
+  }
+}
+.animate-battle-explosion-plasma {
+  animation: battle-explosion-plasma 0.44s ease-out forwards;
+}
+
+@keyframes battle-item-spark {
+  0% {
+    opacity: 0.95;
+    transform: translate(-50%, -50%) scale(0.35);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(2.1);
+  }
+}
+.animate-battle-item-spark {
+  animation: battle-item-spark 0.38s ease-out forwards;
+}
+@keyframes battle-muzzle {
+  0% {
+    transform: scale(0.2);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+.animate-battle-muzzle {
+  animation: battle-muzzle 0.22s ease-out forwards;
+}
+@keyframes battle-threat-pulse {
+  0%,
+  100% {
+    box-shadow: inset 0 0 0 1px rgba(0, 212, 255, 0.15);
+  }
+  50% {
+    box-shadow: inset 0 0 12px rgba(0, 212, 255, 0.25);
+  }
+}
+.animate-battle-threat-pulse {
+  animation: battle-threat-pulse 1.8s ease-in-out infinite;
+}
+@keyframes battle-threat-pulse-enemy {
+  0%,
+  100% {
+    box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.12);
+  }
+  50% {
+    box-shadow: inset 0 0 14px rgba(239, 68, 68, 0.18);
+  }
+}
+.animate-battle-threat-pulse-enemy {
+  animation: battle-threat-pulse-enemy 1.6s ease-in-out infinite;
+}
+
+/* 命中侧额外装饰（受击方一侧） */
+@keyframes battle-accent-spark {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.5);
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.4);
+  }
+}
+.animate-battle-accent-spark {
+  animation: battle-accent-spark 0.38s ease-out forwards;
+}
+
+@keyframes battle-accent-ripple {
+  0% {
+    opacity: 0.85;
+    transform: translate(-50%, -50%) scale(0.3);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(2.2);
+  }
+}
+.animate-battle-accent-ripple {
+  animation: battle-accent-ripple 0.45s ease-out forwards;
+}
+
+@keyframes battle-accent-ember {
+  0% {
+    opacity: 0.9;
+    filter: blur(0);
+  }
+  100% {
+    opacity: 0;
+    filter: blur(4px);
+    transform: translate(-50%, -40%) scale(1.5);
+  }
+}
+.animate-battle-accent-ember {
+  animation: battle-accent-ember 0.42s ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-battle-dodge,
+  .animate-battle-dodge-drop,
+  .animate-battle-dodge-snap {
+    animation-duration: 0.1s;
+  }
+  .animate-battle-explosion,
+  .animate-battle-explosion-plasma {
+    animation-duration: 0.18s;
+  }
+  .animate-battle-item-spark {
+    animation-duration: 0.16s;
+  }
+  .animate-battle-beam-ltr-miss,
+  .animate-battle-beam-rtl-miss {
+    animation-duration: 0.14s;
+  }
+  .animate-battle-accent-spark,
+  .animate-battle-accent-ripple,
+  .animate-battle-accent-ember {
+    animation-duration: 0.12s;
+  }
+}

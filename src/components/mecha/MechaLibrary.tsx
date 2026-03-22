@@ -9,6 +9,7 @@ import { api } from "@/lib/api";
 import { formatDateFriendly } from "@/lib/utils";
 import type { MechaEvolutionDto } from "@/app/api/student/mecha-evolution/[id]/route";
 import { buildMechaReadAloudText } from "@/lib/mecha-speech";
+import { SPEECH_SYNTHESIS_RATE } from "@/lib/speech-config";
 
 interface AdoptedMecha {
   id: string;
@@ -119,7 +120,7 @@ function MechaDetailModal({
 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "zh-CN";
-    utterance.rate = 1;
+    utterance.rate = SPEECH_SYNTHESIS_RATE;
     const voices = window.speechSynthesis.getVoices();
     const zhVoice = voices.find((v) => v.lang === "zh-CN") ?? voices.find((v) => v.lang.startsWith("zh"));
     if (zhVoice) utterance.voice = zhVoice;
