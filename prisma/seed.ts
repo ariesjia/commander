@@ -30,10 +30,68 @@ async function seedAdmin() {
   }
 }
 
+function skillSeedMatchesRow(
+  seed: (typeof MECHA_SEED_DATA)[number]["skills"][number],
+  row: { unlockLevel: number; kind: string; slug: string; name: string; description: string },
+) {
+  return (
+    row.kind === seed.kind &&
+    row.slug === seed.slug &&
+    row.name === seed.name &&
+    row.description === seed.description
+  );
+}
+
+async function syncMechaSkills(
+  mechaId: string,
+  skills: (typeof MECHA_SEED_DATA)[number]["skills"],
+) {
+  const existing = await prisma.mechaSkill.findMany({ where: { mechaId } });
+  const byLevel = new Map(existing.map((s) => [s.unlockLevel, s]));
+
+  for (const seed of skills) {
+    const row = byLevel.get(seed.unlockLevel);
+    if (!row) {
+      await prisma.mechaSkill.create({
+        data: {
+          mechaId,
+          unlockLevel: seed.unlockLevel,
+          kind: seed.kind,
+          slug: seed.slug,
+          name: seed.name,
+          description: seed.description,
+        },
+      });
+      continue;
+    }
+    if (!skillSeedMatchesRow(seed, row)) {
+      await prisma.mechaSkill.update({
+        where: { id: row.id },
+        data: {
+          kind: seed.kind,
+          slug: seed.slug,
+          name: seed.name,
+          description: seed.description,
+        },
+      });
+    }
+  }
+
+  const allowed = new Set<number>(skills.map((s) => s.unlockLevel));
+  for (const row of existing) {
+    if (!allowed.has(row.unlockLevel)) {
+      await prisma.mechaSkill.delete({ where: { id: row.id } });
+    }
+  }
+}
+
 async function seedMecha(config: (typeof MECHA_SEED_DATA)[number]) {
   const existing = await prisma.mecha.findUnique({
     where: { slug: config.slug },
-    include: { levels: { orderBy: { level: "asc" } } },
+    include: {
+      levels: { orderBy: { level: "asc" } },
+      skills: { orderBy: { unlockLevel: "asc" } },
+    },
   });
 
   if (existing?.levels && existing.levels.length > 0) {
@@ -47,7 +105,11 @@ async function seedMecha(config: (typeof MECHA_SEED_DATA)[number]) {
         row?.imageUrl !== c.imageUrl
       );
     });
-    const mechaNeedUpdate = existing.description !== config.description || existing.intro !== config.intro || existing.sortOrder !== config.sortOrder;
+    const mechaNeedUpdate =
+      existing.description !== config.description ||
+      existing.intro !== config.intro ||
+      existing.sortOrder !== config.sortOrder;
+
     if (levelsNeedUpdate) {
       for (const l of config.levels) {
         await prisma.mechaLevel.updateMany({
@@ -64,7 +126,19 @@ async function seedMecha(config: (typeof MECHA_SEED_DATA)[number]) {
       });
       console.log(`已同步更新${config.name}介绍`);
     }
-    if (!levelsNeedUpdate && !mechaNeedUpdate) {
+
+    const skillsNeedSync =
+      existing.skills.length !== config.skills.length ||
+      config.skills.some((seed) => {
+        const row = existing.skills.find((s) => s.unlockLevel === seed.unlockLevel);
+        return !row || !skillSeedMatchesRow(seed, row);
+      });
+    if (skillsNeedSync) {
+      await syncMechaSkills(existing.id, config.skills);
+      console.log(`已同步更新${config.name}技能配置`);
+    }
+
+    if (!levelsNeedUpdate && !mechaNeedUpdate && !skillsNeedSync) {
       console.log(`${config.name}已存在且配置完整，跳过`);
     }
     return;
@@ -72,6 +146,7 @@ async function seedMecha(config: (typeof MECHA_SEED_DATA)[number]) {
 
   if (existing) {
     await prisma.mechaLevel.deleteMany({ where: { mechaId: existing.id } });
+    await prisma.mechaSkill.deleteMany({ where: { mechaId: existing.id } });
     await prisma.mecha.delete({ where: { id: existing.id } });
     console.log(`已删除旧${config.name}配置，准备重建`);
   }
@@ -91,6 +166,15 @@ async function seedMecha(config: (typeof MECHA_SEED_DATA)[number]) {
           threshold: l.threshold,
           imageUrl: l.imageUrl,
           description: l.description,
+        })),
+      },
+      skills: {
+        create: config.skills.map((s) => ({
+          unlockLevel: s.unlockLevel,
+          kind: s.kind,
+          slug: s.slug,
+          name: s.name,
+          description: s.description,
         })),
       },
     },

@@ -29,6 +29,7 @@
 | [0001-mecha-squad-achievements](./stories/0001-mecha-squad-achievements.md) | 机甲小队成就系统：收集指定机甲组合解锁成就，展示联合技 |
 | [0002-student-battle-system](./stories/0002-student-battle-system.md) | 学生每日战斗：当日任务完成积分门槛、后端裁决、可配置胜率与奖励、流水入账 |
 | [0003-student-item-inventory](./stories/0003-student-item-inventory.md) | 学生道具库：道具名称/介绍/图片 + 库存展示（盲盒与碎片为后续 story，本文仅设计预留） |
+| [0004-mecha-skills](./stories/0004-mecha-skills.md) | 机甲里程碑技能：等级 2/5/7 解锁，`MechaSkill` 表（含类型枚举：攻击/防御/增益/治疗/控制/支援）、全机甲技能文案与 seed 同步策略 |
 | [stories/](./stories/) | 开发需求文档：`000x-<name>.md` 格式 |
 
 ---

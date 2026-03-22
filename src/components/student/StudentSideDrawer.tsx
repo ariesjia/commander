@@ -28,7 +28,7 @@ export function StudentSideDrawer({ onClose, children, footer }: StudentSideDraw
         <div className="absolute inset-0 bg-black/60" />
       </motion.div>
       <motion.div
-        className="fixed left-0 z-[61] w-full max-w-lg rounded-r-2xl bg-[#0c1222] border-r border-s-primary/20 shadow-[4px_0_24px_rgba(0,0,0,0.3)] overflow-hidden flex flex-col top-[env(safe-area-inset-top,0px)] bottom-0"
+        className="fixed left-0 z-[61] w-full max-w-2xl rounded-r-2xl bg-[#0c1222] border-r border-s-primary/20 shadow-[4px_0_24px_rgba(0,0,0,0.3)] overflow-hidden flex flex-col top-[env(safe-area-inset-top,0px)] bottom-0"
         initial={{ x: "-100%" }}
         animate={{ x: 0 }}
         exit={{ x: "-100%" }}

@@ -10,6 +10,14 @@ export interface MechaLevelDto {
   description: string;
 }
 
+export interface MechaSkillDto {
+  unlockLevel: number;
+  kind: string;
+  slug: string;
+  name: string;
+  description: string;
+}
+
 export interface MechaDetailDto {
   id: string;
   slug: string;
@@ -17,6 +25,7 @@ export interface MechaDetailDto {
   description: string | null;
   intro: string | null;
   levels: MechaLevelDto[];
+  skills: MechaSkillDto[];
 }
 
 /** 根据 slug 获取机甲完整配置（含等级信息） */
@@ -30,6 +39,7 @@ export async function GET(
     where: { slug, isActive: true },
     include: {
       levels: { orderBy: { level: "asc" } },
+      skills: { orderBy: { unlockLevel: "asc" } },
     },
   });
 
@@ -49,6 +59,13 @@ export async function GET(
       threshold: pointsToNumber(l.threshold),
       imageUrl: l.imageUrl,
       description: l.description ?? "",
+    })),
+    skills: mecha.skills.map((s) => ({
+      unlockLevel: s.unlockLevel,
+      kind: s.kind,
+      slug: s.slug,
+      name: s.name,
+      description: s.description,
     })),
   };
 

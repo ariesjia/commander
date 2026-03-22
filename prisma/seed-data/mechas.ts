@@ -1,3 +1,7 @@
+import { MECHA_SKILLS_BY_SLUG, type MechaSkillSeed } from "./mecha-skills";
+
+export type { MechaSkillSeed } from "./mecha-skills";
+
 /** 机甲等级配置 */
 export interface MechaLevelConfig {
   level: number;
@@ -15,6 +19,7 @@ export interface MechaConfig {
   intro: string;
   sortOrder: number;
   levels: MechaLevelConfig[];
+  skills: MechaSkillSeed[];
 }
 
 /** 机甲种子数据（新增机甲只需在此添加，然后执行 pnpm db:seed） */
@@ -35,6 +40,7 @@ export const MECHA_SEED_DATA: MechaConfig[] = [
       { level: 6, name: "翼甲型", threshold: 200, imageUrl: "/mecha/xuanjia/level-6.png", description: "全域感知与机动兼顾，先锋冲锋战力全开。" },
       { level: 7, name: "完整体", threshold: 250, imageUrl: "/mecha/xuanjia/level-7.png", description: "正面强攻的终极形态，重装装甲与核心力量全开，成为战场突破的绝对先锋。" },
     ],
+    skills: MECHA_SKILLS_BY_SLUG["xuanjia"]!,
   },
   {
     slug: "star-shield",
@@ -52,6 +58,7 @@ export const MECHA_SEED_DATA: MechaConfig[] = [
       { level: 6, name: "星辉型", threshold: 200, imageUrl: "/mecha/star-shield/level-6.png", description: "守护之力臻于完美，构筑绝对屏障与群体庇护。" },
       { level: 7, name: "完整体", threshold: 250, imageUrl: "/mecha/star-shield/level-7.png", description: "全能防御的终极形态，光之铠甲与星辰屏障全开，成为团队最可靠的守护之壁。" },
     ],
+    skills: MECHA_SKILLS_BY_SLUG["star-shield"]!,
   },
   {
     slug: "razor",
@@ -69,6 +76,7 @@ export const MECHA_SEED_DATA: MechaConfig[] = [
       { level: 6, name: "锋芒型", threshold: 200, imageUrl: "/mecha/razor/level-6.png", description: "斩击之力臻于完美，瞬间切入与精准打击达到巅峰。" },
       { level: 7, name: "完整体", threshold: 250, imageUrl: "/mecha/razor/level-7.png", description: "极速突袭的终极形态，破甲武装与雷霆锋芒全开，成为战场斩首的绝对利刃。" },
     ],
+    skills: MECHA_SKILLS_BY_SLUG["razor"]!,
   },
   {
     slug: "swift",
@@ -86,6 +94,7 @@ export const MECHA_SEED_DATA: MechaConfig[] = [
       { level: 6, name: "疾风型", threshold: 200, imageUrl: "/mecha/swift/level-6.png", description: "迅捷之力臻于完美，灵活穿梭与快速支援达到巅峰。" },
       { level: 7, name: "完整体", threshold: 250, imageUrl: "/mecha/swift/level-7.png", description: "机动侦查的终极形态，风雷双翼与瞬影突袭全开，成为战场最迅捷的侦察之眼。" },
     ],
+    skills: MECHA_SKILLS_BY_SLUG["swift"]!,
   },
   {
     slug: "thunder",
@@ -103,6 +112,7 @@ export const MECHA_SEED_DATA: MechaConfig[] = [
       { level: 6, name: "雷翼型", threshold: 200, imageUrl: "/mecha/thunder/level-6.png", description: "轰击之力臻于完美，大范围雷电攻击与群体控制达到巅峰。" },
       { level: 7, name: "完整体", threshold: 250, imageUrl: "/mecha/thunder/level-7.png", description: "范围爆发的终极形态，雷电武装与爆轰之力全开，成为战场范围压制的雷霆核心。" },
     ],
+    skills: MECHA_SKILLS_BY_SLUG["thunder"]!,
   },
   {
     slug: "magnet",
@@ -120,6 +130,7 @@ export const MECHA_SEED_DATA: MechaConfig[] = [
       { level: 6, name: "核心型", threshold: 200, imageUrl: "/mecha/magnet/level-6.png", description: "磁力之力臻于完美，磁场控制达到巅峰。" },
       { level: 7, name: "完整体", threshold: 250, imageUrl: "/mecha/magnet/level-7.png", description: "磁场控制的终极形态，引力核心与磁能武装全开，成为战场控场的绝对主宰。" },
     ],
+    skills: MECHA_SKILLS_BY_SLUG["magnet"]!,
   },
   {
     slug: "aether",
@@ -137,6 +148,7 @@ export const MECHA_SEED_DATA: MechaConfig[] = [
       { level: 6, name: "破穹型", threshold: 200, imageUrl: "/mecha/aether/level-6.png", description: "穿梭之力臻于完美，跨越地形实现全员机动转移达到巅峰。" },
       { level: 7, name: "完整体", threshold: 250, imageUrl: "/mecha/aether/level-7.png", description: "空中全域的终极形态，跃迁引擎与天境核心全开，成为团队空中机动的枢纽。" },
     ],
+    skills: MECHA_SKILLS_BY_SLUG["aether"]!,
   },
   {
     slug: "tidal",
@@ -154,6 +166,7 @@ export const MECHA_SEED_DATA: MechaConfig[] = [
       { level: 6, name: "怒洋型", threshold: 200, imageUrl: "/mecha/tidal/level-6.png", description: "深海之力臻于完美，隐秘潜行与远距离火力压制达到巅峰。" },
       { level: 7, name: "完整体", threshold: 250, imageUrl: "/mecha/tidal/level-7.png", description: "两栖潜行的终极形态，幽洋舰甲与潜航之力全开，成为水域与陆地的全能载具。" },
     ],
+    skills: MECHA_SKILLS_BY_SLUG["tidal"]!,
   },
   {
     slug: "titan-fort",
@@ -171,6 +184,7 @@ export const MECHA_SEED_DATA: MechaConfig[] = [
       { level: 6, name: "要塞型", threshold: 200, imageUrl: "/mecha/titan-fort/level-6.png", description: "防御之力臻于完美，陆地上最可靠的移动防御堡垒。" },
       { level: 7, name: "完整体", threshold: 250, imageUrl: "/mecha/titan-fort/level-7.png", description: "陆地堡垒的终极形态，超重型装甲与壁垒屏障全开，成为陆地上最可靠的移动要塞。" },
     ],
+    skills: MECHA_SKILLS_BY_SLUG["titan-fort"]!,
   },
   {
     slug: "tunnel",
@@ -188,6 +202,7 @@ export const MECHA_SEED_DATA: MechaConfig[] = [
       { level: 6, name: "裂隙型", threshold: 200, imageUrl: "/mecha/tunnel/level-6.png", description: "地下之力臻于完美，为队伍开辟隐蔽通道达到巅峰。" },
       { level: 7, name: "完整体", threshold: 250, imageUrl: "/mecha/tunnel/level-7.png", description: "地下渗透的终极形态，地脉钻头与深潜之力全开，成为地下战场开辟通道的专家。" },
     ],
+    skills: MECHA_SKILLS_BY_SLUG["tunnel"]!,
   },
   {
     slug: "ark",
@@ -205,6 +220,7 @@ export const MECHA_SEED_DATA: MechaConfig[] = [
       { level: 6, name: "续航型", threshold: 200, imageUrl: "/mecha/ark/level-6.png", description: "后勤之力臻于完美，让友军保持弹药与机体状态达到巅峰。" },
       { level: 7, name: "完整体", threshold: 250, imageUrl: "/mecha/ark/level-7.png", description: "补给保障的终极形态，补给投送舱与续航核心全开，成为持久战的核心保障单位。" },
     ],
+    skills: MECHA_SKILLS_BY_SLUG["ark"]!,
   },
   {
     slug: "medecac",
@@ -222,6 +238,7 @@ export const MECHA_SEED_DATA: MechaConfig[] = [
       { level: 6, name: "护佑型", threshold: 200, imageUrl: "/mecha/medecac/level-6.png", description: "医疗之力臻于完美，伤员转运与急救达到巅峰。" },
       { level: 7, name: "完整体", threshold: 250, imageUrl: "/mecha/medecac/level-7.png", description: "医疗救援的终极形态，生命维持舱与护佑之力全开，成为战火中抢救生命的关键力量。" },
     ],
+    skills: MECHA_SKILLS_BY_SLUG["medecac"]!,
   },
   {
     slug: "iron-dragon",
@@ -239,6 +256,7 @@ export const MECHA_SEED_DATA: MechaConfig[] = [
       { level: 6, name: "长编型", threshold: 200, imageUrl: "/mecha/iron-dragon/level-6.png", description: "轨道之力臻于完美，多节运输与阵地压制达到巅峰。" },
       { level: 7, name: "完整体", threshold: 250, imageUrl: "/mecha/iron-dragon/level-7.png", description: "多节列车的终极形态，可拆分车厢与编队协调之力全开，成为陆上重型轨道单位。" },
     ],
+    skills: MECHA_SKILLS_BY_SLUG["iron-dragon"]!,
   },
   {
     slug: "hound",
@@ -256,6 +274,7 @@ export const MECHA_SEED_DATA: MechaConfig[] = [
       { level: 6, name: "猎王型", threshold: 200, imageUrl: "/mecha/hound/level-6.png", description: "猎犬之力臻于完美，快速突击与单点歼灭达到巅峰。" },
       { level: 7, name: "完整体", threshold: 250, imageUrl: "/mecha/hound/level-7.png", description: "四足突击的终极形态，等离子利齿与冲刺推进器全开，成为战场追击与歼灭的猎手。" },
     ],
+    skills: MECHA_SKILLS_BY_SLUG["hound"]!,
   },
   {
     slug: "dive",
@@ -273,5 +292,6 @@ export const MECHA_SEED_DATA: MechaConfig[] = [
       { level: 6, name: "天罚型", threshold: 200, imageUrl: "/mecha/dive/level-6.png", description: "俯冲之力臻于完美，对地突击达到巅峰。" },
       { level: 7, name: "完整体", threshold: 250, imageUrl: "/mecha/dive/level-7.png", description: "空中突击的终极形态，俯冲加速翼与动能穿甲弹全开，成为对地打击的空中猎手。" },
     ],
+    skills: MECHA_SKILLS_BY_SLUG["dive"]!,
   },
 ];

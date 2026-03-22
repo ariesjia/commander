@@ -17,7 +17,10 @@ export async function GET() {
     prisma.mecha.findMany({
       where: { isActive: true },
       orderBy: { sortOrder: "asc" },
-      include: { levels: { orderBy: { level: "asc" } } },
+      include: {
+        levels: { orderBy: { level: "asc" } },
+        skills: { orderBy: { unlockLevel: "asc" } },
+      },
     }),
     prisma.studentMecha.findMany({
       where: { studentId },
@@ -46,6 +49,13 @@ export async function GET() {
         threshold: pointsToNumber(l.threshold),
         imageUrl: l.imageUrl,
         description: l.description ?? "",
+      })),
+      skills: m.skills.map((s) => ({
+        unlockLevel: s.unlockLevel,
+        kind: s.kind,
+        slug: s.slug,
+        name: s.name,
+        description: s.description,
       })),
       ownedCount: ownedBySlug[m.slug]?.count ?? 0,
       points: ownedBySlug[m.slug]?.points ?? 0,

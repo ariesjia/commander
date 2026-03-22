@@ -232,6 +232,7 @@ model Mecha {
   updatedAt   DateTime @updatedAt
 
   levels            MechaLevel[]
+  skills            MechaSkill[]
   studentBattleLogs StudentBattleLog[]
 }
 
@@ -249,6 +250,33 @@ model MechaLevel {
 
   @@unique([mechaId, level])
   @@index([mechaId])
+}
+
+enum MechaSkillKind {
+  ATTACK
+  DEFENSE
+  BUFF
+  HEAL
+  CONTROL
+  SUPPORT
+}
+
+model MechaSkill {
+  id          String         @id @default(cuid())
+  mechaId     String
+  mecha       Mecha          @relation(fields: [mechaId], references: [id], onDelete: Cascade)
+  unlockLevel Int
+  kind        MechaSkillKind
+  slug        String
+  name        String
+  description String         @db.Text
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@unique([mechaId, unlockLevel])
+  @@unique([mechaId, slug])
+  @@index([mechaId])
+  @@index([kind])
 }
 
 enum PointsLogType {

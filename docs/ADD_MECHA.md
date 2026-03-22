@@ -48,8 +48,11 @@ public/mecha/<slug>/
     { level: 6, name: "完全型", threshold: 500, imageUrl: "/mecha/my-mecha/level-6.png", description: "..." },
     { level: 7, name: "完整体", threshold: 800, imageUrl: "/mecha/my-mecha/level-7.png", description: "..." },
   ],
+  skills: MECHA_SKILLS_BY_SLUG["my-mecha"]!, // 见下：里程碑技能
 },
 ```
+
+**里程碑技能**：每台机甲必须有 **3** 条技能，分别在形态等级 **2、5、7** 解锁。在 [`prisma/seed-data/mecha-skills.ts`](../prisma/seed-data/mecha-skills.ts) 的 `MECHA_SKILLS_BY_SLUG` 中增加以 `slug` 为键的数组（每条含 `unlockLevel`、`kind`、`slug`、`name`、`description`）；`kind` 为 `MechaSkillKind`：`ATTACK` | `DEFENSE` | `BUFF` | `HEAL` | `CONTROL` | `SUPPORT`。然后在 `mechas.ts` 的该机甲项上设置 `skills: MECHA_SKILLS_BY_SLUG["<slug>"]!`，与现有机甲一致。
 
 **字段说明**：
 
@@ -61,6 +64,7 @@ public/mecha/<slug>/
 | `intro` | 完整介绍，用于机甲详情页 |
 | `sortOrder` | 排序序号，0 最前 |
 | `levels` | 8 个等级配置 |
+| `skills` | 3 条里程碑技能（数据在 `mecha-skills.ts`，此处引用 `MECHA_SKILLS_BY_SLUG`） |
 
 **等级字段**：
 

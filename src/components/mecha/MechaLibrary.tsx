@@ -10,6 +10,7 @@ import { formatDateFriendly } from "@/lib/utils";
 import type { MechaEvolutionDto } from "@/app/api/student/mecha-evolution/[id]/route";
 import { buildMechaReadAloudText } from "@/lib/mecha-speech";
 import { SPEECH_SYNTHESIS_RATE } from "@/lib/speech-config";
+import { MechaSkillList } from "@/components/mecha/MechaSkillList";
 
 interface AdoptedMecha {
   id: string;
@@ -200,6 +201,14 @@ function MechaDetailModal({
                   </p>
                 </div>
               )}
+
+              <MechaSkillList
+                skills={mecha.skills}
+                currentLevelNum={levelInfo.level}
+                tone="student"
+                showPinyin={!!showPinyin}
+              />
+
               {speechSupported && mecha && levelInfo && (
                 <button
                   type="button"

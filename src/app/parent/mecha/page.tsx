@@ -5,12 +5,21 @@ import { api } from "@/lib/api";
 import { useData } from "@/contexts/DataContext";
 import { Bot, X } from "lucide-react";
 import { toDisplay } from "@/lib/score-display";
+import { MechaSkillList } from "@/components/mecha/MechaSkillList";
 
 interface MechaLevel {
   level: number;
   name: string;
   threshold: number;
   imageUrl: string;
+  description: string;
+}
+
+interface MechaSkillItem {
+  unlockLevel: number;
+  kind: string;
+  slug: string;
+  name: string;
   description: string;
 }
 
@@ -21,6 +30,7 @@ interface ParentMechaItem {
   description: string | null;
   intro: string | null;
   levels: MechaLevel[];
+  skills: MechaSkillItem[];
   ownedCount: number;
   points: number;
 }
@@ -38,10 +48,12 @@ function getCurrentLevel(levels: MechaLevel[], points: number): MechaLevel | nul
 function MechaDetailModal({
   mecha,
   baseScore,
+  showPinyin,
   onClose,
 }: {
   mecha: ParentMechaItem;
   baseScore: import("@/lib/score-display").BaseScore;
+  showPinyin: boolean;
   onClose: () => void;
 }) {
   const currentLevel = getCurrentLevel(mecha.levels, mecha.points);
@@ -137,6 +149,13 @@ function MechaDetailModal({
                   )}
                 </div>
               )}
+
+              <MechaSkillList
+                skills={mecha.skills}
+                currentLevelNum={currentLevel?.level ?? 0}
+                tone="parent"
+                showPinyin={showPinyin}
+              />
             </div>
 
             {/* 右侧：等级一览（PC 时与左侧同高，列表独立滚动） */}
@@ -220,7 +239,7 @@ function MechaCard({
 }
 
 export default function ParentMechaPage() {
-  const { baseScore } = useData();
+  const { baseScore, showPinyin } = useData();
   const [mechas, setMechas] = useState<ParentMechaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<ParentMechaItem | null>(null);
@@ -273,7 +292,12 @@ export default function ParentMechaPage() {
       </div>
 
       {selected && (
-        <MechaDetailModal mecha={selected} baseScore={baseScore} onClose={() => setSelected(null)} />
+        <MechaDetailModal
+          mecha={selected}
+          baseScore={baseScore}
+          showPinyin={showPinyin}
+          onClose={() => setSelected(null)}
+        />
       )}
     </div>
   );

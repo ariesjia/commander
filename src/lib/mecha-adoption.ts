@@ -14,6 +14,15 @@ export interface MechaLevel {
   description: string;
 }
 
+/** 与 API `MechaSkillDto` / Prisma `MechaSkillKind` 对齐 */
+export interface MechaSkill {
+  unlockLevel: number;
+  kind: string;
+  slug: string;
+  name: string;
+  description: string;
+}
+
 export interface MechaDetail {
   id: string;
   slug: string;
@@ -21,4 +30,5 @@ export interface MechaDetail {
   description: string | null;
   intro: string | null;
   levels: MechaLevel[];
+  skills: MechaSkill[];
 }

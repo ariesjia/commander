@@ -13,6 +13,7 @@ import { api } from "@/lib/api";
 import { formatDateFriendly } from "@/lib/utils";
 import type { MechaEvolutionDto } from "@/app/api/student/mecha-evolution/[id]/route";
 import { buildMechaReadAloudText } from "@/lib/mecha-speech";
+import { MechaSkillList } from "@/components/mecha/MechaSkillList";
 
 interface AdoptedMecha {
   id: string;
@@ -327,6 +328,15 @@ function MechaDrawer({
               <TextWithPinyin text={mecha.intro} showPinyin={!!showPinyin} />
             </p>
           </div>
+        )}
+
+        {mecha && levelInfo && (
+          <MechaSkillList
+            skills={mecha.skills}
+            currentLevelNum={levelInfo.level}
+            tone="student"
+            showPinyin={!!showPinyin}
+          />
         )}
       </StudentSideDrawer>
 

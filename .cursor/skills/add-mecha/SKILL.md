@@ -82,13 +82,14 @@ ls public/mecha/<slug>/
 
 ### Phase 4: 执行
 
-1. 编辑 `prisma/seed-data/mechas.ts`，在 `MECHA_SEED_DATA` 数组末尾追加新机甲配置
-2. `sortOrder` = 现有最大 sortOrder + 1
-3. `description` 缺省时用 intro 首句或定位描述
-4. levels 使用标准阈值：0, 20, 50, 80, 120, 160, 200, 250
-5. 等级文案可参考现有机甲风格，结合 intro 生成
-6. 编辑 `docs/MECHA_CHARACTERS.md`，在文档末尾追加新机甲人物设定（格式参考现有条目，英文名用 slug 转 Title Case，如 `star-shield` → Star Shield）
-7. **创建详细设计文档** `docs/<name>-<English>-详细设计.md`，**必须参考同类型机甲的 `docs/*-详细设计.md`**，按以下十段结构撰写：
+1. 编辑 `prisma/seed-data/mecha-skills.ts`，在 `MECHA_SKILLS_BY_SLUG` 中为新 `slug` 增加 3 条里程碑技能（`unlockLevel` 2/5/7，`kind` 为 `MechaSkillKind`）
+2. 编辑 `prisma/seed-data/mechas.ts`，在 `MECHA_SEED_DATA` 数组末尾追加新机甲配置（含 `skills: MECHA_SKILLS_BY_SLUG["<slug>"]!`）
+3. `sortOrder` = 现有最大 sortOrder + 1
+4. `description` 缺省时用 intro 首句或定位描述
+5. levels 使用标准阈值：0, 20, 50, 80, 120, 160, 200, 250
+6. 等级文案可参考现有机甲风格，结合 intro 生成
+7. 编辑 `docs/MECHA_CHARACTERS.md`，在文档末尾追加新机甲人物设定（格式参考现有条目，英文名用 slug 转 Title Case，如 `star-shield` → Star Shield）
+8. **创建详细设计文档** `docs/<name>-<English>-详细设计.md`，**必须参考同类型机甲的 `docs/*-详细设计.md`**，按以下十段结构撰写：
 
 | 章节 | 内容 |
 |------|------|
@@ -104,9 +105,9 @@ ls public/mecha/<slug>/
 | 十、设计参考要点 | 供绘图/建模的要点 |
 
 **参考模板**：`docs/缚网-Reticle-详细设计.md`、`docs/猎犬-Hound-详细设计.md` 等
-8. 创建 `public/mecha/<slug>/doc.md`，格式参考 `public/mecha/dive/doc.md`（简明版：类型、特点、职责、配色、专属装备、简介、等级称号）
-9. 更新 `docs/README.md`，在「四、机甲详细设计」对应分类（人形/载具/仿生）下追加新机甲详细设计条目
-10. 执行 `pnpm db:seed` 或 `npx prisma db seed`
+9. 创建 `public/mecha/<slug>/doc.md`，格式参考 `public/mecha/dive/doc.md`（简明版：类型、特点、职责、配色、专属装备、简介、等级称号）
+10. 更新 `docs/README.md`，在「四、机甲详细设计」对应分类（人形/载具/仿生）下追加新机甲详细设计条目
+11. 执行 `pnpm db:seed` 或 `npx prisma db seed`
 
 ## 配置模板
 
@@ -127,13 +128,14 @@ ls public/mecha/<slug>/
     { level: 6, name: "升华", threshold: 500, imageUrl: "/mecha/<slug>/level-6.png", description: "..." },
     { level: 7, name: "完整体", threshold: 800, imageUrl: "/mecha/<slug>/level-7.png", description: "..." },
   ],
+  skills: MECHA_SKILLS_BY_SLUG["<slug>"]!,
 },
 ```
 
 ## 参考
 
 - 文档目录：`docs/README.md`（了解 docs 结构）
-- 种子数据：`prisma/seed-data/mechas.ts`
+- 种子数据：`prisma/seed-data/mechas.ts`、`prisma/seed-data/mecha-skills.ts`
 - 人物设定：`docs/MECHA_CHARACTERS.md`（新增机甲时需同步追加）
 - 详细设计模板：`docs/缚网-Reticle-详细设计.md`、`docs/猎犬-Hound-详细设计.md` 等（**新增机甲时必须参考同类型，并创建完整详细设计**）
 - doc.md 模板：`public/mecha/dive/doc.md`、`public/mecha/hound/doc.md`
