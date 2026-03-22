@@ -5,12 +5,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useData } from "@/contexts/DataContext";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
-import { User, KeyRound, LogOut, Check, BookOpen, Coins } from "lucide-react";
+import { User, KeyRound, LogOut, Check, BookOpen } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function SettingsPage() {
   const { user, updateNickname, updatePin, logout } = useAuth();
-  const { showPinyin, updateShowPinyin, baseScore, updateBaseScore } = useData();
+  const { showPinyin, updateShowPinyin } = useData();
   const router = useRouter();
 
   const [nickname, setNickname] = useState(user?.childNickname ?? "");
@@ -21,7 +21,6 @@ export default function SettingsPage() {
   const [savingPinyin, setSavingPinyin] = useState(false);
   const [savingNickname, setSavingNickname] = useState(false);
   const [savingPin, setSavingPin] = useState(false);
-  const [savingBaseScore, setSavingBaseScore] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
   useEffect(() => {
@@ -159,7 +158,7 @@ export default function SettingsPage() {
       </div>
 
       {/* 基准分 */}
-      <div className="rounded-xl border border-p-border bg-p-card p-5">
+      {/* <div className="rounded-xl border border-p-border bg-p-card p-5">
         <div className="flex items-center gap-2 mb-4">
           <Coins size={18} className="text-p-accent" />
           <h2 className="text-base font-medium text-p-text">基准分</h2>
@@ -192,7 +191,7 @@ export default function SettingsPage() {
             </button>
           ))}
         </div>
-      </div>
+      </div> */}
 
       {/* PIN */}
       <div className="rounded-xl border border-p-border bg-p-card p-5">
