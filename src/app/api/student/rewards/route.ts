@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireStudent, getStudentId } from "@/lib/api-auth";
+import { pointsToNumber } from "@/lib/points-number";
 
 export async function GET(request: Request) {
   const auth = await requireStudent();
@@ -12,7 +13,7 @@ export async function GET(request: Request) {
   }
 
   const student = await prisma.student.findUniqueOrThrow({ where: { id: studentId } });
-  const availableBalance = student.balance - student.frozenPoints;
+  const availableBalance = pointsToNumber(student.balance) - pointsToNumber(student.frozenPoints);
 
   const rewards = await prisma.reward.findMany({
     where: { parentId: auth.parentId, isActive: true },
@@ -20,16 +21,19 @@ export async function GET(request: Request) {
   });
 
   return NextResponse.json(
-    rewards.map((r) => ({
-      id: r.id,
-      name: r.name,
-      description: r.description,
-      imageUrl: r.imageUrl,
-      points: r.points,
-      isActive: r.isActive,
-      createdAt: r.createdAt.toISOString(),
-      canRedeem: availableBalance >= r.points,
-      pointsNeeded: Math.max(0, r.points - availableBalance),
-    }))
+    rewards.map((r) => {
+      const pts = pointsToNumber(r.points);
+      return {
+        id: r.id,
+        name: r.name,
+        description: r.description,
+        imageUrl: r.imageUrl,
+        points: pts,
+        isActive: r.isActive,
+        createdAt: r.createdAt.toISOString(),
+        canRedeem: availableBalance >= pts,
+        pointsNeeded: Math.max(0, pts - availableBalance),
+      };
+    })
   );
 }

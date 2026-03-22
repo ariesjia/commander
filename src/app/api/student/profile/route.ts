@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { requireStudent, getStudentId } from "@/lib/api-auth";
 import { getCurrentStage, getEvolutionLevel } from "@/lib/mecha-config";
 import { getBattleStatusForStudent } from "@/lib/battle-server";
+import { pointsToNumber } from "@/lib/points-number";
 
 export async function GET(request: Request) {
   const auth = await requireStudent();
@@ -37,14 +38,14 @@ export async function GET(request: Request) {
         ].filter(Boolean)
       : [...student.studentMechas];
   const adoptedMechaIds = adoptedMechas.map((sm) => sm.mechaSlug);
-  const primaryMechaPoints = primaryMecha?.points ?? 0;
+  const primaryMechaPoints = pointsToNumber(primaryMecha?.points);
 
   const mechaStage = getCurrentStage(primaryMechaPoints);
   const evolutionLevel = getEvolutionLevel(primaryMechaPoints);
 
   const mechaPointsBySlug: Record<string, number> = {};
   for (const sm of student.studentMechas) {
-    mechaPointsBySlug[sm.mechaSlug] = sm.points;
+    mechaPointsBySlug[sm.mechaSlug] = pointsToNumber(sm.points);
   }
 
   const battleStatus = await getBattleStatusForStudent(studentId);
@@ -54,11 +55,15 @@ export async function GET(request: Request) {
     baseScore: (student.parent.baseScore ?? 1) as 0.1 | 1 | 10,
     nickname: student.nickname,
     adoptedMechaIds,
-    adoptedMechas: adoptedMechas.map((sm) => ({ id: sm.id, slug: sm.mechaSlug, points: sm.points })),
+    adoptedMechas: adoptedMechas.map((sm) => ({
+      id: sm.id,
+      slug: sm.mechaSlug,
+      points: pointsToNumber(sm.points),
+    })),
     mechaPointsBySlug,
-    totalPoints: student.totalPoints,
-    balance: student.balance,
-    frozenPoints: student.frozenPoints,
+    totalPoints: pointsToNumber(student.totalPoints),
+    balance: pointsToNumber(student.balance),
+    frozenPoints: pointsToNumber(student.frozenPoints),
     streakDays: student.streakDays,
     mechaStage,
     evolutionLevel,

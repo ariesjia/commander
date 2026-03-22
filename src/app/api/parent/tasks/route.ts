@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { requireParent, getStudentId } from "@/lib/api-auth";
 import { getTodayStr, getWeekStartStr, toChinaDateStr } from "@/lib/utils";
 import { TaskType } from "@prisma/client";
+import { parsePointsInput, pointsToNumber } from "@/lib/points-number";
 
 const TASK_TYPE_MAP: Record<string, TaskType> = {
   DAILY: "DAILY",
@@ -48,8 +49,8 @@ export async function GET(request: Request) {
       name: t.name,
       description: t.description,
       type: t.type,
-      maxPoints: t.maxPoints,
-      penaltyPoints: t.penaltyPoints ?? 0,
+      maxPoints: pointsToNumber(t.maxPoints),
+      penaltyPoints: pointsToNumber(t.penaltyPoints),
       isActive: t.isActive,
       createdAt: t.createdAt.toISOString(),
       status: log ? "completed" : "pending",
@@ -76,8 +77,8 @@ export async function POST(request: Request) {
     }
 
     const taskType = TASK_TYPE_MAP[type] ?? "DAILY";
-    const pts = Math.max(0, parseInt(String(maxPoints ?? 0), 10) || 0);
-    const penalty = Math.max(0, parseInt(String(penaltyPoints ?? 0), 10) || 0);
+    const pts = Math.max(0, parsePointsInput(maxPoints) ?? 0);
+    const penalty = Math.max(0, parsePointsInput(penaltyPoints) ?? 0);
 
     if (taskType === "RULE" && penalty > 0) {
       // 惩罚规则：maxPoints 可为 0
@@ -105,8 +106,8 @@ export async function POST(request: Request) {
       name: task.name,
       description: task.description,
       type: task.type,
-      maxPoints: task.maxPoints,
-      penaltyPoints: task.penaltyPoints,
+      maxPoints: pointsToNumber(task.maxPoints),
+      penaltyPoints: pointsToNumber(task.penaltyPoints),
       isActive: task.isActive,
       createdAt: task.createdAt.toISOString(),
     });

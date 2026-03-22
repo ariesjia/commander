@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { hashPassword } from "../src/lib/auth";
+import { pointsToNumber } from "../src/lib/points-number";
 import { MECHA_SEED_DATA } from "./seed-data/mechas";
 import { ITEM_SEED_DATA } from "./seed-data/items";
 
@@ -36,13 +37,16 @@ async function seedMecha(config: (typeof MECHA_SEED_DATA)[number]) {
   });
 
   if (existing?.levels && existing.levels.length > 0) {
-    const levelsNeedUpdate = config.levels.some(
-      (c, i) =>
-        existing.levels[i]?.name !== c.name ||
-        existing.levels[i]?.description !== c.description ||
-        existing.levels[i]?.threshold !== c.threshold ||
-        existing.levels[i]?.imageUrl !== c.imageUrl,
-    );
+    const levelsNeedUpdate = config.levels.some((c, i) => {
+      const row = existing.levels[i];
+      const th = row ? pointsToNumber(row.threshold) : null;
+      return (
+        row?.name !== c.name ||
+        row?.description !== c.description ||
+        th !== c.threshold ||
+        row?.imageUrl !== c.imageUrl
+      );
+    });
     const mechaNeedUpdate = existing.description !== config.description || existing.intro !== config.intro || existing.sortOrder !== config.sortOrder;
     if (levelsNeedUpdate) {
       for (const l of config.levels) {

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireParent, getStudentId } from "@/lib/api-auth";
 import { PointsLogType } from "@prisma/client";
+import { pointsToNumber } from "@/lib/points-number";
 
 export async function POST(
   request: Request,
@@ -34,6 +35,8 @@ export async function POST(
   const rejectReason = body?.reason ? String(body.reason).trim() : null;
 
   const student = await prisma.student.findUniqueOrThrow({ where: { id: studentId } });
+  const cost = pointsToNumber(exchange.pointsCost);
+  const frozen = pointsToNumber(student.frozenPoints);
 
   await prisma.$transaction([
     prisma.exchange.update({
@@ -43,13 +46,13 @@ export async function POST(
     prisma.student.update({
       where: { id: studentId },
       data: {
-        frozenPoints: student.frozenPoints - exchange.pointsCost,
+        frozenPoints: frozen - cost,
       },
     }),
     prisma.pointsLog.create({
       data: {
         studentId,
-        amount: exchange.pointsCost,
+        amount: cost,
         type: PointsLogType.EXCHANGE_REFUND,
         description: `兑换"${exchange.reward.name}"被拒绝退回`,
       },

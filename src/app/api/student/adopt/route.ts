@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireStudent, getStudentId } from "@/lib/api-auth";
+import { pointsToNumber } from "@/lib/points-number";
 
 /** 随机抽取一只机甲并领养 */
 export async function POST() {
@@ -67,7 +68,7 @@ export async function POST() {
   const mechaPoints = 0; // 新领养，积分为 0
   let levelInfo = levels[0]!;
   for (const l of levels) {
-    if (mechaPoints >= l.threshold) levelInfo = l;
+    if (mechaPoints >= pointsToNumber(l.threshold)) levelInfo = l;
     else break;
   }
 

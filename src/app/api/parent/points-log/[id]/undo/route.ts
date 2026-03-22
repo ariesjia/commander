@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireParent, getStudentId } from "@/lib/api-auth";
 import { PointsLogType } from "@prisma/client";
+import { pointsToNumber } from "@/lib/points-number";
 
 export async function POST(
   _request: Request,
@@ -52,9 +53,11 @@ export async function POST(
   }
 
   const student = await prisma.student.findUniqueOrThrow({ where: { id: studentId } });
-  const reverseAmount = -pointsLog.amount;
+  const reverseAmount = -pointsToNumber(pointsLog.amount);
+  const awarded = pointsToNumber(taskLog.pointsAwarded);
+  const bal = pointsToNumber(student.balance);
 
-  if (taskLog.pointsAwarded > 0 && student.balance < taskLog.pointsAwarded) {
+  if (awarded > 0 && bal < awarded) {
     return NextResponse.json({ error: "积分不足，无法撤销（可能已用于兑换）" }, { status: 400 });
   }
 
@@ -74,8 +77,8 @@ export async function POST(
       where: { id: studentId },
       data: {
         // 学生积分最低为 0，撤销时不会出现负分
-        totalPoints: Math.max(0, student.totalPoints - taskLog!.pointsAwarded),
-        balance: Math.max(0, student.balance - taskLog!.pointsAwarded),
+        totalPoints: Math.max(0, pointsToNumber(student.totalPoints) - awarded),
+        balance: Math.max(0, bal - awarded),
       },
     });
     if (studentMechaIdToUndo) {
@@ -85,7 +88,7 @@ export async function POST(
       if (sm) {
         await tx.studentMecha.update({
           where: { id: sm.id },
-          data: { points: Math.max(0, sm.points - taskLog!.pointsAwarded) },
+          data: { points: Math.max(0, pointsToNumber(sm.points) - awarded) },
         });
       }
     }

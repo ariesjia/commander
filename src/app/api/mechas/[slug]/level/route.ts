@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { pointsToNumber } from "@/lib/points-number";
 
 /** 根据积分获取机甲当前等级信息 */
 export async function GET(
@@ -8,7 +9,7 @@ export async function GET(
 ) {
   const { slug } = await params;
   const { searchParams } = new URL(req.url);
-  const points = parseInt(searchParams.get("points") ?? "0", 10);
+  const points = parseFloat(searchParams.get("points") ?? "0") || 0;
 
   const mecha = await prisma.mecha.findUnique({
     where: { slug, isActive: true },
@@ -24,14 +25,14 @@ export async function GET(
   const levels = mecha.levels;
   let currentLevel = levels[0]!;
   for (const l of levels) {
-    if (points >= l.threshold) currentLevel = l;
+    if (points >= pointsToNumber(l.threshold)) currentLevel = l;
     else break;
   }
 
   return NextResponse.json({
     level: currentLevel.level,
     name: currentLevel.name,
-    threshold: currentLevel.threshold,
+    threshold: pointsToNumber(currentLevel.threshold),
     imageUrl: currentLevel.imageUrl,
     description: currentLevel.description,
   });

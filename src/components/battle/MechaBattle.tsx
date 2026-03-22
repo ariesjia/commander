@@ -210,6 +210,7 @@ function speakBattleLine(text: string, opts?: SpeakBattleLineOptions): Promise<v
     const finish = () => {
       if (settled) return;
       settled = true;
+      window.clearTimeout(hangTimer);
       signal?.removeEventListener("abort", onAbort);
       setBattleBgmDucked(false);
       resolve();
@@ -220,6 +221,12 @@ function speakBattleLine(text: string, opts?: SpeakBattleLineOptions): Promise<v
       finish();
     };
     signal?.addEventListener("abort", onAbort);
+
+    /** 部分环境 TTS 既不 onend 也不 onerror，避免整段演出永久 await */
+    const hangTimer = window.setTimeout(() => {
+      synth.cancel();
+      finish();
+    }, 45_000);
 
     synth.cancel();
     setBattleBgmDucked(true);
@@ -290,7 +297,9 @@ export function MechaBattle({
   externalFlow = false,
   onBattlePresentationComplete,
 }: Props) {
-  const reduceMotion = useReducedMotion();
+  const reduceMotionPreferred = useReducedMotion();
+  /** 仅 true 视为减少动效；忽略 null→false，避免 triggerFx/战斗 effect 依赖抖动导致演出被 cancel、战报空白 */
+  const reducedMotion = reduceMotionPreferred === true;
   const { data: playerMecha, loading: playerMechaLoading } = useMecha(playerSlug);
   const playerLevel = getLevelFromMecha(playerMecha, playerMechaPoints);
   const playerImageUrl =
@@ -355,7 +364,7 @@ export function MechaBattle({
     (side: "player" | "enemy", crit: boolean) => {
       setBeam(side);
       setBeamKey((k) => k + 1);
-      window.setTimeout(() => setBeam("none"), reduceMotion ? 120 : 450);
+      window.setTimeout(() => setBeam("none"), reducedMotion ? 120 : 450);
       setShake(side === "player" ? "enemy" : "player");
       setFlash(crit && side === "player" ? "crit" : "hit");
       window.setTimeout(
@@ -363,10 +372,10 @@ export function MechaBattle({
           setShake("none");
           setFlash("none");
         },
-        reduceMotion ? 80 : 220,
+        reducedMotion ? 80 : 220,
       );
     },
-    [reduceMotion],
+    [reducedMotion],
   );
 
   /** 服务端裁决模式：逐条战报；支持朗读时读完一行再进入下一回合 */
@@ -377,7 +386,7 @@ export function MechaBattle({
     let cancelled = false;
     const speechAbort = new AbortController();
     const useSpeech = battleSpeechSupported();
-    const paceMs = reduceMotion ? 520 : 880;
+    const paceMs = reducedMotion ? 520 : 880;
     /** 朗读：一句念完再留白（句间 1 秒） */
     const pauseAfterSpokenLineMs = 1000;
 
@@ -545,7 +554,7 @@ export function MechaBattle({
       }
 
       if (cancelled) return;
-      await new Promise<void>((r) => window.setTimeout(r, reduceMotion ? 200 : 420));
+      await new Promise<void>((r) => window.setTimeout(r, reducedMotion ? 200 : 420));
       if (cancelled) return;
 
       setPhase(serverBattle.outcome === "WIN" ? "victory" : "defeat");
@@ -601,7 +610,7 @@ export function MechaBattle({
       }
       setBattleBgmDucked(false);
     };
-  }, [serverBattle, externalFlow, reduceMotion, triggerFx, clearTick, onBattlePresentationComplete]);
+  }, [serverBattle, externalFlow, reducedMotion, triggerFx, clearTick, onBattlePresentationComplete]);
 
   const fightingOrEnd = phase === "fighting" || phase === "victory" || phase === "defeat";
   const showEnemy = externalFlow ? Boolean(serverBattle) : false;
@@ -632,7 +641,7 @@ export function MechaBattle({
           className="pointer-events-none absolute inset-0 z-[1] bg-[radial-gradient(ellipse_85%_70%_at_50%_45%,transparent_0%,rgba(0,8,20,0.55)_100%)]"
           aria-hidden
         />
-        {!reduceMotion && (
+        {!reduceMotionPreferred && (
           <div
             className="pointer-events-none absolute inset-0 z-10 opacity-[0.12]"
             style={{
@@ -648,7 +657,7 @@ export function MechaBattle({
             } animate-battle-flash`}
           />
         )}
-        {!reduceMotion && beam !== "none" && (
+        {!reduceMotionPreferred && beam !== "none" && (
           <>
             <div
               key={`beam-${beamKey}`}
@@ -699,14 +708,14 @@ export function MechaBattle({
           <div
             className={`relative flex min-w-0 flex-1 flex-col items-center justify-end border-r border-cyan-500/25 bg-gradient-to-br from-cyan-950/40 via-[#0a1628]/80 to-transparent ${arenaPad} ${
               shake === "player" ? "animate-battle-shake" : ""
-            } ${!reduceMotion && fightingOrEnd && phase === "fighting" ? "animate-battle-threat-pulse" : ""}`}
+            } ${!reduceMotionPreferred && fightingOrEnd && phase === "fighting" ? "animate-battle-threat-pulse" : ""}`}
           >
             <p className="mb-2 rounded bg-cyan-950/70 px-2 py-0.5 text-[10px] font-bold tracking-widest text-cyan-200/90 ring-1 ring-cyan-400/35">
               ALLY
             </p>
             <div
               className={
-                !reduceMotion && phase === "fighting" && shake === "none"
+                !reduceMotionPreferred && phase === "fighting" && shake === "none"
                   ? "animate-battle-idle"
                   : ""
               }
@@ -742,7 +751,7 @@ export function MechaBattle({
           <div
             className={`relative flex min-w-0 flex-1 flex-col items-center justify-end bg-gradient-to-bl from-amber-950/25 via-[#0a1628]/80 to-transparent ${arenaPad} ${
               shake === "enemy" ? "animate-battle-shake" : ""
-            } ${!reduceMotion && fightingOrEnd && phase === "fighting" && showEnemy ? "animate-battle-threat-pulse-enemy" : ""}`}
+            } ${!reduceMotionPreferred && fightingOrEnd && phase === "fighting" && showEnemy ? "animate-battle-threat-pulse-enemy" : ""}`}
           >
             {showEnemy ? (
               <>
@@ -751,7 +760,7 @@ export function MechaBattle({
                 </p>
                 <div
                   className={
-                    !reduceMotion && phase === "fighting" && shake === "none"
+                    !reduceMotionPreferred && phase === "fighting" && shake === "none"
                       ? "animate-battle-idle"
                       : ""
                   }

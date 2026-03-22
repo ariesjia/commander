@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireParent, getStudentId } from "@/lib/api-auth";
+import { pointsToNumber } from "@/lib/points-number";
 
 /** 家长端：获取系统中所有机甲，及孩子对每款机甲的拥有数量和积分 */
 export async function GET() {
@@ -29,7 +30,7 @@ export async function GET() {
       ownedBySlug[sm.mechaSlug] = { count: 0, points: 0 };
     }
     ownedBySlug[sm.mechaSlug]!.count += 1;
-    ownedBySlug[sm.mechaSlug]!.points = sm.points;
+    ownedBySlug[sm.mechaSlug]!.points = pointsToNumber(sm.points);
   }
 
   return NextResponse.json(
@@ -42,7 +43,7 @@ export async function GET() {
       levels: m.levels.map((l) => ({
         level: l.level,
         name: l.name,
-        threshold: l.threshold,
+        threshold: pointsToNumber(l.threshold),
         imageUrl: l.imageUrl,
         description: l.description ?? "",
       })),

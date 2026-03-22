@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { requireParent, getStudentId } from "@/lib/api-auth";
 import { TaskType } from "@prisma/client";
 import { getDateRangeChina } from "@/lib/utils";
+import { pointsToNumber } from "@/lib/points-number";
 
 export async function GET(request: Request) {
   try {
@@ -47,7 +48,7 @@ export async function GET(request: Request) {
     const ruleCompleted = taskLogs.filter((l) => l.task.type === TaskType.RULE).length;
 
     const totalCompleted = taskLogs.length;
-    const pointsAwarded = taskLogs.reduce((sum, l) => sum + l.pointsAwarded, 0);
+    const pointsAwarded = taskLogs.reduce((sum, l) => sum + pointsToNumber(l.pointsAwarded), 0);
 
     const daysInPeriod = period === "week" ? 7 : new Date(end.getTime() - 1).getUTCDate();
     const dailyMax = dailyTasks.length * daysInPeriod;

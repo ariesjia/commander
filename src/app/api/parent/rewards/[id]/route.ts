@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireParent } from "@/lib/api-auth";
+import { parsePointsInput, pointsToNumber } from "@/lib/points-number";
 
 export async function PUT(
   request: Request,
@@ -27,7 +28,7 @@ export async function PUT(
     if (name !== undefined) data.name = String(name).trim();
     if (description !== undefined) data.description = description ? String(description).trim() : null;
     if (imageUrl !== undefined) data.imageUrl = imageUrl ? String(imageUrl).trim() : null;
-    if (points !== undefined) data.points = Math.max(0, parseInt(String(points), 10) || 0);
+    if (points !== undefined) data.points = Math.max(0, parsePointsInput(points) ?? 0);
     if (isActive !== undefined) data.isActive = Boolean(isActive);
 
     const updated = await prisma.reward.update({
@@ -40,7 +41,7 @@ export async function PUT(
       name: updated.name,
       description: updated.description,
       imageUrl: updated.imageUrl,
-      points: updated.points,
+      points: pointsToNumber(updated.points),
       isActive: updated.isActive,
       createdAt: updated.createdAt.toISOString(),
     });

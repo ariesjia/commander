@@ -56,7 +56,7 @@ function mapReplayToServerPayload(r: TodayBattleReplay): ServerBattlePayload {
     enemy: {
       name: r.enemy.name,
       imageUrl: r.enemy.imageUrl,
-      skills: r.enemy.skills,
+      skills: Array.isArray(r.enemy.skills) ? r.enemy.skills : [],
     },
     pointsAwarded: r.pointsAwarded > 0 ? r.pointsAwarded : undefined,
     rewards: r.rewards?.length ? r.rewards : undefined,
@@ -198,7 +198,7 @@ export default function StudentBattlePage() {
         enemy: {
           name: data.enemy.name,
           imageUrl: data.enemy.imageUrl,
-          skills: data.enemy.skills,
+          skills: Array.isArray(data.enemy.skills) ? data.enemy.skills : [],
         },
         pointsAwarded: points,
         rewards: data.rewards?.length ? data.rewards : undefined,

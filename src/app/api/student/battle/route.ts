@@ -16,6 +16,7 @@ import {
   resolveWinBattleRewardRoll,
 } from "@/lib/battle-server";
 import { getTodayStr } from "@/lib/utils";
+import { pointsToNumber } from "@/lib/points-number";
 
 export async function GET() {
   const auth = await requireStudent();
@@ -139,18 +140,22 @@ export async function POST() {
         });
         pointsLogId = pointsLog.id;
 
+        const totalBefore = pointsToNumber(student.totalPoints);
+        const balanceBefore = pointsToNumber(student.balance);
+        const mechaPtsBefore = primarySm ? pointsToNumber(primarySm.points) : 0;
+
         await tx.student.update({
           where: { id: studentId },
           data: {
-            totalPoints: Math.max(0, student.totalPoints + pointsTotal),
-            balance: Math.max(0, student.balance + pointsTotal),
+            totalPoints: Math.max(0, totalBefore + pointsTotal),
+            balance: Math.max(0, balanceBefore + pointsTotal),
           },
         });
 
         if (primarySm) {
           await tx.studentMecha.update({
             where: { id: primarySm.id },
-            data: { points: Math.max(0, primarySm.points + pointsTotal) },
+            data: { points: Math.max(0, mechaPtsBefore + pointsTotal) },
           });
         }
 

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { requireParent, getStudentId } from "@/lib/api-auth";
 import { getTodayStr, getWeekStartStr, toChinaDateStr } from "@/lib/utils";
 import { PointsLogType } from "@prisma/client";
+import { parsePointsInput, pointsToNumber } from "@/lib/points-number";
 
 export async function POST(
   request: Request,
@@ -23,8 +24,8 @@ export async function POST(
   let isPenalty = false;
   try {
     const body = await request.json().catch(() => ({}));
-    bodyPoints = body.pointsAwarded != null ? parseInt(String(body.pointsAwarded), 10) : undefined;
-    penaltyAmount = body.penaltyAmount != null ? parseInt(String(body.penaltyAmount), 10) : undefined;
+    bodyPoints = parsePointsInput(body.pointsAwarded);
+    penaltyAmount = parsePointsInput(body.penaltyAmount);
     isPenalty = body.isPenalty === true;
   } catch {
     // ignore
@@ -93,19 +94,30 @@ export async function POST(
   let logType: PointsLogType;
   let description: string;
 
-  if (isPenalty && task.type === "RULE" && task.penaltyPoints > 0) {
-    const deduct = penaltyAmount != null
-      ? Math.max(1, Math.min(penaltyAmount, task.penaltyPoints))
-      : task.penaltyPoints;
+  const maxPts = pointsToNumber(task.maxPoints);
+  const penaltyCap = pointsToNumber(task.penaltyPoints);
+
+  if (isPenalty && task.type === "RULE" && penaltyCap > 0) {
+    const deduct =
+      penaltyAmount != null && Number.isFinite(penaltyAmount)
+        ? Math.min(Math.max(0, penaltyAmount), penaltyCap)
+        : penaltyCap;
+    if (deduct <= 0) {
+      return NextResponse.json({ error: "惩罚分数须大于 0" }, { status: 400 });
+    }
     pointsToApply = -deduct;
     logType = PointsLogType.TASK_PENALTY;
     description = `违反规则"${task.name}"`;
   } else {
-    const requested = bodyPoints ?? task.maxPoints;
-    pointsToApply = Math.max(0, Math.min(requested, task.maxPoints));
+    const requested = bodyPoints ?? maxPts;
+    pointsToApply = Math.max(0, Math.min(requested, maxPts));
     logType = PointsLogType.TASK_REWARD;
     description = `完成任务"${task.name}"`;
   }
+
+  const totalBefore = pointsToNumber(student.totalPoints);
+  const balanceBefore = pointsToNumber(student.balance);
+  const primaryPtsBefore = primarySm ? pointsToNumber(primarySm.points) : 0;
 
   await prisma.$transaction(async (tx) => {
     const taskLog = await tx.taskLog.create({
@@ -120,8 +132,8 @@ export async function POST(
       where: { id: studentId },
       data: {
         // 学生积分最低为 0，惩罚规则下不会出现负分
-        totalPoints: Math.max(0, student.totalPoints + pointsToApply),
-        balance: Math.max(0, student.balance + pointsToApply),
+        totalPoints: Math.max(0, totalBefore + pointsToApply),
+        balance: Math.max(0, balanceBefore + pointsToApply),
         streakDays: pointsToApply >= 0 ? newStreak : student.streakDays,
         lastActiveAt: new Date(),
       },
@@ -139,7 +151,7 @@ export async function POST(
     if (primarySm) {
       await tx.studentMecha.update({
         where: { id: primarySm.id },
-        data: { points: Math.max(0, primarySm.points + pointsToApply) },
+        data: { points: Math.max(0, primaryPtsBefore + pointsToApply) },
       });
     }
   });

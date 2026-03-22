@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireStudent, getStudentId } from "@/lib/api-auth";
+import { pointsToNumber } from "@/lib/points-number";
 
 /** 学生取消自己的待审核兑换申请 */
 export async function POST(
@@ -31,6 +32,8 @@ export async function POST(
     }
 
     const student = await prisma.student.findUniqueOrThrow({ where: { id: studentId } });
+    const frozen = pointsToNumber(student.frozenPoints);
+    const cost = pointsToNumber(exchange.pointsCost);
 
     await prisma.$transaction([
       prisma.exchange.update({
@@ -40,7 +43,7 @@ export async function POST(
       prisma.student.update({
         where: { id: studentId },
         data: {
-          frozenPoints: Math.max(0, student.frozenPoints - exchange.pointsCost),
+          frozenPoints: Math.max(0, frozen - cost),
         },
       }),
     ]);

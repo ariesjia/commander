@@ -157,6 +157,9 @@ export default function TasksPage() {
 
   const handleConfirmTask = async () => {
     if (confirmTaskId) {
+      // 主按钮 disabled 后浏览器会把焦点移到弹层里更靠前的可聚焦元素（上面的 range），
+      // WebKit 上滑块聚焦会像「select」高亮；先移出焦点避免该现象。
+      (document.activeElement as HTMLElement | null)?.blur?.();
       setConfirming(true);
       try {
         await confirmTask(confirmTaskId, {
@@ -482,8 +485,9 @@ export default function TasksPage() {
                       max={maxDisplay}
                       step={step}
                       value={confirmPenaltyAmount}
+                      disabled={confirming}
                       onChange={(e) => setConfirmPenaltyAmount(parseFloat(e.target.value))}
-                      className="flex-1"
+                      className="flex-1 min-h-9 w-full cursor-pointer accent-p-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-p-accent/40 focus-visible:ring-offset-2 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                     <span className="text-sm font-medium w-10">-{confirmPenaltyAmount}</span>
                   </div>
@@ -517,8 +521,9 @@ export default function TasksPage() {
                       max={maxDisplay}
                       step={step}
                       value={confirmPoints}
+                      disabled={confirming}
                       onChange={(e) => setConfirmPoints(parseFloat(e.target.value))}
-                      className="flex-1"
+                      className="flex-1 min-h-9 w-full cursor-pointer accent-p-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-p-accent/40 focus-visible:ring-offset-2 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                     <span className="text-sm font-medium w-10">{confirmPoints}</span>
                   </div>

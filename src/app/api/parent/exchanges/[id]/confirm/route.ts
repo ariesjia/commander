@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireParent, getStudentId } from "@/lib/api-auth";
 import { PointsLogType } from "@prisma/client";
+import { pointsToNumber } from "@/lib/points-number";
 
 export async function POST(
   request: Request,
@@ -35,12 +36,16 @@ export async function POST(
       await tx.$queryRaw`SELECT id FROM "Student" WHERE id = ${studentId} FOR UPDATE`;
       const student = await tx.student.findUniqueOrThrow({ where: { id: studentId } });
 
-      if (student.balance < exchange.pointsCost) {
+      const cost = pointsToNumber(exchange.pointsCost);
+      const bal = pointsToNumber(student.balance);
+      const frozen = pointsToNumber(student.frozenPoints);
+
+      if (bal < cost) {
         throw new Error("INSUFFICIENT_BALANCE");
       }
 
       // frozenPoints 可能因历史数据不一致而不足，以 balance 为准
-      const newFrozenPoints = Math.max(0, student.frozenPoints - exchange.pointsCost);
+      const newFrozenPoints = Math.max(0, frozen - cost);
 
       await tx.exchange.update({
         where: { id: exchangeId },
@@ -49,14 +54,14 @@ export async function POST(
       await tx.student.update({
         where: { id: studentId },
         data: {
-          balance: student.balance - exchange.pointsCost,
+          balance: bal - cost,
           frozenPoints: newFrozenPoints,
         },
       });
       await tx.pointsLog.create({
         data: {
           studentId,
-          amount: -exchange.pointsCost,
+          amount: -cost,
           type: PointsLogType.EXCHANGE_COST,
           description: `兑换"${exchange.reward.name}"`,
         },

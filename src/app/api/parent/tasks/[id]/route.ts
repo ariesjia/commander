@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireParent } from "@/lib/api-auth";
 import { TaskType } from "@prisma/client";
+import { parsePointsInput, pointsToNumber } from "@/lib/points-number";
 
 export async function PUT(
   request: Request,
@@ -28,8 +29,8 @@ export async function PUT(
     if (name !== undefined) data.name = String(name).trim();
     if (description !== undefined) data.description = description ? String(description).trim() : null;
     if (type !== undefined) data.type = type === "WEEKLY" ? ("WEEKLY" as TaskType) : type === "RULE" ? ("RULE" as TaskType) : ("DAILY" as TaskType);
-    if (maxPoints !== undefined) data.maxPoints = Math.max(0, parseInt(String(maxPoints), 10) || 0);
-    if (penaltyPoints !== undefined) data.penaltyPoints = Math.max(0, parseInt(String(penaltyPoints), 10) || 0);
+    if (maxPoints !== undefined) data.maxPoints = Math.max(0, parsePointsInput(maxPoints) ?? 0);
+    if (penaltyPoints !== undefined) data.penaltyPoints = Math.max(0, parsePointsInput(penaltyPoints) ?? 0);
     if (isActive !== undefined) data.isActive = Boolean(isActive);
 
     const updated = await prisma.task.update({
@@ -42,8 +43,8 @@ export async function PUT(
       name: updated.name,
       description: updated.description,
       type: updated.type,
-      maxPoints: updated.maxPoints,
-      penaltyPoints: updated.penaltyPoints ?? 0,
+      maxPoints: pointsToNumber(updated.maxPoints),
+      penaltyPoints: pointsToNumber(updated.penaltyPoints),
       isActive: updated.isActive,
       createdAt: updated.createdAt.toISOString(),
     });

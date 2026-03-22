@@ -3,6 +3,7 @@ import { BattleOutcome, PointsLogType, Prisma } from "@prisma/client";
 import { battleSettings, type BattleRewardGrant } from "@/lib/battle-settings";
 import { getChinaDayBounds, type BattleRewardRoll } from "@/lib/battle";
 import { getTodayStr } from "@/lib/utils";
+import { pointsToNumber } from "@/lib/points-number";
 import { BATTLE_ENEMIES } from "@/lib/battle-enemies";
 
 export type BattleReasonCode = "THRESHOLD_NOT_MET" | "ALREADY_FOUGHT_TODAY" | null;
@@ -202,7 +203,8 @@ export async function getBattleStatusForStudent(
     }),
   ]);
 
-  const taskPointsToday = agg._sum.amount ?? 0;
+  const taskPointsToday =
+    agg._sum.amount == null ? 0 : pointsToNumber(agg._sum.amount);
   const minPointsRequired = battleSettings.minPointsEarnedToday;
   const thresholdMet = taskPointsToday >= minPointsRequired;
   const foughtToday = Boolean(fought);

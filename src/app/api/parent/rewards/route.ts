@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireParent } from "@/lib/api-auth";
+import { parsePointsInput, pointsToNumber } from "@/lib/points-number";
 
 export async function GET(request: Request) {
   const auth = await requireParent();
@@ -17,7 +18,7 @@ export async function GET(request: Request) {
       name: r.name,
       description: r.description,
       imageUrl: r.imageUrl,
-      points: r.points,
+      points: pointsToNumber(r.points),
       isActive: r.isActive,
       createdAt: r.createdAt.toISOString(),
     }))
@@ -39,7 +40,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const pts = Math.max(0, parseInt(String(points), 10) || 0);
+    const pts = Math.max(0, parsePointsInput(points) ?? 0);
 
     const reward = await prisma.reward.create({
       data: {
@@ -57,7 +58,7 @@ export async function POST(request: Request) {
       name: reward.name,
       description: reward.description,
       imageUrl: reward.imageUrl,
-      points: reward.points,
+      points: pointsToNumber(reward.points),
       isActive: reward.isActive,
       createdAt: reward.createdAt.toISOString(),
     });

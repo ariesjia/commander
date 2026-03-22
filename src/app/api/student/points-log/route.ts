@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireStudent, getStudentId } from "@/lib/api-auth";
 import { PointsLogType } from "@prisma/client";
+import { pointsToNumber } from "@/lib/points-number";
 
 export async function GET(_request: Request) {
   const auth = await requireStudent();
@@ -26,10 +27,11 @@ export async function GET(_request: Request) {
   const reversed = [...logs].reverse();
   let runningBalance = 0;
   const withBalance = reversed.map((l) => {
-    runningBalance += l.amount;
+    const amt = pointsToNumber(l.amount);
+    runningBalance += amt;
     return {
       id: l.id,
-      amount: l.amount,
+      amount: amt,
       type: l.type,
       description: l.description,
       balance: runningBalance,

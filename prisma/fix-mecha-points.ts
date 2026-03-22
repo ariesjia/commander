@@ -8,6 +8,7 @@
  * - --force：强制以 TaskLog 为准，即使会降级
  */
 import { PrismaClient } from "@prisma/client";
+import { pointsToNumber } from "../src/lib/points-number";
 
 const prisma = new PrismaClient();
 const force = process.argv.includes("--force");
@@ -36,15 +37,16 @@ async function main() {
 
     let cumulative = 0;
     for (const log of taskLogs) {
-      cumulative += log.pointsAwarded;
+      cumulative += pointsToNumber(log.pointsAwarded);
       if (cumulative < 0) cumulative = 0;
     }
 
-    if (cumulative !== sm.points) {
-      const shouldUpdate = force || cumulative > sm.points;
+    const currentPts = pointsToNumber(sm.points);
+    if (cumulative !== currentPts) {
+      const shouldUpdate = force || cumulative > currentPts;
       if (!shouldUpdate) {
         console.log(
-          `跳过 ${sm.mechaSlug} (${sm.id}): 当前 ${sm.points}，TaskLog 累加 ${cumulative}（可能因任务删除导致 TaskLog 缺失，保留较高值）`
+          `跳过 ${sm.mechaSlug} (${sm.id}): 当前 ${currentPts}，TaskLog 累加 ${cumulative}（可能因任务删除导致 TaskLog 缺失，保留较高值）`
         );
         continue;
       }
@@ -54,7 +56,7 @@ async function main() {
         data: { points: cumulative },
       });
       console.log(
-        `修正 ${sm.mechaSlug} (${sm.id}): ${sm.points} → ${cumulative} (${taskLogs.length} 条 TaskLog)`
+        `修正 ${sm.mechaSlug} (${sm.id}): ${currentPts} → ${cumulative} (${taskLogs.length} 条 TaskLog)`
       );
       fixed++;
     }

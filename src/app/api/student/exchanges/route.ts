@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireStudent, getStudentId } from "@/lib/api-auth";
+import { pointsToNumber } from "@/lib/points-number";
 
 export async function GET(request: Request) {
   const auth = await requireStudent();
@@ -22,7 +23,7 @@ export async function GET(request: Request) {
       id: e.id,
       rewardId: e.rewardId,
       rewardName: e.reward.name,
-      pointsCost: e.pointsCost,
+      pointsCost: pointsToNumber(e.pointsCost),
       status: e.status,
       rejectReason: e.rejectReason,
       createdAt: e.createdAt.toISOString(),
@@ -55,33 +56,44 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "奖励不存在或已下架" }, { status: 404 });
   }
 
-  let result: { exchange: { id: string; rewardId: string; pointsCost: number; status: string; createdAt: Date }; reward: { name: string } };
   try {
-    result = await prisma.$transaction(async (tx) => {
+    const { exchange } = await prisma.$transaction(async (tx) => {
       // 锁定学生行，防止并发兑换超支
       await tx.$queryRaw`SELECT id FROM "Student" WHERE id = ${studentId} FOR UPDATE`;
       const student = await tx.student.findUniqueOrThrow({ where: { id: studentId } });
-      const availableBalance = student.balance - student.frozenPoints;
+      const bal = pointsToNumber(student.balance);
+      const frozen = pointsToNumber(student.frozenPoints);
+      const rewardPts = pointsToNumber(reward.points);
+      const availableBalance = bal - frozen;
 
-      if (availableBalance < reward.points) {
-        throw new Error(`INSUFFICIENT:${reward.points - availableBalance}`);
+      if (availableBalance < rewardPts) {
+        throw new Error(`INSUFFICIENT:${rewardPts - availableBalance}`);
       }
 
       const exchange = await tx.exchange.create({
         data: {
           rewardId: reward.id,
           studentId,
-          pointsCost: reward.points,
+          pointsCost: rewardPts,
           status: "PENDING",
         },
       });
 
       await tx.student.update({
         where: { id: studentId },
-        data: { frozenPoints: student.frozenPoints + reward.points },
+        data: { frozenPoints: frozen + rewardPts },
       });
 
-      return { exchange, reward };
+      return { exchange };
+    });
+
+    return NextResponse.json({
+      id: exchange.id,
+      rewardId: exchange.rewardId,
+      rewardName: reward.name,
+      pointsCost: pointsToNumber(exchange.pointsCost),
+      status: exchange.status,
+      createdAt: exchange.createdAt.toISOString(),
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "";
@@ -94,15 +106,4 @@ export async function POST(request: Request) {
     }
     throw e;
   }
-
-  const { exchange } = result;
-
-  return NextResponse.json({
-    id: exchange.id,
-    rewardId: exchange.rewardId,
-    rewardName: result.reward.name,
-    pointsCost: exchange.pointsCost,
-    status: exchange.status,
-    createdAt: exchange.createdAt.toISOString(),
-  });
 }

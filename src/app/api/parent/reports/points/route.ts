@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { requireParent, getStudentId } from "@/lib/api-auth";
 import { PointsLogType } from "@prisma/client";
 import { getDateRangeChina } from "@/lib/utils";
+import { pointsToNumber } from "@/lib/points-number";
 
 export async function GET(request: Request) {
   try {
@@ -39,8 +40,8 @@ export async function GET(request: Request) {
       }),
     ]);
 
-    const startBalance = logsBeforeStart.reduce((sum, l) => sum + l.amount, 0);
-    const endBalance = startBalance + logsInPeriod.reduce((sum, l) => sum + l.amount, 0);
+    const startBalance = logsBeforeStart.reduce((sum, l) => sum + pointsToNumber(l.amount), 0);
+    const endBalance = startBalance + logsInPeriod.reduce((sum, l) => sum + pointsToNumber(l.amount), 0);
 
     const taskTypes: PointsLogType[] = [
       PointsLogType.TASK_REWARD,
@@ -50,15 +51,15 @@ export async function GET(request: Request) {
     ];
     const taskEarned = logsInPeriod
       .filter((l) => taskTypes.includes(l.type))
-      .reduce((sum, l) => sum + l.amount, 0);
+      .reduce((sum, l) => sum + pointsToNumber(l.amount), 0);
     const exchangeCost = Math.abs(
       logsInPeriod
         .filter((l) => l.type === PointsLogType.EXCHANGE_COST)
-        .reduce((sum, l) => sum + l.amount, 0),
+        .reduce((sum, l) => sum + pointsToNumber(l.amount), 0),
     );
     const exchangeRefund = logsInPeriod
       .filter((l) => l.type === PointsLogType.EXCHANGE_REFUND)
-      .reduce((sum, l) => sum + l.amount, 0);
+      .reduce((sum, l) => sum + pointsToNumber(l.amount), 0);
 
     return NextResponse.json({
       period,

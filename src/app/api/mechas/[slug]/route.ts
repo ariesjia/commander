@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { pointsToNumber } from "@/lib/points-number";
 
 export interface MechaLevelDto {
   level: number;
@@ -45,7 +46,7 @@ export async function GET(
     levels: mecha.levels.map((l) => ({
       level: l.level,
       name: l.name,
-      threshold: l.threshold,
+      threshold: pointsToNumber(l.threshold),
       imageUrl: l.imageUrl,
       description: l.description ?? "",
     })),

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireStudent, getStudentId } from "@/lib/api-auth";
+import { pointsToNumber } from "@/lib/points-number";
 
 export interface EvolutionMilestone {
   level: number;
@@ -52,7 +53,7 @@ export async function GET(
   const milestones: EvolutionMilestone[] = levels.map((l) => ({
     level: l.level,
     name: l.name,
-    threshold: l.threshold,
+    threshold: pointsToNumber(l.threshold),
     imageUrl: l.imageUrl,
     reachedAt: null,
   }));
@@ -78,11 +79,11 @@ export async function GET(
 
   let cumulative = 0;
   for (const log of taskLogs) {
-    cumulative += log.pointsAwarded;
+    cumulative += pointsToNumber(log.pointsAwarded);
     if (cumulative < 0) cumulative = 0;
 
     for (let i = 1; i < levels.length; i++) {
-      const th = levels[i]!.threshold;
+      const th = pointsToNumber(levels[i]!.threshold);
       if (cumulative >= th && !milestones[i]!.reachedAt) {
         milestones[i]!.reachedAt = log.completedAt.toISOString();
       }
@@ -90,11 +91,11 @@ export async function GET(
   }
 
   // 兜底：StudentMecha.points 为权威来源，TaskLog 推算可能因时序等原因未命中
-  const mechaPoints = studentMecha.points;
+  const mechaPoints = pointsToNumber(studentMecha.points);
   const lastLogAt = taskLogs.length > 0 ? taskLogs[taskLogs.length - 1]!.completedAt : null;
   const fallbackDate = lastLogAt ?? studentMecha.adoptedAt;
   for (let i = 1; i < levels.length; i++) {
-    const th = levels[i]!.threshold;
+    const th = pointsToNumber(levels[i]!.threshold);
     if (mechaPoints >= th && !milestones[i]!.reachedAt) {
       milestones[i]!.reachedAt = fallbackDate.toISOString();
     }
@@ -113,10 +114,14 @@ export async function GET(
       ...dto,
       _debug: {
         studentMechaId: studentMecha.id,
-        mechaPoints: studentMecha.points,
+        mechaPoints,
         taskLogCount: taskLogs.length,
         cumulativeFromLogs: cumulative,
-        taskLogIds: taskLogs.map((l) => ({ id: l.id, pointsAwarded: l.pointsAwarded, completedAt: l.completedAt.toISOString() })),
+        taskLogIds: taskLogs.map((l) => ({
+          id: l.id,
+          pointsAwarded: pointsToNumber(l.pointsAwarded),
+          completedAt: l.completedAt.toISOString(),
+        })),
       },
     });
   }

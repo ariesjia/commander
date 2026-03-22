@@ -31,9 +31,9 @@ model Parent {
 model Student {
   id               String    @id @default(cuid())
   nickname         String
-  totalPoints      Int       @default(0)
-  balance          Int       @default(0)
-  frozenPoints     Int       @default(0)
+  totalPoints      Decimal   @default(0) @db.Decimal(16, 8)
+  balance          Decimal   @default(0) @db.Decimal(16, 8)
+  frozenPoints     Decimal   @default(0) @db.Decimal(16, 8)
   streakDays       Int       @default(0)
   primaryMechaId   String?   @unique // 当前主机甲实例，首页展示、任务积分归属
   primaryMecha     StudentMecha? @relation("StudentPrimaryMecha", fields: [primaryMechaId], references: [id], onDelete: SetNull)
@@ -92,7 +92,7 @@ model StudentMecha {
   student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
   mechaSlug String
   adoptedAt DateTime @default(now())
-  points    Int      @default(0) // 领养后获得的任务积分，用于机甲升级
+  points    Decimal  @default(0) @db.Decimal(16, 8) // 领养后获得的任务积分，用于机甲升级
 
   taskLogs     TaskLog[]
   asPrimaryFor Student? @relation("StudentPrimaryMecha")
@@ -106,8 +106,8 @@ model Task {
   name          String
   description   String?
   type          TaskType
-  maxPoints     Int       @default(10) // 最大得分，完成时家长可给予 0～maxPoints
-  penaltyPoints Int       @default(0) // 惩罚扣分（仅 RULE 类型使用）
+  maxPoints     Decimal   @default(10) @db.Decimal(16, 8) // 最大得分，完成时家长可给予 0～maxPoints
+  penaltyPoints Decimal   @default(0) @db.Decimal(16, 8) // 惩罚扣分（仅 RULE 类型使用）
   isActive      Boolean   @default(true)
   deletedAt     DateTime? // 软删除：删除后仍保留 TaskLog，支持撤销积分
   createdAt     DateTime  @default(now())
@@ -129,7 +129,7 @@ model Reward {
   name        String
   description String?
   imageUrl    String?   // 奖励图片链接，支持任意可访问的图片 URL
-  points      Int
+  points      Decimal   @db.Decimal(16, 8)
   isActive    Boolean   @default(true)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -149,7 +149,7 @@ enum ExchangeStatus {
 model Exchange {
   id          String          @id @default(cuid())
   status      ExchangeStatus  @default(PENDING)
-  pointsCost  Int
+  pointsCost  Decimal         @db.Decimal(16, 8)
   rejectReason String?
   createdAt   DateTime        @default(now())
   confirmedAt DateTime?
@@ -162,7 +162,7 @@ model Exchange {
 
 model PointsLog {
   id          String         @id @default(cuid())
-  amount      Int
+  amount      Decimal        @db.Decimal(16, 8)
   type        PointsLogType
   description String
   createdAt   DateTime       @default(now())
@@ -205,7 +205,7 @@ enum BattleOutcome {
 model TaskLog {
   id             String   @id @default(cuid())
   completedAt    DateTime @default(now())
-  pointsAwarded Int
+  pointsAwarded  Decimal  @db.Decimal(16, 8)
   studentMechaId String?  // 确认时获得积分的机甲实例，撤销时用于回滚（支持同款机甲重复领养）
 
   taskId   String
@@ -241,7 +241,7 @@ model MechaLevel {
   mecha       Mecha    @relation(fields: [mechaId], references: [id], onDelete: Cascade)
   level       Int
   name        String
-  threshold   Int
+  threshold   Decimal  @db.Decimal(16, 8)
   imageUrl    String
   description String?
   createdAt   DateTime @default(now())

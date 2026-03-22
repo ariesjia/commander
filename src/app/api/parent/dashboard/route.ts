@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { requireParent, getStudentId } from "@/lib/api-auth";
 import { getCurrentStage, getEvolutionLevel } from "@/lib/mecha-config";
 import { getTodayStr, getWeekStartStr, toChinaDateStr } from "@/lib/utils";
+import { pointsToNumber } from "@/lib/points-number";
 
 export async function GET(request: Request) {
   const auth = await requireParent();
@@ -61,11 +62,11 @@ export async function GET(request: Request) {
     primaryMecha = first;
   }
   const primarySlug = primaryMecha?.mechaSlug ?? null;
-  const primaryMechaPoints = primaryMecha?.points ?? 0;
+  const primaryMechaPoints = pointsToNumber(primaryMecha?.points);
 
   const mechaPointsBySlug: Record<string, number> = {};
   for (const sm of student.studentMechas) {
-    mechaPointsBySlug[sm.mechaSlug] = sm.points;
+    mechaPointsBySlug[sm.mechaSlug] = pointsToNumber(sm.points);
   }
   const adoptedMechas = primarySlug
     ? [
@@ -89,7 +90,7 @@ export async function GET(request: Request) {
       const levels = mechaConfig.levels;
       let levelInfo = levels[0] ?? null;
       for (const l of levels) {
-        if (primaryMechaPoints >= l.threshold) levelInfo = l;
+        if (primaryMechaPoints >= pointsToNumber(l.threshold)) levelInfo = l;
         else break;
       }
       mechaLevelName = levelInfo?.name ?? null;
@@ -101,9 +102,9 @@ export async function GET(request: Request) {
     baseScore: (parent.baseScore ?? 1) as 0.1 | 1 | 10,
     student: {
       nickname: student.nickname,
-      totalPoints: student.totalPoints,
-      balance: student.balance,
-      frozenPoints: student.frozenPoints,
+      totalPoints: pointsToNumber(student.totalPoints),
+      balance: pointsToNumber(student.balance),
+      frozenPoints: pointsToNumber(student.frozenPoints),
       streakDays: student.streakDays,
       mechaPoints: primaryMechaPoints,
     },
@@ -116,12 +117,16 @@ export async function GET(request: Request) {
     mechaName,
     mechaLevelName,
     adoptedMechaIds,
-    adoptedMechas: adoptedMechas.map((sm) => ({ id: sm.id, slug: sm.mechaSlug, points: sm.points })),
+    adoptedMechas: adoptedMechas.map((sm) => ({
+      id: sm.id,
+      slug: sm.mechaSlug,
+      points: pointsToNumber(sm.points),
+    })),
     mechaPointsBySlug,
     pendingExchanges: exchanges.map((e) => ({
       id: e.id,
       rewardName: e.reward.name,
-      pointsCost: e.pointsCost,
+      pointsCost: pointsToNumber(e.pointsCost),
       createdAt: e.createdAt.toISOString(),
     })),
   });
