@@ -300,6 +300,99 @@
   animation: battle-accent-ember 0.42s ease-out forwards;
 }
 
+/* ── 攻击弹道变体（与 rail 横条区分） ── */
+
+/* 斜斩：同轨迹，外层倾斜 */
+.animate-battle-beam-slash-ltr {
+  animation: battle-beam-ltr 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+.animate-battle-beam-slash-rtl {
+  animation: battle-beam-rtl 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+/* 电浆串：竖条组横向扫过 */
+@keyframes battle-bolt-pack-ltr {
+  0% {
+    transform: translateX(-95%);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(95%);
+    opacity: 0;
+  }
+}
+@keyframes battle-bolt-pack-rtl {
+  0% {
+    transform: translateX(95%);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-95%);
+    opacity: 0;
+  }
+}
+.animate-battle-bolt-pack-ltr {
+  animation: battle-bolt-pack-ltr 0.38s cubic-bezier(0.2, 0.85, 0.36, 1) forwards;
+}
+.animate-battle-bolt-pack-rtl {
+  animation: battle-bolt-pack-rtl 0.38s cubic-bezier(0.2, 0.85, 0.36, 1) forwards;
+}
+
+/* 爆心环（从炮口侧扩散） */
+@keyframes battle-beam-burst-ring {
+  0% {
+    transform: translate(-50%, -50%) scale(0.12);
+    opacity: 0.92;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(3.5);
+    opacity: 0;
+  }
+}
+.animate-battle-beam-burst-ring {
+  animation: battle-beam-burst-ring 0.42s ease-out forwards;
+}
+
+/* 扫射宽带：厚模糊带掠过 */
+@keyframes battle-sweep-ltr {
+  0% {
+    transform: translateX(-125%) scaleY(0.35);
+    opacity: 0;
+  }
+  40% {
+    opacity: 0.88;
+  }
+  100% {
+    transform: translateX(125%) scaleY(1.15);
+    opacity: 0;
+  }
+}
+@keyframes battle-sweep-rtl {
+  0% {
+    transform: translateX(125%) scaleY(0.35);
+    opacity: 0;
+  }
+  40% {
+    opacity: 0.88;
+  }
+  100% {
+    transform: translateX(-125%) scaleY(1.15);
+    opacity: 0;
+  }
+}
+.animate-battle-sweep-ltr {
+  animation: battle-sweep-ltr 0.46s cubic-bezier(0.18, 0.72, 0.28, 1) forwards;
+}
+.animate-battle-sweep-rtl {
+  animation: battle-sweep-rtl 0.46s cubic-bezier(0.18, 0.72, 0.28, 1) forwards;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-battle-dodge,
   .animate-battle-dodge-drop,
@@ -321,5 +414,14 @@
   .animate-battle-accent-ripple,
   .animate-battle-accent-ember {
     animation-duration: 0.12s;
+  }
+  .animate-battle-beam-slash-ltr,
+  .animate-battle-beam-slash-rtl,
+  .animate-battle-bolt-pack-ltr,
+  .animate-battle-bolt-pack-rtl,
+  .animate-battle-beam-burst-ring,
+  .animate-battle-sweep-ltr,
+  .animate-battle-sweep-rtl {
+    animation-duration: 0.16s;
   }
 }

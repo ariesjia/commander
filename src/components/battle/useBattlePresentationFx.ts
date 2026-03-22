@@ -1,7 +1,13 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import type { BattleFx, ExplosionHue, ItemBurst, StrikeAccent } from "@/components/battle/battle-fx-types";
+import type {
+  BattleFx,
+  BeamVisual,
+  ExplosionHue,
+  ItemBurst,
+  StrikeAccent,
+} from "@/components/battle/battle-fx-types";
 import { dodgeMotionClass } from "@/components/battle/battle-fx-types";
 
 export type BeamSide = "none" | "player" | "enemy";
@@ -21,6 +27,7 @@ export type BattleArenaFxSnapshot = {
   accentVictim: "player" | "enemy" | "none";
   itemSparkKey: number;
   itemBurst: ItemBurst;
+  beamVisual: BeamVisual;
 };
 
 const defaultExplosionHue: ExplosionHue = "thermal";
@@ -51,6 +58,7 @@ export function useBattlePresentationFx({
   const [accentVictim, setAccentVictim] = useState<"player" | "enemy" | "none">("none");
   const [itemSparkKey, setItemSparkKey] = useState(0);
   const [itemBurst, setItemBurst] = useState<ItemBurst>(defaultItemBurst);
+  const [beamVisual, setBeamVisual] = useState<BeamVisual>("rail");
   const accentClearTimerRef = useRef<number | null>(null);
 
   const clearStrikeAccentSoon = useCallback((ms: number) => {
@@ -109,6 +117,7 @@ export function useBattlePresentationFx({
         const attacker = dodger === "player" ? "enemy" : "player";
         setDodgeMotionClassName(dodgeMotionClass(fx.motion));
         if (reduceMotionPreferred !== true) {
+          setBeamVisual("rail");
           setBeam(attacker);
           setBeamMiss(true);
           setBeamKey((k) => k + 1);
@@ -136,6 +145,7 @@ export function useBattlePresentationFx({
         }
 
         if (reduceMotionPreferred !== true) {
+          setBeamVisual(fx.beam ?? "rail");
           setBeam(attacker);
           setBeamMiss(false);
           setBeamKey((k) => k + 1);
@@ -181,6 +191,7 @@ export function useBattlePresentationFx({
     accentVictim,
     itemSparkKey,
     itemBurst,
+    beamVisual,
   };
 
   return { playBattleFx, fx: snapshot };

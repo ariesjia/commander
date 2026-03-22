@@ -1,13 +1,178 @@
 "use client";
 
 import type { ReactNode } from "react";
-import type { StrikeAccent } from "@/components/battle/battle-fx-types";
+import type { BeamVisual, StrikeAccent } from "@/components/battle/battle-fx-types";
 import type { BattleArenaFxSnapshot } from "@/components/battle/useBattlePresentationFx";
 
 type Props = {
   reduceMotionPreferred: boolean | null;
   fx: BattleArenaFxSnapshot;
 };
+
+function StrikeBeamLayer({
+  beam,
+  beamMiss,
+  beamKey,
+  beamVisual,
+}: {
+  beam: "player" | "enemy";
+  beamMiss: boolean;
+  beamKey: number;
+  beamVisual: BeamVisual;
+}) {
+  const isPlayer = beam === "player";
+  const ltr = isPlayer;
+  const muzzlePos = isPlayer ? "left-[22%]" : "left-[78%]";
+  const showMuzzle =
+    !beamMiss && (beamVisual === "rail" || beamVisual === "slash" || beamVisual === "sweep");
+
+  if (beamMiss) {
+    return (
+      <div
+        key={`beam-miss-${beamKey}`}
+        className={`pointer-events-none absolute top-[40%] left-[5%] z-[15] h-4 w-[90%] overflow-hidden ${
+          ltr ? "animate-battle-beam-ltr-miss" : "animate-battle-beam-rtl-miss"
+        }`}
+        aria-hidden
+      >
+        <div
+          className={`h-full w-full rounded-full blur-[2px] ${
+            isPlayer
+              ? "bg-gradient-to-r from-transparent via-cyan-300/90 to-transparent shadow-[0_0_20px_rgba(34,211,238,0.8)]"
+              : "bg-gradient-to-r from-transparent via-orange-400/85 to-transparent shadow-[0_0_22px_rgba(251,146,60,0.75)]"
+          }`}
+        />
+      </div>
+    );
+  }
+
+  let main: ReactNode;
+
+  switch (beamVisual) {
+    case "slash":
+      main = (
+        <div
+          key={`beam-slash-${beamKey}`}
+          className={`pointer-events-none absolute top-[35%] left-[4%] z-[15] h-12 w-[92%] overflow-visible ${
+            ltr ? "-rotate-[7deg]" : "rotate-[7deg]"
+          }`}
+          aria-hidden
+        >
+          <div
+            className={`h-4 w-full rounded-full blur-[3px] ${
+              ltr ? "animate-battle-beam-slash-ltr" : "animate-battle-beam-slash-rtl"
+            } ${
+              isPlayer
+                ? "bg-gradient-to-r from-cyan-400/30 via-fuchsia-400/95 to-cyan-400/30 shadow-[0_0_28px_rgba(168,85,247,0.8)]"
+                : "bg-gradient-to-r from-amber-500/35 via-rose-500/95 to-amber-500/35 shadow-[0_0_28px_rgba(244,63,94,0.75)]"
+            }`}
+          />
+        </div>
+      );
+      break;
+    case "bolt":
+      main = (
+        <div
+          key={`beam-bolt-${beamKey}`}
+          className="pointer-events-none absolute top-[30%] left-[4%] z-[15] h-36 w-[92%] overflow-hidden"
+          aria-hidden
+        >
+          <div
+            className={`relative h-full w-full ${
+              ltr ? "animate-battle-bolt-pack-ltr" : "animate-battle-bolt-pack-rtl"
+            }`}
+          >
+            <div className="absolute inset-0 flex items-center justify-around px-[8%]">
+              {[0, 1, 2].map((i) => (
+                <div
+                  key={i}
+                  className={`h-[78%] w-2 shrink-0 rounded-full blur-[3px] ${
+                    isPlayer
+                      ? "bg-gradient-to-b from-cyan-100 via-cyan-300 to-cyan-700 shadow-[0_0_18px_rgba(34,211,238,0.95)]"
+                      : "bg-gradient-to-b from-amber-100 via-amber-400 to-orange-700 shadow-[0_0_18px_rgba(251,146,60,0.95)]"
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+      break;
+    case "burst":
+      main = (
+        <div
+          key={`beam-burst-${beamKey}`}
+          className={`pointer-events-none absolute top-[38%] z-[15] h-36 w-36 -translate-x-1/2 -translate-y-1/2 ${muzzlePos}`}
+          aria-hidden
+        >
+          <div
+            className={`h-full w-full rounded-full border-[3px] animate-battle-beam-burst-ring ${
+              isPlayer
+                ? "border-cyan-300/85 bg-[radial-gradient(circle,rgba(34,211,238,0.35)_0%,transparent_65%)]"
+                : "border-amber-400/90 bg-[radial-gradient(circle,rgba(251,146,60,0.4)_0%,transparent_65%)]"
+            }`}
+          />
+        </div>
+      );
+      break;
+    case "sweep":
+      main = (
+        <div
+          key={`beam-sweep-${beamKey}`}
+          className="pointer-events-none absolute top-[32%] left-[3%] z-[15] h-28 w-[94%] overflow-hidden"
+          aria-hidden
+        >
+          <div
+            className={`h-full w-full rounded-[999px] blur-2xl opacity-95 ${
+              ltr ? "animate-battle-sweep-ltr" : "animate-battle-sweep-rtl"
+            } ${
+              isPlayer
+                ? "bg-gradient-to-r from-transparent via-cyan-200/80 to-transparent"
+                : "bg-gradient-to-r from-transparent via-amber-400/85 to-transparent"
+            }`}
+          />
+        </div>
+      );
+      break;
+    case "rail":
+    default:
+      main = (
+        <div
+          key={`beam-rail-${beamKey}`}
+          className={`pointer-events-none absolute top-[40%] left-[5%] z-[15] h-4 w-[90%] overflow-hidden ${
+            ltr ? "animate-battle-beam-ltr" : "animate-battle-beam-rtl"
+          }`}
+          aria-hidden
+        >
+          <div
+            className={`h-full w-full rounded-full blur-[2px] ${
+              isPlayer
+                ? "bg-gradient-to-r from-transparent via-cyan-300/90 to-transparent shadow-[0_0_20px_rgba(34,211,238,0.8)]"
+                : "bg-gradient-to-r from-transparent via-orange-400/85 to-transparent shadow-[0_0_22px_rgba(251,146,60,0.75)]"
+            }`}
+          />
+        </div>
+      );
+  }
+
+  return (
+    <>
+      {main}
+      {showMuzzle ? (
+        <div
+          key={`muzzle-${beamKey}`}
+          className={`pointer-events-none absolute top-[36%] z-[17] h-16 w-16 -translate-x-1/2 -translate-y-1/2 rounded-full animate-battle-muzzle ${muzzlePos}`}
+          style={{
+            background: isPlayer
+              ? "radial-gradient(circle, rgba(165,243,252,0.95) 0%, rgba(34,211,238,0.4) 45%, transparent 70%)"
+              : "radial-gradient(circle, rgba(254,215,170,0.95) 0%, rgba(249,115,22,0.45) 45%, transparent 70%)",
+          }}
+          aria-hidden
+        />
+      ) : null}
+    </>
+  );
+}
 
 function accentClass(a: StrikeAccent | "none"): string {
   if (a === "spark") return "animate-battle-accent-spark";
@@ -51,6 +216,7 @@ export function BattleArenaFx({ reduceMotionPreferred, fx }: Props) {
     beam,
     beamMiss,
     beamKey,
+    beamVisual,
     explosionFlash,
     explosionHue,
     strikeAccentKey,
@@ -88,44 +254,12 @@ export function BattleArenaFx({ reduceMotionPreferred, fx }: Props) {
         />
       )}
       {!reduceMotionPreferred && beam !== "none" && (
-        <>
-          <div
-            key={`beam-${beamKey}`}
-            className={`pointer-events-none absolute top-[40%] left-[5%] z-[15] h-4 w-[90%] overflow-hidden ${
-              beamMiss
-                ? beam === "player"
-                  ? "animate-battle-beam-ltr-miss"
-                  : "animate-battle-beam-rtl-miss"
-                : beam === "player"
-                  ? "animate-battle-beam-ltr"
-                  : "animate-battle-beam-rtl"
-            }`}
-            aria-hidden
-          >
-            <div
-              className={`h-full w-full rounded-full blur-[2px] ${
-                beam === "player"
-                  ? "bg-gradient-to-r from-transparent via-cyan-300/90 to-transparent shadow-[0_0_20px_rgba(34,211,238,0.8)]"
-                  : "bg-gradient-to-r from-transparent via-orange-400/85 to-transparent shadow-[0_0_22px_rgba(251,146,60,0.75)]"
-              }`}
-            />
-          </div>
-          {!beamMiss && (
-            <div
-              key={`muzzle-${beamKey}`}
-              className={`pointer-events-none absolute top-[36%] z-[17] h-16 w-16 -translate-x-1/2 -translate-y-1/2 rounded-full animate-battle-muzzle ${
-                beam === "player" ? "left-[22%]" : "left-[78%]"
-              }`}
-              style={{
-                background:
-                  beam === "player"
-                    ? "radial-gradient(circle, rgba(165,243,252,0.95) 0%, rgba(34,211,238,0.4) 45%, transparent 70%)"
-                    : "radial-gradient(circle, rgba(254,215,170,0.95) 0%, rgba(249,115,22,0.45) 45%, transparent 70%)",
-              }}
-              aria-hidden
-            />
-          )}
-        </>
+        <StrikeBeamLayer
+          beam={beam}
+          beamMiss={beamMiss}
+          beamKey={beamKey}
+          beamVisual={beamVisual}
+        />
       )}
       {strikeAccent !== "none" && accentVictim !== "none" && (
         <div

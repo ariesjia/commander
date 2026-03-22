@@ -4,6 +4,8 @@
  */
 
 export type StrikeAccent = "spark" | "ripple" | "ember";
+/** 攻击光束主视觉（与 rail 横条差异明显） */
+export type BeamVisual = "rail" | "slash" | "bolt" | "burst" | "sweep";
 export type DodgeMotion = "sidestep" | "drop" | "snap";
 /** 大爆炸全屏叠层色调 */
 export type ExplosionHue = "thermal" | "plasma";
@@ -16,6 +18,8 @@ export type BattleFx =
       attacker: "player" | "enemy";
       crit?: boolean;
       explosion?: boolean;
+      /** 主弹道外观；未指定时由生成器随机 */
+      beam?: BeamVisual;
       /** 受击侧额外装饰（火花/扩散环/余烬），不改变伤害语义 */
       accent?: StrikeAccent;
       /** 与 explosion 同开时全屏渐变色调 */

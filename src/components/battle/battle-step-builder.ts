@@ -1,5 +1,6 @@
 import type {
   BattleFx,
+  BeamVisual,
   DodgeMotion,
   ExplosionHue,
   ItemBurst,
@@ -42,6 +43,15 @@ function randomItemBurst(): ItemBurst {
   return randomPick(["cyan", "magenta"] as const);
 }
 
+function randomBeamVisual(): BeamVisual {
+  return randomPick(["rail", "slash", "bolt", "burst", "sweep"] as const);
+}
+
+/** 终结技 / 暴击：偏重大范围冲击 */
+function randomBeamVisualHeavy(): BeamVisual {
+  return randomPick(["burst", "slash", "sweep", "bolt", "rail"] as const);
+}
+
 function strikeFx(
   attacker: "player" | "enemy",
   opts: {
@@ -49,12 +59,14 @@ function strikeFx(
     explosion?: boolean;
     accent?: StrikeAccent;
     hue?: ExplosionHue;
+    beam?: BeamVisual;
   } = {},
 ): BattleFx {
   return {
     kind: "strike",
     attacker,
     ...opts,
+    beam: opts.beam ?? randomBeamVisual(),
   };
 }
 
@@ -122,6 +134,7 @@ export function buildServerBattleSteps(args: {
           crit: true,
           explosion: true,
           hue: randomExplosionHue(),
+          beam: randomBeamVisualHeavy(),
         }),
       },
     ];
@@ -135,6 +148,7 @@ export function buildServerBattleSteps(args: {
           crit: true,
           explosion: true,
           hue: randomExplosionHue(),
+          beam: randomBeamVisualHeavy(),
         }),
       },
       ...preDodge,
@@ -207,6 +221,7 @@ export function buildServerBattleSteps(args: {
         crit: true,
         explosion: true,
         hue: randomExplosionHue(),
+        beam: randomBeamVisualHeavy(),
       }),
     },
   ];
@@ -216,7 +231,10 @@ export function buildServerBattleSteps(args: {
       p: 78,
       e: 100,
       line: firstLine,
-      fx: strikeFx("enemy", { accent: randomStrikeAccent() }),
+      fx: strikeFx("enemy", {
+        accent: randomStrikeAccent(),
+        beam: randomBeamVisual(),
+      }),
     },
     ...preDodge,
     dodgeStep,
