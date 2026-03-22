@@ -19,5 +19,5 @@ export function toDb(displayValue: number, baseScore: BaseScore): number {
 
 /** 获取任务确认滑条的 step 属性 */
 export function getSliderStep(baseScore: BaseScore): number {
-  return baseScore;
+  return baseScore === 1 ? 0.1 : baseScore;
 }
