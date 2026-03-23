@@ -65,12 +65,15 @@
 
 @media (min-width: 768px) {
   .theme-student {
-    font-size: 118.75%; /* 19px base，iPad 更易读 */
+    font-size: 118.75%;
+    /* 19px base，iPad 更易读 */
   }
 }
+
 @media (min-width: 1024px) {
   .theme-student {
-    font-size: 125%; /* 20px base */
+    font-size: 125%;
+    /* 20px base */
   }
 }
 
@@ -81,7 +84,7 @@ html {
   height: 100%;
   min-height: 100dvh;
   min-height: 100vh;
-  min-height: -webkit-fill-available;
+  /* min-height: -webkit-fill-available; */
 }
 
 html:has(.theme-student) {
@@ -95,7 +98,7 @@ body {
   min-height: 100%;
   min-height: 100dvh;
   min-height: 100vh;
-  min-height: -webkit-fill-available;
+  /* min-height: -webkit-fill-available; */
   /* 与家长端一致，避免首屏/加载时 body 透明露出异常 */
   background-color: var(--color-p-bg, #fafafa);
 }
@@ -155,9 +158,11 @@ body:has(.theme-student) {
 .safe-area-top {
   padding-top: env(safe-area-inset-top, 0px);
 }
+
 .safe-area-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
+
 .safe-area-insets {
   padding-top: env(safe-area-inset-top, 0px);
   padding-bottom: env(safe-area-inset-bottom, 0px);
@@ -183,8 +188,17 @@ body:has(.theme-student) {
 
 /* ── Energy pulse keyframe ── */
 @keyframes energy-pulse {
-  0%, 100% { opacity: 0.6; filter: brightness(1); }
-  50% { opacity: 1; filter: brightness(1.3); }
+
+  0%,
+  100% {
+    opacity: 0.6;
+    filter: brightness(1);
+  }
+
+  50% {
+    opacity: 1;
+    filter: brightness(1.3);
+  }
 }
 
 .animate-energy-pulse {
@@ -192,8 +206,15 @@ body:has(.theme-student) {
 }
 
 @keyframes glow-breathe {
-  0%, 100% { box-shadow: 0 0 5px rgba(0, 212, 255, 0.3); }
-  50% { box-shadow: 0 0 20px rgba(0, 212, 255, 0.6), 0 0 40px rgba(0, 212, 255, 0.2); }
+
+  0%,
+  100% {
+    box-shadow: 0 0 5px rgba(0, 212, 255, 0.3);
+  }
+
+  50% {
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.6), 0 0 40px rgba(0, 212, 255, 0.2);
+  }
 }
 
 .animate-glow-breathe {
@@ -201,6 +222,7 @@ body:has(.theme-student) {
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .animate-energy-pulse,
   .animate-glow-breathe {
     animation: none;
@@ -216,15 +238,19 @@ body:has(.theme-student) {
   min-width: 0;
   max-width: 100%;
 }
+
 .text-with-pinyin ruby {
   ruby-position: over;
 }
+
 .text-with-pinyin .py-result-item {
   margin-right: 0.85em;
 }
+
 .text-with-pinyin .py-result-item:last-child {
   margin-right: 0;
 }
+
 .text-with-pinyin rt,
 .text-with-pinyin .py-pinyin-item {
   font-size: 0.95em;
@@ -232,12 +258,15 @@ body:has(.theme-student) {
   opacity: 0.95;
   padding-bottom: 0.35em;
 }
+
 @media (min-width: 768px) {
+
   .text-with-pinyin rt,
   .text-with-pinyin .py-pinyin-item {
     font-size: 1em;
   }
 }
+
 .theme-student .text-with-pinyin rt,
 .theme-student .text-with-pinyin .py-pinyin-item {
   color: var(--color-s-text-secondary);
@@ -247,10 +276,12 @@ body:has(.theme-student) {
 .blind-box-hint {
   color: white;
 }
+
 .blind-box-hint rt,
 .blind-box-hint .py-pinyin-item {
   color: var(--color-s-text-secondary);
 }
+
 .theme-parent .text-with-pinyin rt,
 .theme-parent .text-with-pinyin .py-pinyin-item {
   color: var(--color-p-text-secondary);
@@ -264,6 +295,7 @@ body:has(.theme-student) {
   min-width: 0;
   overflow-x: hidden;
 }
+
 .mecha-detail-modal .mecha-detail-story .text-with-pinyin {
   line-height: 3.2;
   max-width: 100%;
@@ -275,6 +307,7 @@ body:has(.theme-student) {
   .mecha-detail-modal {
     max-width: min(56rem, 95vw);
   }
+
   .mecha-detail-modal .mecha-detail-content {
     flex-direction: row;
     gap: 1.5rem;
@@ -282,16 +315,19 @@ body:has(.theme-student) {
     margin-left: auto;
     margin-right: auto;
   }
+
   .mecha-detail-modal .mecha-detail-content .mecha-detail-text {
     margin-top: 0;
     justify-content: center;
     text-align: left;
   }
+
   .mecha-detail-modal .mecha-detail-content .mecha-detail-image {
     width: 18rem;
     min-height: 0;
     flex-shrink: 0;
   }
+
   .mecha-detail-modal .mecha-detail-content .mecha-detail-image img {
     width: 18rem;
     height: 24rem;
