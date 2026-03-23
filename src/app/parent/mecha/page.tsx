@@ -48,17 +48,27 @@ function getCurrentLevel(levels: MechaLevel[], points: number): MechaLevel | nul
 function MechaDetailModal({
   mecha,
   baseScore,
-  showPinyin,
   onClose,
 }: {
   mecha: ParentMechaItem;
   baseScore: import("@/lib/score-display").BaseScore;
-  showPinyin: boolean;
   onClose: () => void;
 }) {
   const currentLevel = getCurrentLevel(mecha.levels, mecha.points);
   const currentIdx = mecha.levels.findIndex((l) => l === currentLevel);
   const currentLevelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const gap = window.innerWidth - document.documentElement.clientWidth;
+    const prevOverflow = document.body.style.overflow;
+    const prevPaddingRight = document.body.style.paddingRight;
+    document.body.style.overflow = "hidden";
+    if (gap > 0) document.body.style.paddingRight = `${gap}px`;
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      document.body.style.paddingRight = prevPaddingRight;
+    };
+  }, []);
 
   useEffect(() => {
     const el = currentLevelRef.current;
@@ -78,12 +88,15 @@ function MechaDetailModal({
     : 100;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-x-hidden" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center overflow-x-hidden overflow-y-auto bg-black/50 p-4"
+      onClick={onClose}
+    >
       <div
-        className="max-h-[90vh] w-full max-w-md md:max-w-4xl min-w-0 overflow-hidden rounded-2xl bg-white shadow-xl"
+        className="flex max-h-[90vh] min-h-0 w-full max-w-md flex-col overflow-hidden rounded-2xl bg-white shadow-xl md:max-w-4xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex min-w-0 items-center justify-between gap-2 border-b border-p-border p-4">
+        <div className="flex shrink-0 min-w-0 items-center justify-between gap-2 border-b border-p-border p-4">
           <h2 className="min-w-0 truncate text-lg font-semibold text-p-text">{mecha.name}</h2>
           <button
             onClick={onClose}
@@ -93,10 +106,10 @@ function MechaDetailModal({
             <X size={20} />
           </button>
         </div>
-        <div className="max-h-[70vh] min-w-0 overflow-y-auto overflow-x-hidden p-4 md:overflow-hidden md:flex md:flex-col">
-          <div className="flex flex-col gap-4 md:flex-row md:items-stretch md:gap-6 md:flex-1 md:min-h-0">
-            {/* 左侧：介绍、积分、当前等级 */}
-            <div className="min-w-0 flex-1">
+        <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden p-4 md:flex md:flex-col md:overflow-hidden">
+          <div className="flex min-h-0 flex-col gap-4 md:flex-1 md:flex-row md:items-stretch md:gap-6">
+            {/* 左侧：介绍、积分、当前等级、技能（桌面端独立滚动） */}
+            <div className="min-h-0 min-w-0 flex-1 md:overflow-y-auto">
               {/* 机甲介绍 */}
               {mecha.intro && (
                 <div className="mb-4 rounded-xl border border-p-border bg-p-bg/50 p-4">
@@ -154,7 +167,6 @@ function MechaDetailModal({
                 skills={mecha.skills}
                 currentLevelNum={currentLevel?.level ?? 0}
                 tone="parent"
-                showPinyin={showPinyin}
               />
             </div>
 
@@ -239,7 +251,7 @@ function MechaCard({
 }
 
 export default function ParentMechaPage() {
-  const { baseScore, showPinyin } = useData();
+  const { baseScore } = useData();
   const [mechas, setMechas] = useState<ParentMechaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<ParentMechaItem | null>(null);
@@ -292,12 +304,7 @@ export default function ParentMechaPage() {
       </div>
 
       {selected && (
-        <MechaDetailModal
-          mecha={selected}
-          baseScore={baseScore}
-          showPinyin={showPinyin}
-          onClose={() => setSelected(null)}
-        />
+        <MechaDetailModal mecha={selected} baseScore={baseScore} onClose={() => setSelected(null)} />
       )}
     </div>
   );

@@ -49,13 +49,14 @@ export function MechaSkillList({
   skills: MechaSkill[] | undefined;
   currentLevelNum: number;
   tone: Tone;
-  /** 与家长/学生「显示拼音」设置一致 */
+  /** 仅学生端生效；家长端技能名始终不注音 */
   showPinyin?: boolean;
 }) {
   const list = skills?.length ? [...skills].sort((a, b) => a.unlockLevel - b.unlockLevel) : [];
   if (!list.length) return null;
 
   const s = styles[tone];
+  const pinyinOnName = tone === "student" && showPinyin;
 
   return (
     <div className="mt-4 min-w-0">
@@ -73,7 +74,7 @@ export function MechaSkillList({
                 )}
               </div>
               <p className={`mt-2 ${s.name}`}>
-                <TextWithPinyin text={sk.name} showPinyin={showPinyin} />
+                <TextWithPinyin text={sk.name} showPinyin={pinyinOnName} />
               </p>
               <p className={s.desc}>{sk.description}</p>
               {!unlocked && (

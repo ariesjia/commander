@@ -30,6 +30,7 @@
 | [0002-student-battle-system](./stories/0002-student-battle-system.md) | 学生每日战斗：当日任务完成积分门槛、后端裁决、可配置胜率与奖励、流水入账 |
 | [0003-student-item-inventory](./stories/0003-student-item-inventory.md) | 学生道具库：道具名称/介绍/图片 + 库存展示（盲盒与碎片为后续 story，本文仅设计预留） |
 | [0004-mecha-skills](./stories/0004-mecha-skills.md) | 机甲里程碑技能：等级 2/5/7 解锁，`MechaSkill` 表（含类型枚举：攻击/防御/增益/治疗/控制/支援）、全机甲技能文案与 seed 同步策略 |
+| [0005-battle-log-server-skills](./stories/0005-battle-log-server-skills.md) | 战斗演出日志后端化：按技能类型反馈（治疗/增益/防御/支援等）、数值与文案随机，胜率与奖励逻辑不变 |
 | [stories/](./stories/) | 开发需求文档：`000x-<name>.md` 格式 |
 
 ---
