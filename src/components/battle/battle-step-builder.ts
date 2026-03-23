@@ -1,3 +1,7 @@
+/**
+ * 客户端本地生成战报步骤（每日战斗已改由服务端 buildBattleStepsFromOutcome + stepsJson）。
+ * 保留作无 steps 时的降级与演示。
+ */
 import type {
   BattleFx,
   BeamVisual,

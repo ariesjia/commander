@@ -188,6 +188,8 @@ model StudentBattleLog {
   enemyId     String
   narrative   String
   rewardsJson Json?
+  /** 演出步骤快照 ServerBattleStep[]，供回放与 POST 一致 */
+  stepsJson   Json?
   pointsLogId String?       @unique
   pointsLog   PointsLog?    @relation(fields: [pointsLogId], references: [id], onDelete: SetNull)
   createdAt   DateTime      @default(now())

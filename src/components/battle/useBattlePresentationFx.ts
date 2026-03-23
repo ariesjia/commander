@@ -8,7 +8,11 @@ import type {
   ItemBurst,
   StrikeAccent,
 } from "@/components/battle/battle-fx-types";
-import { dodgeMotionClass } from "@/components/battle/battle-fx-types";
+import {
+  dodgeMotionClass,
+  normalizeSkillFxVariant,
+  type SkillFxVariant,
+} from "@/components/battle/battle-fx-types";
 
 export type BeamSide = "none" | "player" | "enemy";
 
@@ -28,6 +32,17 @@ export type BattleArenaFxSnapshot = {
   itemSparkKey: number;
   itemBurst: ItemBurst;
   beamVisual: BeamVisual;
+  healPulseKey: number;
+  controlJamKey: number;
+  defenseBarrierKey: number;
+  buffSurgeKey: number;
+  buffStyle: "buff" | "support";
+  healVariant: SkillFxVariant;
+  controlVariant: SkillFxVariant;
+  defenseVariant: SkillFxVariant;
+  buffVariant: SkillFxVariant;
+  attackSkillKey: number;
+  attackSkillVariant: SkillFxVariant;
 };
 
 const defaultExplosionHue: ExplosionHue = "thermal";
@@ -59,6 +74,17 @@ export function useBattlePresentationFx({
   const [itemSparkKey, setItemSparkKey] = useState(0);
   const [itemBurst, setItemBurst] = useState<ItemBurst>(defaultItemBurst);
   const [beamVisual, setBeamVisual] = useState<BeamVisual>("rail");
+  const [healPulseKey, setHealPulseKey] = useState(0);
+  const [controlJamKey, setControlJamKey] = useState(0);
+  const [defenseBarrierKey, setDefenseBarrierKey] = useState(0);
+  const [buffSurgeKey, setBuffSurgeKey] = useState(0);
+  const [buffStyle, setBuffStyle] = useState<"buff" | "support">("buff");
+  const [healVariant, setHealVariant] = useState<SkillFxVariant>(0);
+  const [controlVariant, setControlVariant] = useState<SkillFxVariant>(0);
+  const [defenseVariant, setDefenseVariant] = useState<SkillFxVariant>(0);
+  const [buffVariant, setBuffVariant] = useState<SkillFxVariant>(0);
+  const [attackSkillKey, setAttackSkillKey] = useState(0);
+  const [attackSkillVariant, setAttackSkillVariant] = useState<SkillFxVariant>(0);
   const accentClearTimerRef = useRef<number | null>(null);
 
   const clearStrikeAccentSoon = useCallback((ms: number) => {
@@ -90,6 +116,35 @@ export function useBattlePresentationFx({
       if (fx.kind === "item") {
         setItemBurst(fx.burst ?? defaultItemBurst);
         setItemSparkKey((k) => k + 1);
+        return;
+      }
+
+      if (fx.kind === "heal") {
+        setHealVariant(normalizeSkillFxVariant(fx.variant));
+        setHealPulseKey((k) => k + 1);
+        return;
+      }
+
+      if (fx.kind === "control") {
+        setControlVariant(normalizeSkillFxVariant(fx.variant));
+        setControlJamKey((k) => k + 1);
+        return;
+      }
+
+      if (fx.kind === "defense") {
+        setDefenseVariant(normalizeSkillFxVariant(fx.variant));
+        setDefenseBarrierKey((k) => k + 1);
+        return;
+      }
+
+      if (fx.kind === "buff") {
+        setBuffStyle(fx.style ?? "buff");
+        setBuffVariant(normalizeSkillFxVariant(fx.variant));
+        setBuffSurgeKey((k) => k + 1);
+        if (fx.flareAttackSkill != null) {
+          setAttackSkillVariant(normalizeSkillFxVariant(fx.flareAttackSkill));
+          setAttackSkillKey((k) => k + 1);
+        }
         return;
       }
 
@@ -136,6 +191,11 @@ export function useBattlePresentationFx({
       if (fx.kind === "strike") {
         const { attacker, crit, explosion } = fx;
         const victim = attacker === "player" ? "enemy" : "player";
+
+        if (attacker === "player" && fx.attackSkillVariant != null) {
+          setAttackSkillVariant(normalizeSkillFxVariant(fx.attackSkillVariant));
+          setAttackSkillKey((k) => k + 1);
+        }
 
         if (fx.accent) {
           setStrikeAccent(fx.accent);
@@ -192,6 +252,17 @@ export function useBattlePresentationFx({
     itemSparkKey,
     itemBurst,
     beamVisual,
+    healPulseKey,
+    controlJamKey,
+    defenseBarrierKey,
+    buffSurgeKey,
+    buffStyle,
+    healVariant,
+    controlVariant,
+    defenseVariant,
+    buffVariant,
+    attackSkillKey,
+    attackSkillVariant,
   };
 
   return { playBattleFx, fx: snapshot };

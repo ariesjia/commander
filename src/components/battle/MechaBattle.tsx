@@ -10,6 +10,7 @@ import { setBattleBgmDucked } from "@/lib/battle-bgm-bridge";
 import { SPEECH_SYNTHESIS_RATE } from "@/lib/speech-config";
 
 import { BattleArenaFx } from "@/components/battle/BattleArenaFx";
+import type { ServerBattleStep } from "@/components/battle/battle-fx-types";
 import { buildServerBattleSteps } from "@/components/battle/battle-step-builder";
 import {
   BATTLE_START_LINES,
@@ -99,6 +100,8 @@ export type ServerBattlePayload = {
   pointsAwarded?: number;
   /** 胜利奖励明细（积分 + 道具等） */
   rewards?: ServerBattleRewardLine[];
+  /** 服务端生成的演出步骤；无则降级 buildServerBattleSteps */
+  steps?: ServerBattleStep[];
 };
 
 function itemRewardLines(rewards: ServerBattleRewardLine[] | undefined) {
@@ -231,10 +234,11 @@ export function MechaBattle({
         serverBattle.enemy.skills.length > 0
           ? `敌人会用的招：${serverBattle.enemy.skills.join("、")}`
           : "";
+
       const openLines = [
         `—— 遇到敌人：${serverBattle.enemy.name} ——`,
         ...(skillLine ? [skillLine] : []),
-        randomPick(COMBAT_ATMOSPHERE_LINES),
+        // randomPick(COMBAT_ATMOSPHERE_LINES),
         randomPick(BATTLE_START_LINES),
       ];
 
@@ -244,11 +248,14 @@ export function MechaBattle({
         await afterLine(line);
       }
 
-      const steps = buildServerBattleSteps({
-        outcome: serverBattle.outcome,
-        enemySkills: serverBattle.enemy.skills,
-        inventoryNames: playerInventoryNames,
-      });
+      const steps: ServerBattleStep[] =
+        serverBattle.steps && serverBattle.steps.length > 0
+          ? serverBattle.steps
+          : buildServerBattleSteps({
+              outcome: serverBattle.outcome,
+              enemySkills: serverBattle.enemy.skills,
+              inventoryNames: playerInventoryNames,
+            });
 
       for (const s of steps) {
         if (cancelled) return;
@@ -363,7 +370,11 @@ export function MechaBattle({
             }}
           />
         )}
-        <BattleArenaFx reduceMotionPreferred={reduceMotionPreferred} fx={fx} />
+        <BattleArenaFx
+          reduceMotionPreferred={reduceMotionPreferred}
+          reducedMotion={reducedMotion}
+          fx={fx}
+        />
         <div className="absolute inset-0 z-[2] overflow-hidden">
           <div
             className="absolute bottom-0 left-1/2 h-[52%] w-[220%] origin-bottom -translate-x-1/2"

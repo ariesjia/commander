@@ -3,9 +3,18 @@
 import type { ReactNode } from "react";
 import type { BeamVisual, StrikeAccent } from "@/components/battle/battle-fx-types";
 import type { BattleArenaFxSnapshot } from "@/components/battle/useBattlePresentationFx";
+import {
+  AttackSkillFxLayer,
+  BuffFxVariantLayer,
+  ControlFxVariantLayer,
+  DefenseFxVariantLayer,
+  HealFxVariantLayer,
+} from "@/components/battle/skill-fx-variants";
 
 type Props = {
   reduceMotionPreferred: boolean | null;
+  /** 与 MechaBattle 中 framer-motion reducedMotion 一致，用于缩短治疗/干扰动效 */
+  reducedMotion?: boolean;
   fx: BattleArenaFxSnapshot;
 };
 
@@ -231,7 +240,11 @@ function accentVisual(a: StrikeAccent | "none"): ReactNode {
 /**
  * 战斗区上半：光束、闪屏、爆炸、受击装饰、道具爆闪（不含机体立绘与地面）。
  */
-export function BattleArenaFx({ reduceMotionPreferred, fx }: Props) {
+export function BattleArenaFx({
+  reduceMotionPreferred,
+  reducedMotion = false,
+  fx,
+}: Props) {
   const {
     flash,
     beam,
@@ -245,6 +258,17 @@ export function BattleArenaFx({ reduceMotionPreferred, fx }: Props) {
     accentVictim,
     itemSparkKey,
     itemBurst,
+    healPulseKey,
+    controlJamKey,
+    defenseBarrierKey,
+    buffSurgeKey,
+    buffStyle,
+    healVariant,
+    controlVariant,
+    defenseVariant,
+    buffVariant,
+    attackSkillKey,
+    attackSkillVariant,
   } = fx;
 
   const explosionClass =
@@ -258,6 +282,14 @@ export function BattleArenaFx({ reduceMotionPreferred, fx }: Props) {
     itemBurst === "magenta"
       ? "border-fuchsia-400/75 bg-fuchsia-500/12 shadow-[0_0_24px_rgba(217,70,239,0.5)]"
       : "border-cyan-300/70 bg-cyan-400/15 shadow-[0_0_24px_rgba(34,211,238,0.55)]";
+
+  const healClass = reducedMotion ? "animate-battle-heal-mend-short" : "animate-battle-heal-mend";
+  const controlClass = reducedMotion ? "animate-battle-control-jam-short" : "animate-battle-control-jam";
+  const defenseClass = reducedMotion ? "animate-battle-defense-barrier-short" : "animate-battle-defense-barrier";
+  const buffClass = reducedMotion ? "animate-battle-buff-surge-short" : "animate-battle-buff-surge";
+  const attackSkillClass = reducedMotion
+    ? "animate-battle-attack-skill-flare-short"
+    : "animate-battle-attack-skill-flare";
 
   return (
     <>
@@ -297,6 +329,51 @@ export function BattleArenaFx({ reduceMotionPreferred, fx }: Props) {
           className={`pointer-events-none absolute left-[22%] top-[36%] z-[16] h-28 w-28 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 animate-battle-item-spark ${itemRing}`}
           aria-hidden
         />
+      )}
+      {healPulseKey > 0 && (
+        <div
+          key={`heal-${healPulseKey}-${healVariant}`}
+          className="pointer-events-none absolute left-[22%] top-[36%] z-[16] -translate-x-1/2 -translate-y-1/2"
+          aria-hidden
+        >
+          <HealFxVariantLayer variant={healVariant} animClass={healClass} />
+        </div>
+      )}
+      {controlJamKey > 0 && (
+        <div
+          key={`control-${controlJamKey}-${controlVariant}`}
+          className="pointer-events-none absolute left-[78%] top-[36%] z-[16] -translate-x-1/2 -translate-y-1/2"
+          aria-hidden
+        >
+          <ControlFxVariantLayer variant={controlVariant} animClass={controlClass} />
+        </div>
+      )}
+      {defenseBarrierKey > 0 && (
+        <div
+          key={`defense-${defenseBarrierKey}-${defenseVariant}`}
+          className="pointer-events-none absolute left-[22%] top-[36%] z-[16] -translate-x-1/2 -translate-y-1/2"
+          aria-hidden
+        >
+          <DefenseFxVariantLayer variant={defenseVariant} animClass={defenseClass} />
+        </div>
+      )}
+      {buffSurgeKey > 0 && (
+        <div
+          key={`buff-${buffSurgeKey}-${buffStyle}-${buffVariant}`}
+          className="pointer-events-none absolute left-[22%] top-[36%] z-[16] -translate-x-1/2 -translate-y-1/2"
+          aria-hidden
+        >
+          <BuffFxVariantLayer variant={buffVariant} style={buffStyle} animClass={buffClass} />
+        </div>
+      )}
+      {attackSkillKey > 0 && (
+        <div
+          key={`atk-skill-${attackSkillKey}-${attackSkillVariant}`}
+          className="pointer-events-none absolute left-[22%] top-[36%] z-[18] -translate-x-1/2 -translate-y-1/2"
+          aria-hidden
+        >
+          <AttackSkillFxLayer variant={attackSkillVariant} animClass={attackSkillClass} />
+        </div>
       )}
     </>
   );

@@ -17,6 +17,9 @@ import {
 } from "@/lib/battle-server";
 import { getTodayStr } from "@/lib/utils";
 import { pointsToNumber } from "@/lib/points-number";
+import { getCurrentMechaLevelFromPoints } from "@/lib/mecha-level";
+import { buildBattleStepsFromOutcome, type UnlockedBattleSkill } from "@/lib/battle-presentation";
+import { getActiveStudentItemDisplayNames } from "@/lib/student-inventory-names";
 
 export async function GET() {
   const auth = await requireStudent();
@@ -106,13 +109,35 @@ export async function POST() {
         .reduce((s, r) => s + r.amount, 0);
 
       let mechaId: string | null = null;
+      let unlockedPlayerSkills: UnlockedBattleSkill[] = [];
       if (primarySm) {
         const mechaRow = await tx.mecha.findUnique({
           where: { slug: primarySm.mechaSlug },
-          select: { id: true },
+          include: {
+            levels: { orderBy: { level: "asc" } },
+            skills: true,
+          },
         });
         mechaId = mechaRow?.id ?? null;
+        if (mechaRow) {
+          const cur = getCurrentMechaLevelFromPoints(
+            mechaRow.levels,
+            pointsToNumber(primarySm.points),
+          );
+          const lv = cur?.level ?? 1;
+          unlockedPlayerSkills = mechaRow.skills
+            .filter((s) => s.unlockLevel <= lv)
+            .map((s) => ({ kind: s.kind, name: s.name, slug: s.slug }));
+        }
       }
+
+      const inventoryNames = await getActiveStudentItemDisplayNames(tx, studentId);
+      const steps = buildBattleStepsFromOutcome({
+        outcome,
+        enemySkills: enemy.skills,
+        inventoryNames,
+        unlockedPlayerSkills,
+      });
 
       const battleLog = await tx.studentBattleLog.create({
         data: {
@@ -123,6 +148,7 @@ export async function POST() {
           enemyId: enemy.id,
           narrative,
           rewardsJson: rewards as Prisma.InputJsonValue,
+          stepsJson: steps as Prisma.InputJsonValue,
         },
       });
 
@@ -165,7 +191,7 @@ export async function POST() {
         });
       }
 
-      return { battleLogId: battleLog.id, pointsLogId, pointsTotal, rewards };
+      return { battleLogId: battleLog.id, pointsLogId, pointsTotal, rewards, steps };
     });
 
     return NextResponse.json({
@@ -174,6 +200,7 @@ export async function POST() {
       enemy: publicEnemy(enemy),
       rewards: result.rewards,
       pointsAwarded: result.pointsTotal,
+      steps: result.steps,
     });
   } catch (e) {
     if (isPrismaUniqueViolation(e)) {

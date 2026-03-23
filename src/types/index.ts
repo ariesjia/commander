@@ -1,3 +1,5 @@
+import type { ServerBattleStep } from "@/components/battle/battle-fx-types";
+
 export type TaskType = "DAILY" | "WEEKLY" | "RULE";
 
 export interface Task {
@@ -79,6 +81,8 @@ export interface TodayBattleReplay {
     name?: string;
     imageUrl?: string;
   }[];
+  /** 与 POST 一致；旧数据无此字段 */
+  steps?: ServerBattleStep[];
 }
 
 /** 与 GET /api/student/battle、profile.battleStatus 一致 */

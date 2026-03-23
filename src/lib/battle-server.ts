@@ -5,6 +5,7 @@ import { getChinaDayBounds, type BattleRewardRoll } from "@/lib/battle";
 import { getTodayStr } from "@/lib/utils";
 import { pointsToNumber } from "@/lib/points-number";
 import { BATTLE_ENEMIES } from "@/lib/battle-enemies";
+import type { ServerBattleStep } from "@/components/battle/battle-fx-types";
 
 export type BattleReasonCode = "THRESHOLD_NOT_MET" | "ALREADY_FOUGHT_TODAY" | null;
 
@@ -29,6 +30,8 @@ export type TodayBattleReplayPayload = {
     name?: string;
     imageUrl?: string;
   }[];
+  /** 与 POST 一致；历史 null 时前端降级本地生成 */
+  steps?: ServerBattleStep[];
 };
 
 /**
@@ -118,11 +121,33 @@ function parseBattleRewardsJson(
   return out;
 }
 
+function parseBattleStepsJson(json: Prisma.JsonValue | null): ServerBattleStep[] | undefined {
+  if (json == null || !Array.isArray(json)) return undefined;
+  const out: ServerBattleStep[] = [];
+  for (const row of json) {
+    if (!row || typeof row !== "object") continue;
+    const o = row as Record<string, unknown>;
+    if (typeof o.p !== "number" || typeof o.e !== "number" || typeof o.line !== "string") continue;
+    const fx = o.fx;
+    if (!fx || typeof fx !== "object") continue;
+    const fk = (fx as Record<string, unknown>).kind;
+    if (typeof fk !== "string") continue;
+    out.push({
+      p: o.p,
+      e: o.e,
+      line: o.line,
+      fx: fx as ServerBattleStep["fx"],
+    });
+  }
+  return out.length ? out : undefined;
+}
+
 function buildTodayBattleReplay(log: {
   outcome: BattleOutcome;
   narrative: string;
   enemyId: string;
   rewardsJson: Prisma.JsonValue | null;
+  stepsJson: Prisma.JsonValue | null;
 }): TodayBattleReplayPayload | null {
   const enemyConfig =
     BATTLE_ENEMIES.find((e) => e.id === log.enemyId) ?? BATTLE_ENEMIES[0];
@@ -131,6 +156,7 @@ function buildTodayBattleReplay(log: {
   const pointsAwarded = rewards
     .filter((r): r is { kind: "points"; amount: number } => r.kind === "points" && typeof r.amount === "number")
     .reduce((s, r) => s + r.amount, 0);
+  const steps = parseBattleStepsJson(log.stepsJson);
   return {
     outcome: log.outcome === BattleOutcome.WIN ? "WIN" : "LOSE",
     narrative: log.narrative,
@@ -144,6 +170,7 @@ function buildTodayBattleReplay(log: {
     },
     pointsAwarded,
     rewards,
+    ...(steps ? { steps } : {}),
   };
 }
 

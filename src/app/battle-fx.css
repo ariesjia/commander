@@ -425,6 +425,122 @@
   animation: battle-sweep-rtl 0.46s cubic-bezier(0.18, 0.72, 0.28, 1) forwards;
 }
 
+@keyframes battle-heal-mend {
+  0% {
+    transform: scale(0.62);
+    opacity: 0;
+  }
+  40% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.22);
+    opacity: 0;
+  }
+}
+.animate-battle-heal-mend {
+  animation: battle-heal-mend 0.52s ease-out forwards;
+}
+@keyframes battle-heal-mend-short {
+  0% {
+    transform: scale(0.88);
+    opacity: 0;
+  }
+  45% {
+    opacity: 0.95;
+  }
+  100% {
+    transform: scale(1.04);
+    opacity: 0;
+  }
+}
+.animate-battle-heal-mend-short {
+  animation: battle-heal-mend-short 0.14s ease-out forwards;
+}
+
+@keyframes battle-control-jam {
+  0% {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  12% {
+    opacity: 1;
+  }
+  45% {
+    transform: scale(1.03) skewX(-2deg);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1);
+  }
+}
+.animate-battle-control-jam {
+  animation: battle-control-jam 0.48s ease-out forwards;
+}
+.animate-battle-control-jam-short {
+  animation: battle-control-jam 0.15s ease-out forwards;
+}
+
+@keyframes battle-defense-barrier {
+  0% {
+    transform: scale(0.72) rotate(-8deg);
+    opacity: 0;
+  }
+  35% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.12) rotate(4deg);
+    opacity: 0;
+  }
+}
+.animate-battle-defense-barrier {
+  animation: battle-defense-barrier 0.46s ease-out forwards;
+}
+.animate-battle-defense-barrier-short {
+  animation: battle-defense-barrier 0.14s ease-out forwards;
+}
+
+@keyframes battle-buff-surge {
+  0% {
+    transform: scale(0.5) translateY(10px);
+    opacity: 0;
+  }
+  22% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.18) translateY(-8px);
+    opacity: 0;
+  }
+}
+.animate-battle-buff-surge {
+  animation: battle-buff-surge 0.5s cubic-bezier(0.22, 0.82, 0.32, 1) forwards;
+}
+.animate-battle-buff-surge-short {
+  animation: battle-buff-surge 0.15s ease-out forwards;
+}
+
+@keyframes battle-attack-skill-flare {
+  0% {
+    transform: scale(0.55);
+    opacity: 0;
+  }
+  38% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.08);
+    opacity: 0;
+  }
+}
+.animate-battle-attack-skill-flare {
+  animation: battle-attack-skill-flare 0.4s cubic-bezier(0.2, 0.85, 0.35, 1) forwards;
+}
+.animate-battle-attack-skill-flare-short {
+  animation: battle-attack-skill-flare 0.13s ease-out forwards;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-battle-dodge,
   .animate-battle-dodge-drop,
@@ -455,5 +571,16 @@
   .animate-battle-sweep-ltr,
   .animate-battle-sweep-rtl {
     animation-duration: 0.16s;
+  }
+  .animate-battle-heal-mend,
+  .animate-battle-control-jam {
+    animation-duration: 0.14s;
+  }
+  .animate-battle-defense-barrier,
+  .animate-battle-buff-surge {
+    animation-duration: 0.14s;
+  }
+  .animate-battle-attack-skill-flare {
+    animation-duration: 0.13s;
   }
 }

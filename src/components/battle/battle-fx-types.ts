@@ -11,6 +11,14 @@ export type DodgeMotion = "sidestep" | "drop" | "snap";
 export type ExplosionHue = "thermal" | "plasma";
 export type ItemBurst = "cyan" | "magenta";
 
+/** 技能类演出随机变体（服务端每步 0～2 抽样） */
+export type SkillFxVariant = 0 | 1 | 2;
+
+export function normalizeSkillFxVariant(v: unknown): SkillFxVariant {
+  if (v === 1 || v === 2) return v;
+  return 0;
+}
+
 export type BattleFx =
   | { kind: "none" }
   | {
@@ -24,10 +32,26 @@ export type BattleFx =
       accent?: StrikeAccent;
       /** 与 explosion 同开时全屏渐变色调 */
       hue?: ExplosionHue;
+      /** 台词为 ATTACK 技能名时叠加我方侧技能光效变体 */
+      attackSkillVariant?: SkillFxVariant;
     }
   | { kind: "dodge"; dodger: "player" | "enemy"; motion?: DodgeMotion }
   | { kind: "explosion"; hue?: ExplosionHue }
-  | { kind: "item"; burst?: ItemBurst };
+  | { kind: "item"; burst?: ItemBurst }
+  /** 我方治疗/回充：柔和绿青脉冲，非攻击光束 */
+  | { kind: "heal"; variant?: SkillFxVariant }
+  /** 牵制干扰：敌方侧读数紊乱（与普攻命中视觉区分） */
+  | { kind: "control"; variant?: SkillFxVariant }
+  /** 防御减伤：我方侧护盾/装甲硬化（接敌命中时） */
+  | { kind: "defense"; variant?: SkillFxVariant }
+  /** 增益/支援：我方侧火控或输出增强（命中前摇）；`style: support` 略偏侦测协调色调 */
+  | {
+      kind: "buff";
+      style?: "buff" | "support";
+      variant?: SkillFxVariant;
+      /** 台词同时展示 ATTACK 技能名时叠加技能爆闪 */
+      flareAttackSkill?: SkillFxVariant;
+    };
 
 export type ServerBattleStep = {
   p: number;

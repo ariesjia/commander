@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { useData } from "@/contexts/DataContext";
 import { MechaBattle, type ServerBattlePayload } from "@/components/battle/MechaBattle";
+import type { ServerBattleStep } from "@/components/battle/battle-fx-types";
 import { useMecha, getLevelFromMecha } from "@/hooks/useMecha";
 import { api } from "@/lib/api";
 import { registerBattleBgmEl } from "@/lib/battle-bgm-bridge";
@@ -62,6 +63,7 @@ type BattlePostResponse = {
     imageUrl?: string;
   }[];
   pointsAwarded: number;
+  steps?: ServerBattleStep[];
 };
 
 const BATTLE_BGM_SRC = "/sounds/battle.mp3";
@@ -77,6 +79,7 @@ function mapReplayToServerPayload(r: TodayBattleReplay): ServerBattlePayload {
     },
     pointsAwarded: r.pointsAwarded > 0 ? r.pointsAwarded : undefined,
     rewards: r.rewards?.length ? r.rewards : undefined,
+    steps: r.steps?.length ? r.steps : undefined,
   };
 }
 
@@ -126,13 +129,6 @@ export default function StudentBattlePage() {
     };
   }, [clearPostBattleBgmTimer]);
 
-  useEffect(() => {
-    if (battleResult === null) {
-      clearPostBattleBgmTimer();
-      setBattleBgmStopped(false);
-    }
-  }, [battleResult, clearPostBattleBgmTimer]);
-
   /** 点击开始战斗后（加载中 + 整场演出）循环播放 BGM；演出结束后再播约 5 秒即停 */
   useEffect(() => {
     const active = (posting || battleResult !== null) && !battleBgmStopped;
@@ -175,8 +171,10 @@ export default function StudentBattlePage() {
     }
   }, []);
 
+  /** 首屏拉取战斗状态（setState 仅在 loadStatus 内 await 之后） */
   useEffect(() => {
-    loadStatus();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 挂载请求 /api/student/battle
+    void loadStatus();
   }, [loadStatus]);
 
   /** 预拉库存道具名：开战前就有列表，且与 POST 后再拉取形成双保险（战报装饰依赖非空名称） */
@@ -189,6 +187,7 @@ export default function StudentBattlePage() {
     if (presentationFromReplayRef.current) {
       presentationFromReplayRef.current = false;
       setBattleInventoryNames([]);
+      setBattleBgmStopped(false);
       setBattleResult(null);
     }
     clearPostBattleBgmTimer();
@@ -229,6 +228,7 @@ export default function StudentBattlePage() {
         },
         pointsAwarded: points,
         rewards: data.rewards?.length ? data.rewards : undefined,
+        steps: data.steps?.length ? data.steps : undefined,
       });
       setPosting(false);
       void refetch();
