@@ -14,7 +14,11 @@ function fetchMecha(slug: string): Promise<MechaDetail> {
   let pending = pendingRequests.get(slug);
   if (!pending) {
     pending = api.get<MechaDetail>(`/api/mechas/${slug}`).then((data) => {
-      const normalized: MechaDetail = { ...data, skills: data.skills ?? [] };
+      const normalized: MechaDetail = {
+        ...data,
+        skills: data.skills ?? [],
+        evolutionVideoUrl: data.evolutionVideoUrl ?? null,
+      };
       mechaCache.set(slug, normalized);
       pendingRequests.delete(slug);
       return normalized;

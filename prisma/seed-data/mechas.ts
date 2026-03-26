@@ -18,6 +18,8 @@ export interface MechaConfig {
   description: string;
   intro: string;
   sortOrder: number;
+  /** 可选进化/展示视频（公开路径或 URL） */
+  evolutionVideoUrl?: string | null;
   levels: MechaLevelConfig[];
   skills: MechaSkillSeed[];
 }
@@ -66,6 +68,7 @@ export const MECHA_SEED_DATA: MechaConfig[] = [
     description: "极速突袭型人形机甲，擅长瞬间切入与精准打击",
     intro: "利刃，极速突袭型人形机甲，擅长瞬间切入与精准打击，以超高效率瓦解敌方关键目标。负责快速突袭、弱点击破、敌后干扰。它在历练中不断觉醒，解锁更强形态、破甲武装与雷霆锋芒，每一次蜕变都让斩击之力更强。",
     sortOrder: 2,
+    evolutionVideoUrl: "/mecha/razor/animation.mp4",
     levels: [
       { level: 0, name: "量产型", threshold: 0, imageUrl: "/mecha/razor/level-0.png", description: "基础极速与精准打击能力，可执行快速突袭任务。" },
       { level: 1, name: "改良型", threshold: 20, imageUrl: "/mecha/razor/level-1.png", description: "瞬间切入能力增强，弱点击破效率提升。" },

@@ -29,6 +29,7 @@ export interface MechaDetail {
   name: string;
   description: string | null;
   intro: string | null;
+  evolutionVideoUrl: string | null;
   levels: MechaLevel[];
   skills: MechaSkill[];
 }

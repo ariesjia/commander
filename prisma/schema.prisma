@@ -228,6 +228,8 @@ model Mecha {
   name        String
   description String?
   intro       String?
+  /// 可选进化/展示视频（公开 URL，如 /mecha/razor/animation.mp4）
+  evolutionVideoUrl String?
   isActive    Boolean  @default(true)
   sortOrder   Int      @default(0)
   createdAt   DateTime @default(now())

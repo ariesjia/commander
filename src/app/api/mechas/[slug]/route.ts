@@ -24,6 +24,7 @@ export interface MechaDetailDto {
   name: string;
   description: string | null;
   intro: string | null;
+  evolutionVideoUrl: string | null;
   levels: MechaLevelDto[];
   skills: MechaSkillDto[];
 }
@@ -53,6 +54,7 @@ export async function GET(
     name: mecha.name,
     description: mecha.description,
     intro: mecha.intro,
+    evolutionVideoUrl: mecha.evolutionVideoUrl ?? null,
     levels: mecha.levels.map((l) => ({
       level: l.level,
       name: l.name,

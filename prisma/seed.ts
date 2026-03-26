@@ -108,7 +108,8 @@ async function seedMecha(config: (typeof MECHA_SEED_DATA)[number]) {
     const mechaNeedUpdate =
       existing.description !== config.description ||
       existing.intro !== config.intro ||
-      existing.sortOrder !== config.sortOrder;
+      existing.sortOrder !== config.sortOrder ||
+      (existing.evolutionVideoUrl ?? null) !== (config.evolutionVideoUrl ?? null);
 
     if (levelsNeedUpdate) {
       for (const l of config.levels) {
@@ -122,7 +123,12 @@ async function seedMecha(config: (typeof MECHA_SEED_DATA)[number]) {
     if (mechaNeedUpdate) {
       await prisma.mecha.update({
         where: { id: existing.id },
-        data: { description: config.description, intro: config.intro, sortOrder: config.sortOrder },
+        data: {
+          description: config.description,
+          intro: config.intro,
+          sortOrder: config.sortOrder,
+          evolutionVideoUrl: config.evolutionVideoUrl ?? null,
+        },
       });
       console.log(`已同步更新${config.name}介绍`);
     }
@@ -157,6 +163,7 @@ async function seedMecha(config: (typeof MECHA_SEED_DATA)[number]) {
       name: config.name,
       description: config.description,
       intro: config.intro,
+      evolutionVideoUrl: config.evolutionVideoUrl ?? null,
       isActive: true,
       sortOrder: config.sortOrder,
       levels: {

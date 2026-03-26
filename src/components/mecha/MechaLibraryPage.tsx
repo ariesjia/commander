@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Volume2, Square, History } from "lucide-react";
+import { X, Volume2, Square, History, Clapperboard } from "lucide-react";
 import { useMecha, getLevelFromMecha } from "@/hooks/useMecha";
 import { useReadAloud } from "@/hooks/useReadAloud";
 import { StudentSideDrawer } from "@/components/student/StudentSideDrawer";
@@ -14,6 +14,7 @@ import { formatDateFriendly } from "@/lib/utils";
 import type { MechaEvolutionDto } from "@/app/api/student/mecha-evolution/[id]/route";
 import { buildMechaReadAloudText } from "@/lib/mecha-speech";
 import { MechaSkillList } from "@/components/mecha/MechaSkillList";
+import { MechaEvolutionVideoModal } from "@/components/mecha/MechaEvolutionVideoModal";
 
 interface AdoptedMecha {
   id: string;
@@ -224,6 +225,9 @@ function MechaDrawer({
   const [evolutionLoading, setEvolutionLoading] = useState(false);
   const [evolutionError, setEvolutionError] = useState(false);
   const [showEvolutionModal, setShowEvolutionModal] = useState(false);
+  const [showVideoModal, setShowVideoModal] = useState(false);
+
+  const videoUrl = mecha?.evolutionVideoUrl?.trim() ?? "";
 
   const handleSpeak = () => {
     if (!mecha || !levelInfo || !speechSupported) return;
@@ -274,6 +278,16 @@ function MechaDrawer({
           )}
         </button>
       )}
+      {videoUrl ? (
+        <button
+          type="button"
+          onClick={() => setShowVideoModal(true)}
+          className="w-full flex items-center justify-center gap-2 rounded-xl border border-cyan-400/30 bg-cyan-400/8 px-4 py-3 text-sm text-cyan-100/95 hover:bg-cyan-400/15 transition-colors touch-manipulation"
+        >
+          <Clapperboard size={18} />
+          进化影像
+        </button>
+      ) : null}
       <button
         type="button"
         onClick={handleOpenEvolution}
@@ -348,6 +362,17 @@ function MechaDrawer({
             onClose={() => setShowEvolutionModal(false)}
           />
         )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showVideoModal && videoUrl && mecha ? (
+          <MechaEvolutionVideoModal
+            key="mecha-evolution-video"
+            videoUrl={videoUrl}
+            title={mecha.name}
+            onClose={() => setShowVideoModal(false)}
+          />
+        ) : null}
       </AnimatePresence>
     </>
   );
