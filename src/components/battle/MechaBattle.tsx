@@ -7,6 +7,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { useReducedMotion } from "framer-motion";
 import { useMecha, getLevelFromMecha } from "@/hooks/useMecha";
 import { setBattleBgmDucked } from "@/lib/battle-bgm-bridge";
+import { isIOSSpeechGestureSensitiveEnvironment } from "@/lib/battle-speech-gesture";
 import { SPEECH_SYNTHESIS_RATE } from "@/lib/speech-config";
 
 import { BattleArenaFx } from "@/components/battle/BattleArenaFx";
@@ -30,21 +31,28 @@ function battleSpeechSupported(): boolean {
 }
 
 /**
- * iPad/iPhone（含 iPadOS 桌面 UA）：战报在异步链里调用 speak 时，常既不发声也不触发 onend，
- * Promise 会挂到 hangTimer 才继续，表现为卡住只显示第一句。此处禁用战报 TTS，改用计时 pacing。
+ * 桌面端：可安全 await 整句 TTS（onend 可靠）。
+ * iPad/iPhone：异步战报里若只 await onend，常永久不 resolve；改用带 cap 的朗读 + 与 pace 并行等待。
  */
-function battleSpeechReliableForAsyncPresentation(): boolean {
-  if (typeof navigator === "undefined" || !battleSpeechSupported()) return false;
-  const ua = navigator.userAgent;
-  const isIOS =
-    /iPad|iPhone|iPod/.test(ua) ||
-    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-  return !isIOS;
+function battleAwaitFullSpeechBetweenLines(): boolean {
+  if (!battleSpeechSupported()) return false;
+  return !isIOSSpeechGestureSensitiveEnvironment();
+}
+
+/** iOS 等环境：按字数估算最长等待，避免 onend 不来时卡死；到点 unduck、放行下一句。 */
+function estimateBattleSpeechCapMs(text: string): number {
+  const units = [...text].length;
+  return Math.min(12_000, 480 + units * 92);
 }
 
 type SpeakBattleLineOptions = {
   /** 页面卸载或离开战斗时 abort，避免 Promise 悬挂、BGM 一直压低 */
   signal?: AbortSignal;
+  /**
+   * 最长等待毫秒；到时视为本句结束（cancel 并 unduck）。用于 iOS WebKit 等 onend 不可靠场景。
+   * 不设则默认 14s 兜底。
+   */
+  capMs?: number;
 };
 
 /**
@@ -74,12 +82,13 @@ function speakBattleLine(text: string, opts?: SpeakBattleLineOptions): Promise<v
     };
     signal?.addEventListener("abort", onAbort);
 
-    /** 部分环境 TTS 既不 onend 也不 onerror；过长会卡住战报，桌面亦不宜等太久 */
+    const maxHangMs = opts?.capMs ?? 14_000;
     const hangTimer = window.setTimeout(() => {
       synth.cancel();
       finish();
-    }, 14_000);
+    }, maxHangMs);
 
+    if (isIOSSpeechGestureSensitiveEnvironment() && synth.paused) synth.resume();
     synth.cancel();
     setBattleBgmDucked(true);
     const u = new SpeechSynthesisUtterance(text);
@@ -222,19 +231,54 @@ export function MechaBattle({
     clearTick();
     let cancelled = false;
     const speechAbort = new AbortController();
-    const useSpeech = battleSpeechReliableForAsyncPresentation();
+    const awaitFullSpeech = battleAwaitFullSpeechBetweenLines();
     const paceMs = reducedMotion ? 520 : 880;
     /** 朗读：一句念完再留白（句间 1 秒） */
     const pauseAfterSpokenLineMs = 1000;
+    const pauseIOSMs = Math.min(pauseAfterSpokenLineMs, 780);
+
+    const delay = (ms: number) =>
+      new Promise<void>((r) => {
+        window.setTimeout(r, ms);
+      });
 
     const afterLine = async (line: string) => {
       if (cancelled) return;
-      if (useSpeech) {
+      if (!battleSpeechSupported()) {
+        await delay(paceMs);
+        return;
+      }
+      if (awaitFullSpeech) {
         await speakBattleLine(line, { signal: speechAbort.signal });
         if (cancelled) return;
-        await new Promise<void>((r) => window.setTimeout(r, pauseAfterSpokenLineMs));
+        await delay(pauseAfterSpokenLineMs);
       } else {
-        await new Promise<void>((r) => window.setTimeout(r, paceMs));
+        const capMs = estimateBattleSpeechCapMs(line);
+        await Promise.all([
+          speakBattleLine(line, { signal: speechAbort.signal, capMs }),
+          delay(paceMs),
+        ]);
+        if (cancelled) return;
+        await delay(pauseIOSMs);
+      }
+    };
+
+    const afterClosingSpeech = async (text: string) => {
+      if (cancelled) return;
+      /** 无 TTS API 时与旧逻辑一致：不人为拖长结算旁白 */
+      if (!battleSpeechSupported()) return;
+      if (awaitFullSpeech) {
+        await speakBattleLine(text, { signal: speechAbort.signal });
+        if (cancelled) return;
+        await delay(pauseAfterSpokenLineMs);
+      } else {
+        const capMs = estimateBattleSpeechCapMs(text);
+        await Promise.all([
+          speakBattleLine(text, { signal: speechAbort.signal, capMs }),
+          delay(paceMs),
+        ]);
+        if (cancelled) return;
+        await delay(pauseIOSMs);
       }
     };
 
@@ -284,43 +328,31 @@ export function MechaBattle({
 
       setPhase(serverBattle.outcome === "WIN" ? "victory" : "defeat");
 
-      if (useSpeech) {
-        await speakBattleLine(serverBattle.narrative, { signal: speechAbort.signal });
+      await afterClosingSpeech(serverBattle.narrative);
+      if (
+        serverBattle.outcome === "WIN" &&
+        serverBattle.pointsAwarded != null &&
+        serverBattle.pointsAwarded > 0
+      ) {
         if (cancelled) return;
-        await new Promise<void>((r) => window.setTimeout(r, pauseAfterSpokenLineMs));
-        if (
-          serverBattle.outcome === "WIN" &&
-          serverBattle.pointsAwarded != null &&
-          serverBattle.pointsAwarded > 0
-        ) {
-          if (cancelled) return;
-          await speakBattleLine(`获得积分 ${serverBattle.pointsAwarded} 分`, {
-            signal: speechAbort.signal,
-          });
-          if (cancelled) return;
-          await new Promise<void>((r) => window.setTimeout(r, pauseAfterSpokenLineMs));
-        }
-        if (serverBattle.outcome === "WIN") {
-          for (const it of itemRewardLines(serverBattle.rewards)) {
-            if (cancelled) return;
-            const label = it.name?.trim() || it.itemSlug;
-            const q = typeof it.quantity === "number" && it.quantity > 0 ? it.quantity : 1;
-            await speakBattleLine(
-              q > 1 ? `获得道具 ${label}，共 ${q} 件` : `获得道具 ${label}`,
-              { signal: speechAbort.signal },
-            );
-            if (cancelled) return;
-            await new Promise<void>((r) => window.setTimeout(r, pauseAfterSpokenLineMs));
-          }
-        }
-        if (cancelled) return;
-        await speakBattleLine(
-          serverBattle.outcome === "WIN"
-            ? randomPick(CLOSING_VOICE_WIN)
-            : randomPick(CLOSING_VOICE_LOSE),
-          { signal: speechAbort.signal },
-        );
+        await afterClosingSpeech(`获得积分 ${serverBattle.pointsAwarded} 分`);
       }
+      if (serverBattle.outcome === "WIN") {
+        for (const it of itemRewardLines(serverBattle.rewards)) {
+          if (cancelled) return;
+          const label = it.name?.trim() || it.itemSlug;
+          const q = typeof it.quantity === "number" && it.quantity > 0 ? it.quantity : 1;
+          await afterClosingSpeech(
+            q > 1 ? `获得道具 ${label}，共 ${q} 件` : `获得道具 ${label}`,
+          );
+        }
+      }
+      if (cancelled) return;
+      await afterClosingSpeech(
+        serverBattle.outcome === "WIN"
+          ? randomPick(CLOSING_VOICE_WIN)
+          : randomPick(CLOSING_VOICE_LOSE),
+      );
       if (!cancelled) onBattlePresentationComplete?.();
     };
 

@@ -9,6 +9,7 @@ import type { ServerBattleStep } from "@/components/battle/battle-fx-types";
 import { useMecha, getLevelFromMecha } from "@/hooks/useMecha";
 import { api } from "@/lib/api";
 import { registerBattleBgmEl } from "@/lib/battle-bgm-bridge";
+import { warmupSpeechSynthesisFromUserGesture } from "@/lib/battle-speech-gesture";
 import type { BattleStatus, TodayBattleReplay } from "@/types";
 import type { StudentItemsResponse } from "@/types/items";
 
@@ -203,6 +204,8 @@ export default function StudentBattlePage() {
   }, [clearPostBattleBgmTimer]);
 
   const startBattle = async () => {
+    /** iOS：须在任意 await 之前同步 speak，否则战报 TTS 全程无声 */
+    warmupSpeechSynthesisFromUserGesture();
     setBattleBgmStopped(false);
     clearPostBattleBgmTimer();
     setPostError(null);
@@ -243,6 +246,7 @@ export default function StudentBattlePage() {
   const startReplay = useCallback(() => {
     const r = status?.todayReplay;
     if (!r) return;
+    warmupSpeechSynthesisFromUserGesture();
     presentationFromReplayRef.current = true;
     setBattleBgmStopped(false);
     clearPostBattleBgmTimer();
