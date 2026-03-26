@@ -29,6 +29,19 @@ function battleSpeechSupported(): boolean {
   );
 }
 
+/**
+ * iPad/iPhone（含 iPadOS 桌面 UA）：战报在异步链里调用 speak 时，常既不发声也不触发 onend，
+ * Promise 会挂到 hangTimer 才继续，表现为卡住只显示第一句。此处禁用战报 TTS，改用计时 pacing。
+ */
+function battleSpeechReliableForAsyncPresentation(): boolean {
+  if (typeof navigator === "undefined" || !battleSpeechSupported()) return false;
+  const ua = navigator.userAgent;
+  const isIOS =
+    /iPad|iPhone|iPod/.test(ua) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  return !isIOS;
+}
+
 type SpeakBattleLineOptions = {
   /** 页面卸载或离开战斗时 abort，避免 Promise 悬挂、BGM 一直压低 */
   signal?: AbortSignal;
@@ -61,11 +74,11 @@ function speakBattleLine(text: string, opts?: SpeakBattleLineOptions): Promise<v
     };
     signal?.addEventListener("abort", onAbort);
 
-    /** 部分环境 TTS 既不 onend 也不 onerror，避免整段演出永久 await */
+    /** 部分环境 TTS 既不 onend 也不 onerror；过长会卡住战报，桌面亦不宜等太久 */
     const hangTimer = window.setTimeout(() => {
       synth.cancel();
       finish();
-    }, 45_000);
+    }, 14_000);
 
     synth.cancel();
     setBattleBgmDucked(true);
@@ -209,7 +222,7 @@ export function MechaBattle({
     clearTick();
     let cancelled = false;
     const speechAbort = new AbortController();
-    const useSpeech = battleSpeechSupported();
+    const useSpeech = battleSpeechReliableForAsyncPresentation();
     const paceMs = reducedMotion ? 520 : 880;
     /** 朗读：一句念完再留白（句间 1 秒） */
     const pauseAfterSpokenLineMs = 1000;
@@ -238,7 +251,7 @@ export function MechaBattle({
       const openLines = [
         `—— 遇到敌人：${serverBattle.enemy.name} ——`,
         ...(skillLine ? [skillLine] : []),
-        // randomPick(COMBAT_ATMOSPHERE_LINES),
+        randomPick(COMBAT_ATMOSPHERE_LINES),
         randomPick(BATTLE_START_LINES),
       ];
 
