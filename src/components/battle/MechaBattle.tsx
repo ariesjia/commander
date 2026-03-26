@@ -30,29 +30,15 @@ function battleSpeechSupported(): boolean {
   );
 }
 
-/**
- * 桌面端：可安全 await 整句 TTS（onend 可靠）。
- * iPad/iPhone：异步战报里若只 await onend，常永久不 resolve；改用带 cap 的朗读 + 与 pace 并行等待。
- */
-function battleAwaitFullSpeechBetweenLines(): boolean {
-  if (!battleSpeechSupported()) return false;
-  return !isIOSSpeechGestureSensitiveEnvironment();
-}
-
-/** iOS 等环境：按字数估算最长等待，避免 onend 不来时卡死；到点 unduck、放行下一句。 */
-function estimateBattleSpeechCapMs(text: string): number {
+/** onend 迟迟不来时的兜底（按字数拉长，避免长句被过早 cancel） */
+function speechLineHangFallbackMs(text: string): number {
   const units = [...text].length;
-  return Math.min(12_000, 480 + units * 92);
+  return Math.min(60_000, 2_400 + units * 220);
 }
 
 type SpeakBattleLineOptions = {
   /** 页面卸载或离开战斗时 abort，避免 Promise 悬挂、BGM 一直压低 */
   signal?: AbortSignal;
-  /**
-   * 最长等待毫秒；到时视为本句结束（cancel 并 unduck）。用于 iOS WebKit 等 onend 不可靠场景。
-   * 不设则默认 14s 兜底。
-   */
-  capMs?: number;
 };
 
 /**
@@ -82,7 +68,7 @@ function speakBattleLine(text: string, opts?: SpeakBattleLineOptions): Promise<v
     };
     signal?.addEventListener("abort", onAbort);
 
-    const maxHangMs = opts?.capMs ?? 14_000;
+    const maxHangMs = speechLineHangFallbackMs(text);
     const hangTimer = window.setTimeout(() => {
       synth.cancel();
       finish();
@@ -231,11 +217,9 @@ export function MechaBattle({
     clearTick();
     let cancelled = false;
     const speechAbort = new AbortController();
-    const awaitFullSpeech = battleAwaitFullSpeechBetweenLines();
     const paceMs = reducedMotion ? 520 : 880;
-    /** 朗读：一句念完再留白（句间 1 秒） */
+    /** 朗读：一句念完再留白（句间 1 秒），再进入下一行 */
     const pauseAfterSpokenLineMs = 1000;
-    const pauseIOSMs = Math.min(pauseAfterSpokenLineMs, 780);
 
     const delay = (ms: number) =>
       new Promise<void>((r) => {
@@ -248,38 +232,18 @@ export function MechaBattle({
         await delay(paceMs);
         return;
       }
-      if (awaitFullSpeech) {
-        await speakBattleLine(line, { signal: speechAbort.signal });
-        if (cancelled) return;
-        await delay(pauseAfterSpokenLineMs);
-      } else {
-        const capMs = estimateBattleSpeechCapMs(line);
-        await Promise.all([
-          speakBattleLine(line, { signal: speechAbort.signal, capMs }),
-          delay(paceMs),
-        ]);
-        if (cancelled) return;
-        await delay(pauseIOSMs);
-      }
+      await speakBattleLine(line, { signal: speechAbort.signal });
+      if (cancelled) return;
+      await delay(pauseAfterSpokenLineMs);
     };
 
     const afterClosingSpeech = async (text: string) => {
       if (cancelled) return;
       /** 无 TTS API 时与旧逻辑一致：不人为拖长结算旁白 */
       if (!battleSpeechSupported()) return;
-      if (awaitFullSpeech) {
-        await speakBattleLine(text, { signal: speechAbort.signal });
-        if (cancelled) return;
-        await delay(pauseAfterSpokenLineMs);
-      } else {
-        const capMs = estimateBattleSpeechCapMs(text);
-        await Promise.all([
-          speakBattleLine(text, { signal: speechAbort.signal, capMs }),
-          delay(paceMs),
-        ]);
-        if (cancelled) return;
-        await delay(pauseIOSMs);
-      }
+      await speakBattleLine(text, { signal: speechAbort.signal });
+      if (cancelled) return;
+      await delay(pauseAfterSpokenLineMs);
     };
 
     const run = async () => {
