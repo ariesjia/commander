@@ -66,7 +66,7 @@ export async function POST(request: Request) {
     const exp = expectedAnswer(q);
     if (got !== exp) {
       return NextResponse.json(
-        { error: "读数未全部校准，请再试一次", code: "WRONG_ANSWERS" },
+        { error: "还有读数不对，请再试一次", code: "WRONG_ANSWERS" },
         { status: 400 },
       );
     }

@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useCallback, useEffect, useState } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, Wrench } from "lucide-react";
@@ -43,6 +43,9 @@ export default function MaintenanceMathPage() {
   const [combo, setCombo] = useState(0);
   /** 用于连击动画每次重新挂载 */
   const [comboBurstKey, setComboBurstKey] = useState(0);
+  /** 连击条仅短时显示，避免 combo≥2 后一直占位 */
+  const [comboBurstVisible, setComboBurstVisible] = useState(false);
+  const comboHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   /** 用户点击「开始」后再朗读与答题（避免手机无点击导致无法 TTS） */
   const [sessionStarted, setSessionStarted] = useState(false);
 
@@ -56,6 +59,7 @@ export default function MaintenanceMathPage() {
         setStep(0);
         setInput("");
         setCombo(0);
+        setComboBurstVisible(false);
         setSessionStarted(false);
       }
     } catch (e: unknown) {
@@ -76,6 +80,7 @@ export default function MaintenanceMathPage() {
   useEffect(() => {
     return () => {
       cancelSpeech();
+      if (comboHideTimerRef.current) clearTimeout(comboHideTimerRef.current);
     };
   }, [cancelSpeech]);
 
@@ -142,6 +147,7 @@ export default function MaintenanceMathPage() {
         setAnswers([]);
         setInput("");
         setCombo(0);
+        setComboBurstVisible(false);
         const first = active.questions[0];
         if (first) speakStepPrompt(0, first);
       } else {
@@ -163,6 +169,11 @@ export default function MaintenanceMathPage() {
     if (n !== exp) {
       setLocalErr("再算一算哦");
       setCombo(0);
+      setComboBurstVisible(false);
+      if (comboHideTimerRef.current) {
+        clearTimeout(comboHideTimerRef.current);
+        comboHideTimerRef.current = null;
+      }
       speakNow(MAINTENANCE_COPY.wrongTryAgain);
       return;
     }
@@ -170,20 +181,26 @@ export default function MaintenanceMathPage() {
     setCombo(newCombo);
     if (newCombo >= 2) {
       setComboBurstKey((k) => k + 1);
+      setComboBurstVisible(true);
+      if (comboHideTimerRef.current) clearTimeout(comboHideTimerRef.current);
+      comboHideTimerRef.current = setTimeout(() => {
+        setComboBurstVisible(false);
+        comboHideTimerRef.current = null;
+      }, 1400);
     }
     const next = [...answers];
     next[step] = n;
     setAnswers(next);
     setInput("");
     if (step + 1 >= total) {
-      speakNow(MAINTENANCE_COPY.ttsCalibrationReadDone, {
+      speakNow(MAINTENANCE_COPY.ttsStepReadDone(step + 1), {
         onEnd: () => {
           void submitAll(next);
         },
       });
       return;
     }
-    speakNow(MAINTENANCE_COPY.ttsCalibrationReadDone, {
+    speakNow(MAINTENANCE_COPY.ttsStepReadDone(step + 1), {
       onEnd: () => setStep((s) => s + 1),
     });
   };
@@ -275,7 +292,7 @@ export default function MaintenanceMathPage() {
 
       <div className="relative rounded-2xl border border-cyan-500/25 bg-gradient-to-b from-cyan-500/10 to-transparent px-4 py-6">
         <AnimatePresence mode="wait">
-          {combo >= 2 && comboBurstKey > 0 && (
+          {comboBurstVisible && combo >= 2 && comboBurstKey > 0 && (
             <motion.div
               key={comboBurstKey}
               initial={{ opacity: 0, scale: 0.85, y: 8 }}
@@ -344,7 +361,7 @@ export default function MaintenanceMathPage() {
         onClick={confirmStep}
         className="mx-auto w-full max-w-sm rounded-xl bg-s-primary/90 py-3.5 text-sm font-semibold text-[#0a0f18] shadow-[0_0_24px_rgba(0,212,255,0.25)] hover:bg-s-primary active:scale-[0.99] disabled:opacity-50 touch-manipulation"
       >
-        {step + 1 >= total ? "完成校准" : "下一步"}
+        {step + 1 >= total ? "完成检修" : "下一步"}
       </button>
 
       {!maintenanceMath.enabled && (
