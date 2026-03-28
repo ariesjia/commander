@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireParent, getStudentId } from "@/lib/api-auth";
 import { getCurrentStage, getEvolutionLevel } from "@/lib/mecha-config";
+import { chinaDateStrToDbDate } from "@/lib/battle-server";
 import { getTodayStr, getWeekStartStr, toChinaDateStr } from "@/lib/utils";
 import { pointsToNumber } from "@/lib/points-number";
 
@@ -14,10 +15,13 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "未找到学生" }, { status: 404 });
   }
 
-  const [parent, student, tasks, taskLogs, exchanges] = await Promise.all([
+  const todayStr = getTodayStr();
+  const completedOnMaintenance = chinaDateStrToDbDate(todayStr);
+
+  const [parent, student, tasks, taskLogs, exchanges, maintenanceLogToday] = await Promise.all([
     prisma.parent.findUniqueOrThrow({
       where: { id: auth.parentId },
-      select: { showPinyin: true, baseScore: true },
+      select: { showPinyin: true, baseScore: true, maintenanceMathEnabled: true },
     }),
     prisma.student.findUniqueOrThrow({
       where: { id: studentId },
@@ -32,10 +36,14 @@ export async function GET(request: Request) {
       where: { studentId, status: "PENDING" },
       include: { reward: true },
     }),
+    prisma.studentMaintenanceMathLog.findUnique({
+      where: {
+        studentId_completedOn: { studentId, completedOn: completedOnMaintenance },
+      },
+    }),
   ]);
 
   const weekStart = getWeekStartStr();
-  const todayStr = getTodayStr();
   const weekStartDate = new Date(weekStart + "T00:00:00+08:00");
   const weeklyCompletedCount = taskLogs.filter((l) => l.completedAt >= weekStartDate).length;
   const weeklyTotalCount = tasks.length;
@@ -98,6 +106,11 @@ export async function GET(request: Request) {
   }
 
   return NextResponse.json({
+    maintenanceMath: {
+      enabled: parent.maintenanceMathEnabled,
+      completedToday: !!maintenanceLogToday,
+      date: todayStr,
+    },
     showPinyin: parent.showPinyin,
     baseScore: (parent.baseScore ?? 1) as 0.1 | 1 | 10,
     student: {

@@ -13,14 +13,25 @@ import { XuanjiaProgress } from "@/components/mecha/XuanjiaProgress";
 import Link from "next/link";
 import { PinDialog } from "@/components/mode-switch/PinDialog";
 import Image from "next/image";
-import { Coins, Flame, Snowflake, Lock, Library, Swords, Package } from "lucide-react";
-import { MECHA_STAGES, STREAK_EFFECTS } from "@/lib/mecha-config";
+import { Coins, Snowflake, Lock, Library, Swords, Package, Wrench } from "lucide-react";
+import { MECHA_STAGES } from "@/lib/mecha-config";
 import { toDisplay } from "@/lib/score-display";
 
 import { useMecha, getLevelFromMecha } from "@/hooks/useMecha";
 
 export default function StudentHome() {
-  const { student, mechaStage, adoptedMechaIds, adoptedMechas, mechaPointsBySlug, showPinyin, isLoading, refetch, baseScore } = useData();
+  const {
+    student,
+    mechaStage,
+    adoptedMechaIds,
+    adoptedMechas,
+    mechaPointsBySlug,
+    showPinyin,
+    isLoading,
+    refetch,
+    baseScore,
+    maintenanceMath,
+  } = useData();
   const hasMechas = adoptedMechas.length > 0;
   const { user } = useAuth();
   const { switchToParent, setTransitioning } = useMode();
@@ -36,8 +47,6 @@ export default function StudentHome() {
   const displayTitle = primaryMecha
     ? `${primaryMecha.name} · ${levelInfo?.name ?? ""}`
     : stageName;
-  const streakEffect = STREAK_EFFECTS.filter((e) => student.streakDays >= e.days).pop();
-
   const handlePinSuccess = () => {
     setPinOpen(false);
     setTransitioning(true);
@@ -115,8 +124,7 @@ export default function StudentHome() {
           <Lock size={20} />
         </button>
 
-        {/* Mecha display */}
-        <div className="relative flex justify-center">
+        <div className="relative mt-1 flex justify-center">
           {primarySlug ? (
             <XuanjiaViewer
               slug={primarySlug}
@@ -125,14 +133,6 @@ export default function StudentHome() {
             />
           ) : (
             <MechaViewer stage={mechaStage} className="w-64 h-80 sm:w-72 sm:h-96" />
-          )}
-          {streakEffect && (
-            <div className="absolute bottom-2 left-1/2 -translate-x-1/2">
-              <span className="inline-flex items-center gap-1 rounded-full bg-orange-500/20 px-3 py-1 text-xs text-orange-400 border border-orange-500/30">
-                <Flame size={12} />
-                {streakEffect.name} · {student.streakDays}天
-              </span>
-            </div>
           )}
         </div>
       </div>
@@ -200,6 +200,22 @@ export default function StudentHome() {
             <Swords size={18} strokeWidth={2} />
             每日战斗
           </Link>
+          {maintenanceMath.enabled && (
+            maintenanceMath.completedToday ? (
+              <div className="mt-2 flex w-full min-h-[48px] items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-s-text-secondary/80">
+                <Wrench size={18} strokeWidth={1.75} />
+                今日维修已完成
+              </div>
+            ) : (
+              <Link
+                href="/student/maintenance-math"
+                className="mt-2 flex w-full min-h-[48px] items-center justify-center gap-2 rounded-xl border border-teal-500/35 bg-gradient-to-r from-teal-500/12 to-cyan-500/10 px-4 py-3 text-sm font-semibold text-teal-100/95 transition-colors hover:border-teal-400/50 hover:bg-teal-500/18 touch-manipulation active:scale-[0.99]"
+              >
+                <Wrench size={18} strokeWidth={2} />
+                机甲维修
+              </Link>
+            )
+          )}
         </section>
       )}
 

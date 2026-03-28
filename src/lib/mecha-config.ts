@@ -19,12 +19,40 @@ export const EVOLUTION_LEVELS = [
   { level: 5, name: "终极型", threshold: 6000, description: "最终形态" },
 ];
 
+/** 连续打卡展示档位（由少到多）。用「驾驶员」等级，小学生好懂，也和机甲设定一致。 */
 export const STREAK_EFFECTS = [
-  { days: 3, name: "小火焰", description: "机甲脚下出现小火焰" },
-  { days: 7, name: "坚持7天", description: "火焰变大 + 徽章" },
-  { days: 14, name: "能量翅膀", description: "机甲背后出现能量翅膀" },
-  { days: 30, name: "钢铁意志", description: "金色光环 + 称号" },
+  { days: 3, name: "新手驾驶员", description: "先养成每天做完任务的习惯" },
+  { days: 7, name: "熟练驾驶员", description: "一周都在坚持，越做越顺" },
+  { days: 30, name: "王牌驾驶员", description: "一个月都在坚持，特别厉害" },
 ];
+
+export type StreakTier = (typeof STREAK_EFFECTS)[number];
+
+/** 当前解锁档、下一档与进度条百分比（用于学生任务页连续打卡大卡）。 */
+export function getStreakDisplay(streakDays: number): {
+  currentTier: StreakTier | null;
+  nextTier: StreakTier | null;
+  progressToNext: number;
+} {
+  let currentTier: StreakTier | null = null;
+  for (const e of STREAK_EFFECTS) {
+    if (streakDays >= e.days) currentTier = e;
+  }
+  const currentIdx = currentTier ? STREAK_EFFECTS.indexOf(currentTier) : -1;
+  const nextTier: StreakTier | null =
+    currentIdx >= 0
+      ? currentIdx < STREAK_EFFECTS.length - 1
+        ? STREAK_EFFECTS[currentIdx + 1]
+        : null
+      : STREAK_EFFECTS[0] ?? null;
+  const prevDays = currentTier?.days ?? 0;
+  let progressToNext = 100;
+  if (nextTier) {
+    const span = nextTier.days - prevDays;
+    progressToNext = span > 0 ? Math.min(100, Math.round(((streakDays - prevDays) / span) * 100)) : 100;
+  }
+  return { currentTier, nextTier, progressToNext };
+}
 
 export function getCurrentStage(totalPoints: number): number {
   let stage = 0;

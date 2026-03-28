@@ -8,6 +8,7 @@ import {
   PointsLog,
   StudentData,
   TaskWithStatus,
+  type MaintenanceMathStatus,
 } from "@/types";
 import { api } from "@/lib/api";
 import { useMode } from "@/contexts/ModeContext";
@@ -31,6 +32,8 @@ interface DataState {
   updateShowPinyin: (show: boolean) => Promise<void>;
   baseScore: BaseScore;
   updateBaseScore: (v: BaseScore) => Promise<void>;
+  maintenanceMath: MaintenanceMathStatus;
+  updateMaintenanceMathEnabled: (enabled: boolean) => Promise<void>;
 
   addTask: (t: Omit<Task, "id" | "createdAt">) => Promise<void>;
   updateTask: (id: string, t: Partial<Task>) => Promise<void>;
@@ -85,6 +88,11 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const [mechaLevelName, setMechaLevelName] = useState<string | null>(null);
   const [showPinyin, setShowPinyin] = useState(false);
   const [baseScore, setBaseScore] = useState<BaseScore>(1);
+  const [maintenanceMath, setMaintenanceMath] = useState<MaintenanceMathStatus>({
+    enabled: true,
+    completedToday: false,
+    date: "",
+  });
   const [isLoading, setIsLoading] = useState(true);
 
   const refetch = useCallback(async () => {
@@ -104,6 +112,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
             mechaPointsBySlug?: Record<string, number>;
             showPinyin?: boolean;
             baseScore?: number;
+            maintenanceMath?: MaintenanceMathStatus;
           }>("/api/parent/dashboard"),
           api.get<Array<Task & { status: string; completedAt?: string }>>("/api/parent/tasks"),
           api.get<Reward[]>("/api/parent/rewards"),
@@ -134,13 +143,27 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         setMechaPointsBySlug(dashboard.mechaPointsBySlug ?? {});
         setShowPinyin(dashboard.showPinyin ?? false);
         setBaseScore((dashboard.baseScore ?? 1) as BaseScore);
+        if (dashboard.maintenanceMath) {
+          setMaintenanceMath(dashboard.maintenanceMath);
+        }
       } catch {
         // not logged in or error
       }
     } else {
       try {
         const [profile, tasksRes, rewardsRes, exchangesRes, pointsRes] = await Promise.all([
-          api.get<StudentData & { mechaStage: number; evolutionLevel: number; adoptedMechaIds?: string[]; adoptedMechas?: { id: string; slug: string; points: number }[]; mechaPointsBySlug?: Record<string, number>; showPinyin?: boolean; baseScore?: number }>("/api/student/profile"),
+          api.get<
+            StudentData & {
+              mechaStage: number;
+              evolutionLevel: number;
+              adoptedMechaIds?: string[];
+              adoptedMechas?: { id: string; slug: string; points: number }[];
+              mechaPointsBySlug?: Record<string, number>;
+              showPinyin?: boolean;
+              baseScore?: number;
+              maintenanceMath?: MaintenanceMathStatus;
+            }
+          >("/api/student/profile"),
           api.get<TaskWithStatus[]>("/api/student/tasks"),
           api.get<Array<Reward & { canRedeem?: boolean; pointsNeeded?: number }>>("/api/student/rewards"),
           api.get<Exchange[]>("/api/student/exchanges"),
@@ -166,6 +189,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         setMechaPointsBySlug(profile.mechaPointsBySlug ?? {});
         setShowPinyin(profile.showPinyin ?? false);
         setBaseScore((profile.baseScore ?? 1) as BaseScore);
+        if (profile.maintenanceMath) {
+          setMaintenanceMath(profile.maintenanceMath);
+        }
         setWeeklyCompletedCount(0);
         setWeeklyTotalCount(0);
       } catch {
@@ -258,6 +284,15 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     await refetch();
   }, [refetch]);
 
+  const updateMaintenanceMathEnabled = useCallback(
+    async (enabled: boolean) => {
+      await api.put("/api/parent/settings", { maintenanceMathEnabled: enabled });
+      setMaintenanceMath((prev) => ({ ...prev, enabled }));
+      await refetch();
+    },
+    [refetch],
+  );
+
   return (
     <DataContext.Provider
       value={{
@@ -277,6 +312,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         updateShowPinyin,
         baseScore,
         updateBaseScore,
+        maintenanceMath,
+        updateMaintenanceMathEnabled,
         addTask,
         updateTask,
         deleteTask,

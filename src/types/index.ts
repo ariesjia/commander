@@ -107,6 +107,13 @@ export interface PointsLog {
   createdAt: string;
 }
 
+/** 与 GET /api/student/profile、GET /api/parent/dashboard 的 maintenanceMath 一致 */
+export interface MaintenanceMathStatus {
+  enabled: boolean;
+  completedToday: boolean;
+  date: string;
+}
+
 export interface StudentData {
   nickname: string;
   totalPoints: number;

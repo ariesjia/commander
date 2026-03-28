@@ -2,10 +2,11 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireStudent, getStudentId } from "@/lib/api-auth";
 import { getCurrentStage, getEvolutionLevel } from "@/lib/mecha-config";
-import { getBattleStatusForStudent } from "@/lib/battle-server";
+import { chinaDateStrToDbDate, getBattleStatusForStudent } from "@/lib/battle-server";
+import { getTodayStr } from "@/lib/utils";
 import { pointsToNumber } from "@/lib/points-number";
 
-export async function GET(request: Request) {
+export async function GET() {
   const auth = await requireStudent();
   if (!auth.ok) return auth.response;
 
@@ -14,9 +15,22 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "未找到学生" }, { status: 404 });
   }
 
+  const dateKey = getTodayStr();
+  const completedOn = chinaDateStrToDbDate(dateKey);
+
   const student = await prisma.student.findUniqueOrThrow({
     where: { id: studentId },
-    include: { parent: { select: { showPinyin: true, baseScore: true } }, studentMechas: true, primaryMecha: true },
+    include: {
+      parent: { select: { showPinyin: true, baseScore: true, maintenanceMathEnabled: true } },
+      studentMechas: true,
+      primaryMecha: true,
+    },
+  });
+
+  const maintenanceLogToday = await prisma.studentMaintenanceMathLog.findUnique({
+    where: {
+      studentId_completedOn: { studentId, completedOn },
+    },
   });
 
   // primaryMechaId 可能未回填（迁移前领养），有 studentMechas 时用第一个并回填
@@ -51,6 +65,11 @@ export async function GET(request: Request) {
   const battleStatus = await getBattleStatusForStudent(studentId);
 
   return NextResponse.json({
+    maintenanceMath: {
+      enabled: student.parent.maintenanceMathEnabled,
+      completedToday: !!maintenanceLogToday,
+      date: dateKey,
+    },
     showPinyin: student.parent.showPinyin,
     baseScore: (student.parent.baseScore ?? 1) as 0.1 | 1 | 10,
     nickname: student.nickname,

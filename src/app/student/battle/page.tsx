@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
 import { useData } from "@/contexts/DataContext";
+import { StudentPageHeader } from "@/components/student/StudentPageHeader";
 import { MechaBattle, type ServerBattlePayload } from "@/components/battle/MechaBattle";
 import type { ServerBattleStep } from "@/components/battle/battle-fx-types";
 import { useMecha, getLevelFromMecha } from "@/hooks/useMecha";
@@ -275,18 +275,8 @@ export default function StudentBattlePage() {
   const statusPending = status === null && statusError === null;
 
   return (
-    <div className="flex flex-col gap-3 pt-2 pb-6">
-      <div className="flex items-center gap-3">
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="flex h-9 w-9 items-center justify-center rounded-lg text-s-text-secondary transition-colors hover:bg-white/10 hover:text-s-text touch-manipulation"
-          aria-label="返回"
-        >
-          <ArrowLeft size={20} />
-        </button>
-        <h1 className="font-display text-xl font-bold text-s-text md:text-2xl">每日战斗</h1>
-      </div>
+    <div className="flex flex-col gap-5 pb-6">
+      <StudentPageHeader title="每日战斗" />
 
       {statusError && (
         <p className="text-sm text-s-danger px-1">{statusError}</p>

@@ -17,7 +17,10 @@ async function fetchApi<T>(
 
   if (!res.ok) {
     const msg = typeof data?.error === "string" ? data.error : `Request failed: ${res.status}`;
-    throw new Error(msg);
+    const err = new Error(msg) as Error & { status: number; body: unknown };
+    err.status = res.status;
+    err.body = data;
+    throw err;
   }
 
   return data as T;

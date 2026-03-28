@@ -10,12 +10,13 @@ export async function GET(request: Request) {
 
   const parent = await prisma.parent.findUniqueOrThrow({
     where: { id: auth.parentId },
-    select: { showPinyin: true, baseScore: true },
+    select: { showPinyin: true, baseScore: true, maintenanceMathEnabled: true },
   });
 
   return NextResponse.json({
     showPinyin: parent.showPinyin,
     baseScore: parent.baseScore as 0.1 | 1 | 10,
+    maintenanceMathEnabled: parent.maintenanceMathEnabled,
   });
 }
 
@@ -26,11 +27,20 @@ async function updateSettings(request: Request) {
   const body = await request.json().catch(() => ({}));
   const showPinyin = body.showPinyin;
   const baseScore = body.baseScore;
+  const maintenanceMathEnabled = body.maintenanceMathEnabled;
 
-  const data: { showPinyin?: boolean; baseScore?: number } = {};
+  const data: {
+    showPinyin?: boolean;
+    baseScore?: number;
+    maintenanceMathEnabled?: boolean;
+  } = {};
 
   if (typeof showPinyin === "boolean") {
     data.showPinyin = showPinyin;
+  }
+
+  if (typeof maintenanceMathEnabled === "boolean") {
+    data.maintenanceMathEnabled = maintenanceMathEnabled;
   }
 
   if (baseScore !== undefined) {
@@ -44,20 +54,25 @@ async function updateSettings(request: Request) {
   if (Object.keys(data).length === 0) {
     const parent = await prisma.parent.findUniqueOrThrow({
       where: { id: auth.parentId },
-      select: { showPinyin: true, baseScore: true },
+      select: { showPinyin: true, baseScore: true, maintenanceMathEnabled: true },
     });
-    return NextResponse.json({ showPinyin: parent.showPinyin, baseScore: parent.baseScore });
+    return NextResponse.json({
+      showPinyin: parent.showPinyin,
+      baseScore: parent.baseScore,
+      maintenanceMathEnabled: parent.maintenanceMathEnabled,
+    });
   }
 
   const updated = await prisma.parent.update({
     where: { id: auth.parentId },
     data,
-    select: { showPinyin: true, baseScore: true },
+    select: { showPinyin: true, baseScore: true, maintenanceMathEnabled: true },
   });
 
   return NextResponse.json({
     showPinyin: updated.showPinyin,
     baseScore: updated.baseScore as 0.1 | 1 | 10,
+    maintenanceMathEnabled: updated.maintenanceMathEnabled,
   });
 }
 

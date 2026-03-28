@@ -5,12 +5,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useData } from "@/contexts/DataContext";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
-import { User, KeyRound, LogOut, Check, BookOpen } from "lucide-react";
+import { User, KeyRound, LogOut, Check, BookOpen, Wrench } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function SettingsPage() {
   const { user, updateNickname, updatePin, logout } = useAuth();
-  const { showPinyin, updateShowPinyin } = useData();
+  const { showPinyin, updateShowPinyin, maintenanceMath, updateMaintenanceMathEnabled } = useData();
   const router = useRouter();
 
   const [nickname, setNickname] = useState(user?.childNickname ?? "");
@@ -19,6 +19,7 @@ export default function SettingsPage() {
   const [savedPin, setSavedPin] = useState(false);
   const [pinyinOn, setPinyinOn] = useState(showPinyin);
   const [savingPinyin, setSavingPinyin] = useState(false);
+  const [savingMaintenance, setSavingMaintenance] = useState(false);
   const [savingNickname, setSavingNickname] = useState(false);
   const [savingPin, setSavingPin] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
@@ -72,6 +73,17 @@ export default function SettingsPage() {
       // ignore
     } finally {
       setSavingPinyin(false);
+    }
+  };
+
+  const handleToggleMaintenance = async () => {
+    setSavingMaintenance(true);
+    try {
+      await updateMaintenanceMathEnabled(!maintenanceMath.enabled);
+    } catch {
+      // ignore
+    } finally {
+      setSavingMaintenance(false);
     }
   };
 
@@ -151,6 +163,38 @@ export default function SettingsPage() {
             <div
               className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow transition-transform ${
                 pinyinOn ? "left-6" : "left-1"
+              }`}
+            />
+          </div>
+        </button>
+      </div>
+
+      {/* 机甲维修（口算） */}
+      <div className="rounded-xl border border-p-border bg-p-card p-5">
+        <div className="flex items-center gap-2 mb-4">
+          <Wrench size={18} className="text-p-accent" />
+          <h2 className="text-base font-medium text-p-text">机甲维修</h2>
+        </div>
+        <p className="text-sm text-p-text-secondary mb-4">
+          开启后，孩子可在学生端进行每日「维修工单」小游戏（一年级口算练习），不产生积分。关闭后入口隐藏。
+        </p>
+        <button
+          type="button"
+          onClick={handleToggleMaintenance}
+          disabled={savingMaintenance}
+          className={`flex items-center justify-between w-full rounded-lg border-2 px-4 py-3 transition-colors cursor-pointer ${
+            maintenanceMath.enabled ? "border-p-accent bg-p-accent/5" : "border-p-border bg-white hover:bg-gray-50"
+          }`}
+        >
+          <span className="text-sm font-medium text-p-text">{maintenanceMath.enabled ? "已开启" : "已关闭"}</span>
+          <div
+            className={`relative h-6 w-11 rounded-full transition-colors ${
+              maintenanceMath.enabled ? "bg-p-accent" : "bg-gray-300"
+            }`}
+          >
+            <div
+              className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow transition-transform ${
+                maintenanceMath.enabled ? "left-6" : "left-1"
               }`}
             />
           </div>

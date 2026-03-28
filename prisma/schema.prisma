@@ -21,6 +21,8 @@ model Parent {
   pinHash      String
   showPinyin   Boolean  @default(false) // 学生端是否显示拼音注音
   baseScore    Float    @default(1)    // 基准分：0.1 | 1 | 10，所有积分以1分为单位存储
+  /// 学生端「机甲维修」口算小游戏，默认开启
+  maintenanceMathEnabled Boolean @default(true)
   createdAt    DateTime @default(now())
 
   student Student?
@@ -48,6 +50,23 @@ model Student {
   studentMechas StudentMecha[]
   studentBattleLogs StudentBattleLog[]
   studentItems    StudentItem[]
+  studentMaintenanceMathLogs StudentMaintenanceMathLog[]
+}
+
+/// 每日机甲维修（口算）完成记录，无积分
+model StudentMaintenanceMathLog {
+  id           String   @id @default(cuid())
+  studentId    String
+  student      Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  completedOn  DateTime @db.Date // 中国时区自然日
+  completedAt  DateTime @default(now())
+  correctCount Int
+  totalCount   Int
+  generatorId  String
+  sessionHash  String?
+
+  @@unique([studentId, completedOn])
+  @@index([studentId])
 }
 
 enum ItemKind {

@@ -6,6 +6,7 @@ import { TextWithPinyin } from "@/components/ui/TextWithPinyin";
 import { Check, Clock, CalendarDays, CalendarRange } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toDisplay } from "@/lib/score-display";
+import { StudentStreakHero } from "@/components/student/StudentStreakHero";
 
 const statusConfig: Record<string, { label: string; icon: typeof Clock; variant: "neon" | "orange"; color: string }> = {
   pending: { label: "待完成", icon: Clock, variant: "neon", color: "text-s-primary" },
@@ -13,7 +14,7 @@ const statusConfig: Record<string, { label: string; icon: typeof Clock; variant:
 };
 
 export default function StudentTasksPage() {
-  const { getTasksWithStatus, showPinyin, isLoading, baseScore } = useData();
+  const { getTasksWithStatus, showPinyin, isLoading, baseScore, student } = useData();
   const tasks = getTasksWithStatus();
 
   if (isLoading) {
@@ -93,6 +94,8 @@ export default function StudentTasksPage() {
       <h1 className="font-display text-xl md:text-2xl font-bold text-s-text">
       任务列表
       </h1>
+
+      <StudentStreakHero streakDays={student.streakDays} />
 
       {dailyTasks.length > 0 && renderGroup("每日任务", <CalendarDays size={20} className="text-s-primary md:w-6 md:h-6" />, dailyTasks)}
       {weeklyTasks.length > 0 && renderGroup("每周任务", <CalendarRange size={20} className="text-s-primary md:w-6 md:h-6" />, weeklyTasks)}
