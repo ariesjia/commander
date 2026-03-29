@@ -48,6 +48,8 @@ export default function MaintenanceMathPage() {
   const comboHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   /** 用户点击「开始」后再朗读与答题（避免手机无点击导致无法 TTS） */
   const [sessionStarted, setSessionStarted] = useState(false);
+  /** 开始检修时刻（performance.now 不可用跨刷新，用 Date.now） */
+  const repairStartedAtMsRef = useRef<number | null>(null);
 
   const load = useCallback(async () => {
     setLoadError(null);
@@ -61,6 +63,7 @@ export default function MaintenanceMathPage() {
         setCombo(0);
         setComboBurstVisible(false);
         setSessionStarted(false);
+        repairStartedAtMsRef.current = null;
       }
     } catch (e: unknown) {
       const err = e as Error & { status?: number; body?: { code?: string; error?: string } };
@@ -110,6 +113,7 @@ export default function MaintenanceMathPage() {
   const handleStartSession = useCallback(() => {
     const first = active?.questions[0];
     if (!first) return;
+    repairStartedAtMsRef.current = Date.now();
     setSessionStarted(true);
     speakStepPrompt(0, first);
   }, [active, speakStepPrompt]);
@@ -135,8 +139,14 @@ export default function MaintenanceMathPage() {
     if (!active) return;
     setSubmitting(true);
     setLocalErr(null);
+    const started = repairStartedAtMsRef.current;
+    const durationMs =
+      started != null ? Math.max(0, Math.round(Date.now() - started)) : 0;
     try {
-      await api.post("/api/student/maintenance-math/complete", { answers: finalAnswers });
+      await api.post("/api/student/maintenance-math/complete", {
+        answers: finalAnswers,
+        durationMs,
+      });
       setDone(true);
       await refetch();
     } catch (e: unknown) {

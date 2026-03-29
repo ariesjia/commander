@@ -62,6 +62,8 @@ model StudentMaintenanceMathLog {
   completedAt  DateTime @default(now())
   correctCount Int
   totalCount   Int
+  /// 维修用时（毫秒），由学生端从开始检修起计时提交
+  durationMs   Int      @default(0)
   generatorId  String
   sessionHash  String?
 

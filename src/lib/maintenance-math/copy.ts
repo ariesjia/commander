@@ -41,7 +41,7 @@ export const MAINTENANCE_COPY = {
   /** 浏览器朗读：维修叙事 + 题目（不单读算式） */
   ttsSessionStart: "今日维修工单开始。",
   /** 朗读不念「共几步」，界面仍用 stepLabel 显示进度 */
-  ttsStepPrompt: (step: number) => `第${step}步，${stepFocus(step)}。${step === 0 ? "请说出算式结果。" : ""}`,
+  ttsStepPrompt: (step: number) => `第${step}步，${stepFocus(step)}。${step === 0 ? "请说出算式结果" : ""}`,
   ttsStepReadDone: (step: number) => STEP_READ_DONE_TTS[(step - 1) % STEP_READ_DONE_TTS.length],
   ttsDone: "今日维修完成。核心读数已稳定，主机甲状态良好。",
 } as const;

@@ -6,6 +6,9 @@ import { generateGrade1Session, expectedAnswer, sessionHash } from "@/lib/mainte
 import { DEFAULT_MAINTENANCE_GENERATOR_CONFIG } from "@/config/maintenance-math";
 import { chinaDateStrToDbDate } from "@/lib/battle-server";
 
+/** 单次维修合理上限（毫秒），防止异常值 */
+const MAX_MAINTENANCE_DURATION_MS = 24 * 60 * 60 * 1000;
+
 export async function POST(request: Request) {
   const auth = await requireStudent();
   if (!auth.ok) return auth.response;
@@ -42,6 +45,12 @@ export async function POST(request: Request) {
 
   const body = await request.json().catch(() => ({}));
   const answers = body.answers as unknown;
+  const durationMsRaw = (body as { durationMs?: unknown }).durationMs;
+
+  if (typeof durationMsRaw !== "number" || !Number.isFinite(durationMsRaw)) {
+    return NextResponse.json({ error: "durationMs 需为数字（毫秒）", code: "INVALID_BODY" }, { status: 400 });
+  }
+  const durationMs = Math.max(0, Math.min(Math.round(durationMsRaw), MAX_MAINTENANCE_DURATION_MS));
 
   if (!Array.isArray(answers) || answers.some((x) => typeof x !== "number" || !Number.isFinite(x))) {
     return NextResponse.json({ error: "answers 需为数字数组", code: "INVALID_BODY" }, { status: 400 });
@@ -80,6 +89,7 @@ export async function POST(request: Request) {
       completedOn,
       correctCount: spec.questions.length,
       totalCount: spec.questions.length,
+      durationMs,
       generatorId: spec.meta.generatorId,
       sessionHash: hash,
     },
