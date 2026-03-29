@@ -11,7 +11,7 @@ export const battleSettings = {
   minPointsEarnedToday: 5,
   /** 计入「当日任务积分门槛」：默认仅家长确认任务后的奖励 */
   eligiblePointsLogTypesForThreshold: ["TASK_REWARD"] as const satisfies readonly PointsLogType[],
-  winProbability: 0.6,
+  winProbability: 0.75,
   /**
    * 胜利后按权重抽一档（权重之和应为 1）。
    * - points：固定积分

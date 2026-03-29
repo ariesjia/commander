@@ -35,7 +35,7 @@
 1. 学生请求「开始战斗」（单次 API 即可完成裁决 + 落库，避免前端篡改）。
 2. 服务端校验资格（2.1）与当日是否已战。
 3. 从敌人配置池 **均匀随机** 选一个敌人（首批约 **8** 个，持续以配置扩充）。
-4. 使用可配置概率判定 **胜利** 或 **失败**（默认胜利概率 **40%**，**配置文件**）。
+4. 使用可配置概率判定 **胜利** 或 **失败**（默认胜利概率 **75%**，**配置文件**）。
 5. 响应中返回：`outcome`（`WIN` \| `LOSE`）、`narrative`（一句话胜/负描述）、敌人展示信息（名称、描述、技能名列表、图片 URL 等）。
 6. **失败**：不发放奖励，仍记一条战斗记录（便于统计与防重复）。
 7. **胜利**：进入奖励解析（2.3）；若本次奖励为积分，则在同一事务内更新学生积分并写入 `PointsLog`。
@@ -136,7 +136,7 @@ export const battleSettings = {
   minPointsEarnedToday: 5,
   /** 计入「当日任务积分门槛」：默认仅家长确认任务后的奖励 */
   eligiblePointsLogTypesForThreshold: ["TASK_REWARD"] as const,
-  winProbability: 0.6,
+  winProbability: 0.75,
   /** 胜利后按权重抽一档：积分或随机道具（见 src/lib/battle-settings.ts） */
   winBattleRewards: [
     { weight: 0.3, kind: "points", amount: 1 },
