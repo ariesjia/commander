@@ -3,7 +3,7 @@
  */
 export const MAINTENANCE_MATH_GENERATOR_ID = "grade1-fixed-pool-v1";
 
-export const MAINTENANCE_MATH_GENERATOR_VERSION = "1.2.0";
+export const MAINTENANCE_MATH_GENERATOR_VERSION = "1.3.0";
 
 export const DEFAULT_MAINTENANCE_GENERATOR_CONFIG = {
   questionCount: 10,

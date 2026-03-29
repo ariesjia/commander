@@ -91,11 +91,33 @@ function generateChain4(rand: () => number, id: string): ChainQuestion {
   return { kind: "chain", id, nums: [1, 2, 3, 4], ops: ["+", "+", "+"] };
 }
 
+function generateChain5(rand: () => number, id: string): ChainQuestion {
+  for (let attempt = 0; attempt < 2000; attempt++) {
+    const nums = [
+      randomInt(rand, 0, 20),
+      randomInt(rand, 0, 20),
+      randomInt(rand, 0, 20),
+      randomInt(rand, 0, 20),
+      randomInt(rand, 0, 20),
+    ];
+    const ops: ArithmeticOp[] = [pickOp(rand), pickOp(rand), pickOp(rand), pickOp(rand)];
+    const q: ChainQuestion = { kind: "chain", id: "_", nums, ops };
+    if (isValidQuestion(q)) {
+      return { kind: "chain", id, nums, ops };
+    }
+  }
+  return { kind: "chain", id, nums: [1, 2, 3, 4, 5], ops: ["+", "+", "+", "+"] };
+}
+
+/** 题量 ≥6 时：3 道三数连算 + 2 道四数 + 1 道五数；3≤题量&lt;6 时沿用 2×三数 + 1×四数 */
+const CHAIN_SLOTS_FULL = 6;
+const CHAIN_SLOTS_LEGACY = 3;
+
 /**
  * 同 studentId + dateKey + generator 版本 → 同一题目序列
  *
- * 默认 10 题：7 道两数一步 + 2 道三数连加减 + 1 道四数连加减（均从左到右，中间结果 0–20）。
- * 题量 &lt; 3 时仅抽两数题；≥3 时保留 3 道连算位（2×三数 + 1×四数），其余为两数题。
+ * 默认 10 题（题量≥6）：4 道两数一步 + 3 道三数连加减 + 2 道四数连加减 + 1 道五数连加减（从左到右，中间结果 0–20）。
+ * 题量 &lt; 3 时仅两数题；3≤题量&lt;6 时 3 道连算位（2×三数 + 1×四数），其余两数题。
  */
 export function generateGrade1Session(input: GenerateSessionInput): MaintenanceSessionSpec {
   const config = {
@@ -106,10 +128,11 @@ export function generateGrade1Session(input: GenerateSessionInput): MaintenanceS
   const seed = hash32(seedStr);
   const rand = mulberry32(seed);
 
-  const maxTotal = GRADE1_POOL.length + 3;
+  const maxTotal = GRADE1_POOL.length + CHAIN_SLOTS_FULL;
   const n = Math.min(config.questionCount, maxTotal);
   const wantChains = n >= 3;
-  const binaryCount = wantChains ? n - 3 : n;
+  const chainSlots = wantChains && n >= CHAIN_SLOTS_FULL ? CHAIN_SLOTS_FULL : wantChains ? CHAIN_SLOTS_LEGACY : 0;
+  const binaryCount = wantChains ? n - chainSlots : n;
 
   const indices: number[] = [];
   for (let i = 0; i < GRADE1_POOL.length; i++) indices.push(i);
@@ -136,9 +159,18 @@ export function generateGrade1Session(input: GenerateSessionInput): MaintenanceS
   }
 
   if (wantChains) {
-    questions.push(generateChain3(rand, `${input.dateKey}-c3-${slot++}`));
-    questions.push(generateChain3(rand, `${input.dateKey}-c3-${slot++}`));
-    questions.push(generateChain4(rand, `${input.dateKey}-c4-${slot++}`));
+    if (chainSlots === CHAIN_SLOTS_FULL) {
+      questions.push(generateChain3(rand, `${input.dateKey}-c3-${slot++}`));
+      questions.push(generateChain3(rand, `${input.dateKey}-c3-${slot++}`));
+      questions.push(generateChain3(rand, `${input.dateKey}-c3-${slot++}`));
+      questions.push(generateChain4(rand, `${input.dateKey}-c4-${slot++}`));
+      questions.push(generateChain4(rand, `${input.dateKey}-c4-${slot++}`));
+      questions.push(generateChain5(rand, `${input.dateKey}-c5-${slot++}`));
+    } else {
+      questions.push(generateChain3(rand, `${input.dateKey}-c3-${slot++}`));
+      questions.push(generateChain3(rand, `${input.dateKey}-c3-${slot++}`));
+      questions.push(generateChain4(rand, `${input.dateKey}-c4-${slot++}`));
+    }
   }
 
   return {

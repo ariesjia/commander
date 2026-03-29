@@ -31,7 +31,7 @@ export function isValidQuestion(q: MaintenanceQuestion): boolean {
   }
   const { nums, ops } = q;
   if (nums.length !== ops.length + 1) return false;
-  if (nums.length !== 3 && nums.length !== 4) return false;
+  if (nums.length < 3 || nums.length > 5) return false;
   if (nums.some((n) => !Number.isInteger(n) || n < 0 || n > 20)) return false;
   if (ops.some((o) => o !== "+" && o !== "-")) return false;
   let acc = nums[0]!;

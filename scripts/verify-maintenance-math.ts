@@ -27,9 +27,11 @@ for (const q of a.questions) {
 const binaries = a.questions.filter((q) => q.kind === "binary").length;
 const chains3 = a.questions.filter((q) => q.kind === "chain" && q.nums.length === 3).length;
 const chains4 = a.questions.filter((q) => q.kind === "chain" && q.nums.length === 4).length;
-assert.equal(binaries, 7, "默认 10 题含 7 道两数一步");
-assert.equal(chains3, 2, "含 2 道三数连加减");
-assert.equal(chains4, 1, "含 1 道四数连加减");
+const chains5 = a.questions.filter((q) => q.kind === "chain" && q.nums.length === 5).length;
+assert.equal(binaries, 4, "默认 10 题含 4 道两数一步");
+assert.equal(chains3, 3, "含 3 道三数连加减");
+assert.equal(chains4, 2, "含 2 道四数连加减");
+assert.equal(chains5, 1, "含 1 道五数连加减");
 assert.equal(a.questions.length, 10, "默认题量为 10");
 
 console.log("maintenance-math verify: ok", a.questions.length, "questions");

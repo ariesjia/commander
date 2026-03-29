@@ -35,11 +35,16 @@ export const MAINTENANCE_COPY = {
 
   /** 工单加载完成 → 需用户点击后再朗读（移动端 Speech 依赖手势） */
   readyTitle: "工单已就绪",
-  readyBody: "点击下方按钮开始检修。首次点击会开启朗读。",
+  readyBody:
+    "点击下方按钮开始检修。首次点击会朗读开场说明：用口算结果校对机体各部位的仪表读数。",
   readyButton: "开始检修",
 
-  /** 浏览器朗读：维修叙事 + 题目（不单读算式） */
-  ttsSessionStart: "今日维修工单开始。",
+  /**
+   * 浏览器朗读：维修开场背景（随后接第 1 步部位名 + 题目）
+   * 说明口算与「校对机体各部位读数」的关系，避免像纯做题
+   */
+  ttsSessionStart:
+    "今日维修工单开始。各部位仪表要靠算式结果来对齐读数，请你帮忙口算，校对机体各部位的数值。",
   /** 朗读不念「共几步」，界面仍用 stepLabel 显示进度 */
   ttsStepPrompt: (step: number) => `第${step}步，${stepFocus(step)}。${step === 0 ? "请说出算式结果" : ""}`,
   ttsStepReadDone: (step: number) => STEP_READ_DONE_TTS[(step - 1) % STEP_READ_DONE_TTS.length],

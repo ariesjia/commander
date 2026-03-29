@@ -16,6 +16,8 @@ import {
   ENEMY_HIT_SITUATIONS,
   ENEMY_OPENING_SITUATIONS,
   LOSE_PRE_DODGE_TENSION,
+  LOSE_SPARRING_EARLY_LINES,
+  LOSE_SPARRING_LATE_LINES,
   PLAYER_ACTIONS,
   PLAYER_HIT_EXTRAS,
   PLAYER_HIT_EXTRAS_CRIT,
@@ -26,6 +28,8 @@ import {
   randomPick,
   randomPlayerDodgeLine,
   WIN_PRE_DODGE_TENSION,
+  WIN_SPARRING_EARLY_LINES,
+  WIN_SPARRING_LATE_LINES,
 } from "@/lib/battle-narrative-shared";
 
 export type UnlockedBattleSkill = {
@@ -168,7 +172,7 @@ function validateSteps(steps: ServerBattleStep[], outcome: "WIN" | "LOSE"): bool
   return last.p === 0 && last.e === 40;
 }
 
-/** 与现网 battle-step-builder 一致：WIN 末 (64,0)，LOSE 末 (0,40) */
+/** WIN 末 (64,0)，LOSE 末 (0,40)；与客户端无 steps 时直接展示的终点 HP 一致 */
 export function buildBattleStepsFromOutcome(args: {
   outcome: "WIN" | "LOSE";
   enemySkills: readonly string[];
@@ -291,6 +295,15 @@ function tryBuildWin(ctx: {
   ];
 
   steps.push({
+    p: 100,
+    e: eAfterOpen,
+    line: randomPick(WIN_SPARRING_EARLY_LINES, random),
+    fx: strikeFx(random, random() < 0.5 ? "player" : "enemy", {
+      accent: randomStrikeAccent(random),
+    }),
+  });
+
+  steps.push({
     p: p1,
     e: eAfterOpen,
     line: enemyHitLine(
@@ -336,6 +349,15 @@ function tryBuildWin(ctx: {
   });
 
   steps.push({
+    p: pHeal,
+    e: eAfterMid,
+    line: randomPick(WIN_SPARRING_LATE_LINES, random),
+    fx: strikeFx(random, random() < 0.5 ? "enemy" : "player", {
+      accent: randomStrikeAccent(random),
+    }),
+  });
+
+  steps.push({
     p: 64,
     e: eAfterMid,
     line: enemyHitLine(
@@ -368,7 +390,7 @@ function tryBuildWin(ctx: {
       line: `【我方】掷出「${name}」晃了一下对手传感器！`,
       fx: { kind: "item", burst: randomItemBurst(random) },
     };
-    const insertAt = 1 + neutralCount + 1;
+    const insertAt = 1 + neutralCount + 1 + 1;
     steps.splice(insertAt, 0, itemStep);
   }
 
@@ -490,38 +512,49 @@ function tryBuildLose(ctx: {
       line: randomEnemyDodgeLine(counterAction, random),
       fx: { kind: "dodge", dodger: "enemy", motion: randomDodgeMotion(random) },
     },
-    {
-      p: p0,
-      e: e1,
-      line: battleLinePlayerHit(counterAction, dP1, randomPick(PLAYER_HIT_EXTRAS, random)),
-      fx: picked.buff
+  ];
+
+  steps.push({
+    p: p0,
+    e: 100,
+    line: randomPick(LOSE_SPARRING_EARLY_LINES, random),
+    fx: strikeFx(random, random() < 0.5 ? "player" : "enemy", {
+      accent: randomStrikeAccent(random),
+    }),
+  });
+
+  steps.push({
+    p: p0,
+    e: e1,
+    line: battleLinePlayerHit(counterAction, dP1, randomPick(PLAYER_HIT_EXTRAS, random)),
+    fx: picked.buff
+      ? {
+          kind: "buff",
+          style: "buff",
+          variant: skillFxVariant(random),
+          ...(picked.attackLine ? { flareAttackSkill: skillFxVariant(random) } : {}),
+        }
+      : picked.support
         ? {
             kind: "buff",
-            style: "buff",
+            style: "support",
             variant: skillFxVariant(random),
             ...(picked.attackLine ? { flareAttackSkill: skillFxVariant(random) } : {}),
           }
-        : picked.support
-          ? {
-              kind: "buff",
-              style: "support",
-              variant: skillFxVariant(random),
-              ...(picked.attackLine ? { flareAttackSkill: skillFxVariant(random) } : {}),
-            }
-          : strikeFx(random, "player", {
-              accent: randomStrikeAccent(random),
-              ...(picked.attackLine ? { attackSkillVariant: skillFxVariant(random) } : {}),
-            }),
-    },
-    {
-      p: p1,
-      e: e1,
-      line: battleLineEnemyHit(enemyAtk(), dEmid, randomPick(ENEMY_HIT_SITUATIONS, random)),
-      fx: picked.control
-        ? { kind: "control", variant: skillFxVariant(random) }
-        : strikeFx(random, "enemy", { accent: randomStrikeAccent(random) }),
-    },
-  ];
+        : strikeFx(random, "player", {
+            accent: randomStrikeAccent(random),
+            ...(picked.attackLine ? { attackSkillVariant: skillFxVariant(random) } : {}),
+          }),
+  });
+
+  steps.push({
+    p: p1,
+    e: e1,
+    line: battleLineEnemyHit(enemyAtk(), dEmid, randomPick(ENEMY_HIT_SITUATIONS, random)),
+    fx: picked.control
+      ? { kind: "control", variant: skillFxVariant(random) }
+      : strikeFx(random, "enemy", { accent: randomStrikeAccent(random) }),
+  });
 
   if (healSkill && healAmt > 0) {
     steps.push({
@@ -537,6 +570,15 @@ function tryBuildLose(ctx: {
       fx: { kind: "heal", variant: skillFxVariant(random) },
     });
   }
+
+  steps.push({
+    p: pHeal,
+    e: e1,
+    line: randomPick(LOSE_SPARRING_LATE_LINES, random),
+    fx: strikeFx(random, random() < 0.5 ? "enemy" : "player", {
+      accent: randomStrikeAccent(random),
+    }),
+  });
 
   steps.push({
     p: pHeal,
@@ -569,7 +611,7 @@ function tryBuildLose(ctx: {
       line: `【我方】把「${name}」甩进对方视野，干扰读数一瞬间！`,
       fx: { kind: "item", burst: randomItemBurst(random) },
     };
-    const insertAt = 1 + neutralCount + 1;
+    const insertAt = 1 + neutralCount + 1 + 1;
     steps.splice(insertAt, 0, itemStep);
   }
 

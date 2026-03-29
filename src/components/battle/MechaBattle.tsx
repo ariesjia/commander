@@ -12,7 +12,6 @@ import { SPEECH_SYNTHESIS_RATE } from "@/lib/speech-config";
 
 import { BattleArenaFx } from "@/components/battle/BattleArenaFx";
 import type { ServerBattleStep } from "@/components/battle/battle-fx-types";
-import { buildServerBattleSteps } from "@/components/battle/battle-step-builder";
 import {
   BATTLE_START_LINES,
   CLOSING_VOICE_LOSE,
@@ -108,7 +107,7 @@ export type ServerBattlePayload = {
   pointsAwarded?: number;
   /** 胜利奖励明细（积分 + 道具等） */
   rewards?: ServerBattleRewardLine[];
-  /** 服务端生成的演出步骤；无则降级 buildServerBattleSteps */
+  /** 服务端生成的演出步骤；无则跳过过程演出，直接结算 */
   steps?: ServerBattleStep[];
 };
 
@@ -133,8 +132,6 @@ type Props = {
   externalFlow?: boolean;
   /** 服务端演出全部结束（含收尾朗读）后触发，供页面做 BGM 收尾等 */
   onBattlePresentationComplete?: () => void;
-  /** 学生库存道具名（仅战报装饰，不影响服务端战斗结果） */
-  playerInventoryNames?: string[];
 };
 
 export function MechaBattle({
@@ -145,7 +142,6 @@ export function MechaBattle({
   serverBattle = null,
   externalFlow = false,
   onBattlePresentationComplete,
-  playerInventoryNames = [],
 }: Props) {
   const reduceMotionPreferred = useReducedMotion();
   /** 仅 true 视为减少动效；忽略 null→false，避免 triggerFx/战斗 effect 依赖抖动导致演出被 cancel、战报空白 */
@@ -251,39 +247,42 @@ export function MechaBattle({
       setHp({ p: 100, e: 100, eMax: 100 });
       setLog([]);
 
-      const skillLine =
-        serverBattle.enemy.skills.length > 0
-          ? `敌人会用的招：${serverBattle.enemy.skills.join("、")}`
-          : "";
+      const steps = serverBattle.steps?.length ? serverBattle.steps : null;
 
-      const openLines = [
-        `—— 遇到敌人：${serverBattle.enemy.name} ——`,
-        ...(skillLine ? [skillLine] : []),
-        randomPick(COMBAT_ATMOSPHERE_LINES),
-        randomPick(BATTLE_START_LINES),
-      ];
+      if (steps) {
+        const skillLine =
+          serverBattle.enemy.skills.length > 0
+            ? `敌人会用的招：${serverBattle.enemy.skills.join("、")}`
+            : "";
 
-      for (const line of openLines) {
-        if (cancelled) return;
-        setLog((prev) => [...prev, line]);
-        await afterLine(line);
+        const openLines = [
+          `—— 遇到敌人：${serverBattle.enemy.name} ——`,
+          ...(skillLine ? [skillLine] : []),
+          randomPick(COMBAT_ATMOSPHERE_LINES),
+          randomPick(BATTLE_START_LINES),
+        ];
+
+        for (const line of openLines) {
+          if (cancelled) return;
+          setLog((prev) => [...prev, line]);
+          await afterLine(line);
+        }
       }
 
-      const steps: ServerBattleStep[] =
-        serverBattle.steps && serverBattle.steps.length > 0
-          ? serverBattle.steps
-          : buildServerBattleSteps({
-              outcome: serverBattle.outcome,
-              enemySkills: serverBattle.enemy.skills,
-              inventoryNames: playerInventoryNames,
-            });
-
-      for (const s of steps) {
-        if (cancelled) return;
-        setHp({ p: s.p, e: s.e, eMax: 100 });
-        setLog((prev) => [...prev.slice(-12), s.line]);
-        playBattleFx(s.fx);
-        await afterLine(s.line);
+      if (steps) {
+        for (const s of steps) {
+          if (cancelled) return;
+          setHp({ p: s.p, e: s.e, eMax: 100 });
+          setLog((prev) => [...prev.slice(-12), s.line]);
+          playBattleFx(s.fx);
+          await afterLine(s.line);
+        }
+      } else {
+        setHp({
+          p: serverBattle.outcome === "WIN" ? 64 : 0,
+          e: serverBattle.outcome === "WIN" ? 0 : 40,
+          eMax: 100,
+        });
       }
 
       if (cancelled) return;
@@ -338,7 +337,6 @@ export function MechaBattle({
     playBattleFx,
     clearTick,
     onBattlePresentationComplete,
-    playerInventoryNames,
   ]);
 
   const fightingOrEnd = phase === "fighting" || phase === "victory" || phase === "defeat";

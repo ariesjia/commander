@@ -11,24 +11,6 @@ import { api } from "@/lib/api";
 import { registerBattleBgmEl } from "@/lib/battle-bgm-bridge";
 import { warmupSpeechSynthesisFromUserGesture } from "@/lib/battle-speech-gesture";
 import type { BattleStatus, TodayBattleReplay } from "@/types";
-import type { StudentItemsResponse } from "@/types/items";
-
-async function fetchInventoryNamesForBattle(): Promise<string[]> {
-  try {
-    const body = await api.get<StudentItemsResponse>("/api/student/items");
-    return [
-      ...new Set(
-        body.items
-          .filter((r) => r.quantity > 0)
-          .map((r) => r.item.name.trim())
-          .filter(Boolean),
-      ),
-    ];
-  } catch {
-    return [];
-  }
-}
-
 function itemRewardsFromReplay(
   rewards: TodayBattleReplay["rewards"] | undefined,
 ): { label: string; quantity: number; imageUrl?: string }[] {
@@ -102,8 +84,6 @@ export default function StudentBattlePage() {
   const [posting, setPosting] = useState(false);
   const [replayInProgress, setReplayInProgress] = useState(false);
   const [battleMountKey, setBattleMountKey] = useState(0);
-  /** 与本场演出同步的道具名（POST/回放前拉取，避免异步补全导致战报重启） */
-  const [battleInventoryNames, setBattleInventoryNames] = useState<string[]>([]);
   const [battleBgmStopped, setBattleBgmStopped] = useState(false);
   const battleBgmRef = useRef<HTMLAudioElement | null>(null);
   const postBattleBgmStopTimerRef = useRef<number | null>(null);
@@ -178,16 +158,10 @@ export default function StudentBattlePage() {
     void loadStatus();
   }, [loadStatus]);
 
-  /** 预拉库存道具名：开战前就有列表，且与 POST 后再拉取形成双保险（战报装饰依赖非空名称） */
-  useEffect(() => {
-    void fetchInventoryNamesForBattle().then(setBattleInventoryNames);
-  }, []);
-
   const handleBattlePresentationComplete = useCallback(() => {
     setReplayInProgress(false);
     if (presentationFromReplayRef.current) {
       presentationFromReplayRef.current = false;
-      setBattleInventoryNames([]);
       setBattleBgmStopped(false);
       setBattleResult(null);
     }
@@ -218,8 +192,6 @@ export default function StudentBattlePage() {
           : undefined;
       presentationFromReplayRef.current = false;
       setReplayInProgress(true);
-      const invNames = await fetchInventoryNamesForBattle();
-      setBattleInventoryNames(invNames);
       setBattleMountKey((k) => k + 1);
       setBattleResult({
         outcome: data.outcome,
@@ -252,11 +224,8 @@ export default function StudentBattlePage() {
     clearPostBattleBgmTimer();
     setPostError(null);
     setReplayInProgress(true);
-    void fetchInventoryNamesForBattle().then((names) => {
-      setBattleInventoryNames(names);
-      setBattleMountKey((k) => k + 1);
-      setBattleResult(mapReplayToServerPayload(r));
-    });
+    setBattleMountKey((k) => k + 1);
+    setBattleResult(mapReplayToServerPayload(r));
   }, [status?.todayReplay, clearPostBattleBgmTimer]);
 
   const canStart =
@@ -412,13 +381,11 @@ export default function StudentBattlePage() {
           playerSlug={primarySlug}
           playerMechaPoints={pts}
           serverBattle={battleResult}
-          playerInventoryNames={battleInventoryNames}
           externalFlow
           onBattlePresentationComplete={handleBattlePresentationComplete}
           onExit={() => {
             clearPostBattleBgmTimer();
             setBattleBgmStopped(false);
-            setBattleInventoryNames([]);
             setBattleResult(null);
             router.back();
           }}
