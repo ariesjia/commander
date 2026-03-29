@@ -30,7 +30,7 @@ export const ITEM_SEED_DATA: ItemSeedRow[] = [
   },
   {
     slug: "swarm-nine-rocket-pod",
-    name: "九联蜂群火箭巢",
+    name: "九联蜂群火箭炮",
     description:
       "中程火力支援舱。正面九联装微型导弹可扇形齐射，对区域目标做饱和打击；底部旋台便于在机动中保持射界。",
     imageUrl: "/item/0004.png",
@@ -39,7 +39,7 @@ export const ITEM_SEED_DATA: ItemSeedRow[] = [
   },
   {
     slug: "hex-thermal-missile-pod",
-    name: "六联热能导弹巢",
+    name: "六联热能导弹炮",
     description:
       "六管并列热能导弹巢，适合短点射与覆盖轰炸。炮口预热呈暖色辉光，侧舷冷媒灯提示热控与待发状态。",
     imageUrl: "/item/0005.png",
