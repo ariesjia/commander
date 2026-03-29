@@ -139,10 +139,10 @@ export const battleSettings = {
   winProbability: 0.75,
   /** 胜利后按权重抽一档：积分或随机道具（见 src/lib/battle-settings.ts） */
   winBattleRewards: [
-    { weight: 0.3, kind: "points", amount: 1 },
+    { weight: 0.2, kind: "points", amount: 1 },
     { weight: 0.15, kind: "points", amount: 2 },
     { weight: 0.05, kind: "points", amount: 3 },
-    { weight: 0.5, kind: "item_random" },
+    { weight: 0.6, kind: "item_random" },
   ] as const,
 };
 ```

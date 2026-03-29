@@ -18,10 +18,10 @@ export const battleSettings = {
    * - item_random：从当前启用的 Item 中均匀随机一件，数量 +1
    */
   winBattleRewards: [
-    { weight: 0.3, kind: "points" as const, amount: 1 },
+    { weight: 0.2, kind: "points" as const, amount: 1 },
     { weight: 0.15, kind: "points" as const, amount: 2 },
     { weight: 0.05, kind: "points" as const, amount: 3 },
-    { weight: 0.5, kind: "item_random" as const },
+    { weight: 0.6, kind: "item_random" as const },
   ] as const,
 };
 
