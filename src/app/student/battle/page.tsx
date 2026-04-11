@@ -4,7 +4,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useData } from "@/contexts/DataContext";
 import { StudentPageHeader } from "@/components/student/StudentPageHeader";
-import { MechaBattle, type ServerBattlePayload } from "@/components/battle/MechaBattle";
+import {
+  MechaBattle,
+  stopBattlePageSpeech,
+  type ServerBattlePayload,
+} from "@/components/battle/MechaBattle";
 import type { ServerBattleStep } from "@/components/battle/battle-fx-types";
 import { useMecha, getLevelFromMecha } from "@/hooks/useMecha";
 import { api } from "@/lib/api";
@@ -245,7 +249,7 @@ export default function StudentBattlePage() {
 
   return (
     <div className="flex flex-col gap-5 pb-6">
-      <StudentPageHeader title="每日战斗" />
+      <StudentPageHeader title="每日战斗" onNavigateBack={stopBattlePageSpeech} />
 
       {statusError && (
         <p className="text-sm text-s-danger px-1">{statusError}</p>
@@ -384,6 +388,7 @@ export default function StudentBattlePage() {
           externalFlow
           onBattlePresentationComplete={handleBattlePresentationComplete}
           onExit={() => {
+            stopBattlePageSpeech();
             clearPostBattleBgmTimer();
             setBattleBgmStopped(false);
             setBattleResult(null);

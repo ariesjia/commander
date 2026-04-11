@@ -17,6 +17,8 @@ export type StudentPageHeaderProps = {
   subtitle?: string;
   /** 默认 `router.back()`；传入如 `/student` 则回学生首页 */
   backHref?: string;
+  /** 点击返回时先同步调用（如停止 TTS），再执行跳转 */
+  onNavigateBack?: () => void;
   className?: string;
 };
 
@@ -24,18 +26,37 @@ export type StudentPageHeaderProps = {
  * 学生子页统一顶栏：左侧返回、居中标题（可选副标题）。
  * 与机甲库 / 道具库等页面视觉一致。
  */
-export function StudentPageHeader({ title, subtitle, backHref, className }: StudentPageHeaderProps) {
+export function StudentPageHeader({
+  title,
+  subtitle,
+  backHref,
+  onNavigateBack,
+  className,
+}: StudentPageHeaderProps) {
   const router = useRouter();
 
   const backClassName =
     "absolute left-0 flex h-9 w-9 items-center justify-center rounded-lg text-s-text-secondary transition-colors hover:bg-white/10 hover:text-s-text touch-manipulation";
 
   const backControl = backHref ? (
-    <Link href={backHref} className={backClassName} aria-label="返回">
+    <Link
+      href={backHref}
+      className={backClassName}
+      aria-label="返回"
+      onClick={() => onNavigateBack?.()}
+    >
       <BackIcon />
     </Link>
   ) : (
-    <button type="button" onClick={() => router.back()} className={backClassName} aria-label="返回">
+    <button
+      type="button"
+      onClick={() => {
+        onNavigateBack?.();
+        router.back();
+      }}
+      className={backClassName}
+      aria-label="返回"
+    >
       <BackIcon />
     </button>
   );

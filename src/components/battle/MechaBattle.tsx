@@ -89,6 +89,13 @@ function speakBattleLine(text: string, opts?: SpeakBattleLineOptions): Promise<v
   });
 }
 
+/** 离开战斗页或打断演出：停止朗读并恢复 BGM 响度 */
+export function stopBattlePageSpeech() {
+  if (typeof window !== "undefined" && battleSpeechSupported()) {
+    window.speechSynthesis.cancel();
+  }
+  setBattleBgmDucked(false);
+}
 
 /** 与 POST /api/student/battle、todayReplay.rewards 对齐 */
 export type ServerBattleRewardLine = {
@@ -217,9 +224,23 @@ export function MechaBattle({
     /** 朗读：一句念完再留白（句间 1 秒），再进入下一行 */
     const pauseAfterSpokenLineMs = 1000;
 
+    /** 离开页面时 abort()，此处须立即结束等待，否则会卡在无语音的 setTimeout 里 */
     const delay = (ms: number) =>
-      new Promise<void>((r) => {
-        window.setTimeout(r, ms);
+      new Promise<void>((resolve) => {
+        if (speechAbort.signal.aborted) {
+          resolve();
+          return;
+        }
+        const id = window.setTimeout(() => {
+          speechAbort.signal.removeEventListener("abort", onAbort);
+          resolve();
+        }, ms);
+        const onAbort = () => {
+          clearTimeout(id);
+          speechAbort.signal.removeEventListener("abort", onAbort);
+          resolve();
+        };
+        speechAbort.signal.addEventListener("abort", onAbort);
       });
 
     const afterLine = async (line: string) => {
@@ -286,7 +307,7 @@ export function MechaBattle({
       }
 
       if (cancelled) return;
-      await new Promise<void>((r) => window.setTimeout(r, reducedMotion ? 200 : 420));
+      await delay(reducedMotion ? 200 : 420);
       if (cancelled) return;
 
       setPhase(serverBattle.outcome === "WIN" ? "victory" : "defeat");
@@ -319,16 +340,21 @@ export function MechaBattle({
       if (!cancelled) onBattlePresentationComplete?.();
     };
 
+    const onPageHide = () => {
+      cancelled = true;
+      speechAbort.abort();
+      stopBattlePageSpeech();
+    };
+    window.addEventListener("pagehide", onPageHide);
+
     void run();
 
     return () => {
       cancelled = true;
       speechAbort.abort();
       clearTick();
-      if (typeof window !== "undefined" && battleSpeechSupported()) {
-        window.speechSynthesis.cancel();
-      }
-      setBattleBgmDucked(false);
+      stopBattlePageSpeech();
+      window.removeEventListener("pagehide", onPageHide);
     };
   }, [
     serverBattle,
