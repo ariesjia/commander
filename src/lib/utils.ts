@@ -60,6 +60,16 @@ export function getTodayStr(): string {
   return toChinaDateStr(new Date());
 }
 
+/** 中国时区日历日加减（用于战斗记录等按自然日对齐） */
+export function addCalendarDaysChina(dateStr: string, deltaDays: number): string {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const noon = new Date(
+    `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}T12:00:00+08:00`,
+  );
+  noon.setDate(noon.getDate() + deltaDays);
+  return toChinaDateStr(noon);
+}
+
 /** 将 Date 转为中国时区的日期字符串 YYYY-MM-DD */
 export function toChinaDateStr(date: Date): string {
   const formatter = new Intl.DateTimeFormat("zh-CN", {

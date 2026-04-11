@@ -2,7 +2,7 @@ import { prisma } from "@/lib/db";
 import { BattleOutcome, PointsLogType, Prisma } from "@prisma/client";
 import { battleSettings, type BattleRewardGrant } from "@/lib/battle-settings";
 import { getChinaDayBounds, type BattleRewardRoll } from "@/lib/battle";
-import { getTodayStr } from "@/lib/utils";
+import { addCalendarDaysChina, getTodayStr } from "@/lib/utils";
 import { pointsToNumber } from "@/lib/points-number";
 import { BATTLE_ENEMIES } from "@/lib/battle-enemies";
 import type { ServerBattleStep } from "@/components/battle/battle-fx-types";
@@ -253,4 +253,29 @@ export async function getBattleStatusForStudent(
 
 export function isPrismaUniqueViolation(e: unknown): boolean {
   return e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002";
+}
+
+/**
+ * 最近 `lookbackDays` 个上海日历日（不含 todayStr 当天）是否有过胜利。
+ * 用于「连败保底」：若从未胜利则本场可强制必胜。
+ */
+export async function studentHadBattleWinInRecentCalendarDays(
+  studentId: string,
+  todayStr: string,
+  lookbackDays: number,
+): Promise<boolean> {
+  if (lookbackDays <= 0) return false;
+  const foughtOnValues: Date[] = [];
+  for (let i = 1; i <= lookbackDays; i++) {
+    foughtOnValues.push(chinaDateStrToDbDate(addCalendarDaysChina(todayStr, -i)));
+  }
+  const found = await prisma.studentBattleLog.findFirst({
+    where: {
+      studentId,
+      outcome: BattleOutcome.WIN,
+      foughtOn: { in: foughtOnValues },
+    },
+    select: { id: true },
+  });
+  return Boolean(found);
 }

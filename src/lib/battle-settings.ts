@@ -13,6 +13,11 @@ export const battleSettings = {
   eligiblePointsLogTypesForThreshold: ["TASK_REWARD"] as const satisfies readonly PointsLogType[],
   winProbability: 0.75,
   /**
+   * 回看最近若干「上海日历日」（不含今天）是否有过胜利。
+   * 若这些天内从未胜利（含未开战或全败），则本场战斗必为胜利。
+   */
+  pityWinIfNoVictoryInLastDays: 3,
+  /**
    * 胜利后按权重抽一档（权重之和应为 1）。
    * - points：固定积分
    * - item_random：从当前启用的 Item 中均匀随机一件，数量 +1

@@ -14,6 +14,7 @@ import {
   getBattleStatusForStudent,
   isPrismaUniqueViolation,
   resolveWinBattleRewardRoll,
+  studentHadBattleWinInRecentCalendarDays,
 } from "@/lib/battle-server";
 import { getTodayStr } from "@/lib/utils";
 import { pointsToNumber } from "@/lib/points-number";
@@ -83,7 +84,16 @@ export async function POST() {
   }
 
   const enemy = pickRandomEnemy();
-  const outcome = rollBattleOutcome(battleSettings.winProbability);
+
+  const lookback = battleSettings.pityWinIfNoVictoryInLastDays;
+  const hadWinInLookback =
+    lookback > 0
+      ? await studentHadBattleWinInRecentCalendarDays(studentId, todayStr, lookback)
+      : true;
+  const outcome: "WIN" | "LOSE" = hadWinInLookback
+    ? rollBattleOutcome(battleSettings.winProbability)
+    : "WIN";
+
   const narrative = pickNarrative(enemy, outcome);
 
   const winRewardRoll = outcome === "WIN" ? rollWinBattleRewards() : null;

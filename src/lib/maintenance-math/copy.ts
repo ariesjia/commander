@@ -29,6 +29,10 @@ export const MAINTENANCE_COPY = {
   submitAllWrong: "还有读数不对，请再试一次",
   doneTitle: "今日维修完成",
   doneBody: "核心读数已稳定，主机甲状态良好。",
+  /** 完成时约 50% 额外掉落道具的展示标题 */
+  doneBonusTitle: "检修补给",
+  doneBonusLine: (name: string) => `获得道具「${name}」×1`,
+  ttsBonusReward: (name: string) => `本次检修补给：获得道具 ${name}。`,
   disabled: "家长已关闭机甲维修，可在家长设置中开启。",
   alreadyDone: "今日工单已完成",
   loading: "加载工单…",
@@ -49,4 +53,4 @@ export const MAINTENANCE_COPY = {
   ttsStepPrompt: (step: number) => `第${step}步，${stepFocus(step)}。${step === 0 ? "请说出算式结果" : ""}`,
   ttsStepReadDone: (step: number) => STEP_READ_DONE_TTS[(step - 1) % STEP_READ_DONE_TTS.length],
   ttsDone: "今日维修完成。核心读数已稳定，主机甲状态良好。",
-} as const;
+};

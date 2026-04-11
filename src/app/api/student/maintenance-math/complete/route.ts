@@ -3,7 +3,10 @@ import { prisma } from "@/lib/db";
 import { requireStudent, getStudentId } from "@/lib/api-auth";
 import { getTodayStr } from "@/lib/utils";
 import { generateGrade1Session, expectedAnswer, sessionHash } from "@/lib/maintenance-math";
-import { DEFAULT_MAINTENANCE_GENERATOR_CONFIG } from "@/config/maintenance-math";
+import {
+  DEFAULT_MAINTENANCE_GENERATOR_CONFIG,
+  MAINTENANCE_BONUS_ITEM_PROBABILITY,
+} from "@/config/maintenance-math";
 import { chinaDateStrToDbDate } from "@/lib/battle-server";
 
 /** 单次维修合理上限（毫秒），防止异常值 */
@@ -83,21 +86,48 @@ export async function POST(request: Request) {
 
   const hash = sessionHash(spec);
 
-  await prisma.studentMaintenanceMathLog.create({
-    data: {
-      studentId,
-      completedOn,
-      correctCount: spec.questions.length,
-      totalCount: spec.questions.length,
-      durationMs,
-      generatorId: spec.meta.generatorId,
-      sessionHash: hash,
-    },
+  const { created, bonusReward } = await prisma.$transaction(async (tx) => {
+    let bonusItemId: string | null = null;
+    let bonusReward: { slug: string; name: string; imageUrl: string } | null = null;
+
+    if (Math.random() < MAINTENANCE_BONUS_ITEM_PROBABILITY) {
+      const items = await tx.item.findMany({
+        where: { isActive: true },
+        select: { id: true, slug: true, name: true, imageUrl: true },
+      });
+      if (items.length > 0) {
+        const pick = items[Math.floor(Math.random() * items.length)]!;
+        bonusItemId = pick.id;
+        bonusReward = { slug: pick.slug, name: pick.name, imageUrl: pick.imageUrl };
+        await tx.studentItem.upsert({
+          where: { studentId_itemId: { studentId, itemId: pick.id } },
+          create: { studentId, itemId: pick.id, quantity: 1 },
+          update: { quantity: { increment: 1 } },
+        });
+      }
+    }
+
+    const created = await tx.studentMaintenanceMathLog.create({
+      data: {
+        studentId,
+        completedOn,
+        correctCount: spec.questions.length,
+        totalCount: spec.questions.length,
+        durationMs,
+        generatorId: spec.meta.generatorId,
+        sessionHash: hash,
+        bonusItemId,
+      },
+    });
+
+    return { created, bonusReward };
   });
 
   return NextResponse.json({
     ok: true,
     dateKey,
     message: "今日维修完成",
+    completedAt: created.completedAt.toISOString(),
+    bonusReward,
   });
 }

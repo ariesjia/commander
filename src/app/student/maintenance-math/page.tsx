@@ -21,10 +21,18 @@ type SessionActive = {
   sessionHash: string;
 };
 
+type MaintenanceBonusReward = {
+  slug: string;
+  name: string;
+  imageUrl: string;
+};
+
 type SessionCompleted = {
   status: "completed";
   dateKey: string;
   completedAt: string;
+  /** 完成时约 50% 概率记录的额外道具；未中奖为 null */
+  bonusReward: MaintenanceBonusReward | null;
 };
 
 export default function MaintenanceMathPage() {
@@ -37,7 +45,6 @@ export default function MaintenanceMathPage() {
   const [answers, setAnswers] = useState<number[]>([]);
   const [input, setInput] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [done, setDone] = useState(false);
   const [localErr, setLocalErr] = useState<string | null>(null);
   /** 连续答对步数（本题组内） */
   const [combo, setCombo] = useState(0);
@@ -118,11 +125,24 @@ export default function MaintenanceMathPage() {
     speakStepPrompt(0, first);
   }, [active, speakStepPrompt]);
 
-  /** 维修完成页：朗读收尾叙事 */
+  const completed = session?.status === "completed";
+  const bonusName = completed ? session.bonusReward?.name : undefined;
+
+  /** 维修完成页：收尾叙事 + 有补给时追加朗读 */
   useEffect(() => {
-    if (session?.status !== "completed" && !done) return;
-    speakNow(MAINTENANCE_COPY.ttsDone);
-  }, [session?.status, done, speakNow]);
+    if (!completed) return;
+    let cancelled = false;
+    void (async () => {
+      await speakNow(MAINTENANCE_COPY.ttsDone);
+      if (cancelled) return;
+      if (bonusName) {
+        await speakNow(MAINTENANCE_COPY.ttsBonusReward(bonusName));
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [completed, bonusName, speakNow]);
 
   const appendDigit = (d: string) => {
     if (input.length >= 3) return;
@@ -143,11 +163,20 @@ export default function MaintenanceMathPage() {
     const durationMs =
       started != null ? Math.max(0, Math.round(Date.now() - started)) : 0;
     try {
-      await api.post("/api/student/maintenance-math/complete", {
+      const res = await api.post<{
+        dateKey: string;
+        completedAt: string;
+        bonusReward: MaintenanceBonusReward | null;
+      }>("/api/student/maintenance-math/complete", {
         answers: finalAnswers,
         durationMs,
       });
-      setDone(true);
+      setSession({
+        status: "completed",
+        dateKey: res.dateKey,
+        completedAt: res.completedAt,
+        bonusReward: res.bonusReward ?? null,
+      });
       await refetch();
     } catch (e: unknown) {
       const err = e as Error & { status?: number; body?: { code?: string; error?: string } };
@@ -261,13 +290,31 @@ export default function MaintenanceMathPage() {
     );
   }
 
-  if (session.status === "completed" || done) {
+  if (session.status === "completed") {
     return (
       <div className="flex flex-col gap-5 pb-6">
         <StudentPageHeader title={MAINTENANCE_COPY.doneTitle} backHref="/student" />
         <div className="flex flex-col items-center gap-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-6 py-10 text-center">
           <Wrench className="text-emerald-300" size={40} strokeWidth={1.5} />
           <p className="text-sm text-emerald-200/80">{MAINTENANCE_COPY.doneBody}</p>
+          {session.bonusReward && (
+            <div className="mt-4 w-full max-w-sm rounded-xl border border-cyan-400/35 bg-[#0a1628]/90 px-4 py-4 text-left shadow-[inset_0_0_24px_rgba(0,212,255,0.06)]">
+              <p className="text-center text-[11px] font-semibold uppercase tracking-[0.2em] text-cyan-300/85">
+                {MAINTENANCE_COPY.doneBonusTitle}
+              </p>
+              <div className="mt-3 flex flex-col items-center gap-2">
+                {/* eslint-disable-next-line @next/next/no-img-element -- 道具图 URL 来自库 */}
+                <img
+                  src={session.bonusReward.imageUrl}
+                  alt=""
+                  className="h-16 w-16 object-contain"
+                />
+                <p className="text-sm font-medium text-cyan-100/95">
+                  {MAINTENANCE_COPY.doneBonusLine(session.bonusReward.name)}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );

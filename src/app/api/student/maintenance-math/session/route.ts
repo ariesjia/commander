@@ -34,6 +34,9 @@ export async function GET() {
     where: {
       studentId_completedOn: { studentId, completedOn },
     },
+    include: {
+      bonusItem: { select: { slug: true, name: true, imageUrl: true } },
+    },
   });
 
   if (existing) {
@@ -41,6 +44,13 @@ export async function GET() {
       status: "completed" as const,
       dateKey,
       completedAt: existing.completedAt.toISOString(),
+      bonusReward: existing.bonusItem
+        ? {
+            slug: existing.bonusItem.slug,
+            name: existing.bonusItem.name,
+            imageUrl: existing.bonusItem.imageUrl,
+          }
+        : null,
     });
   }
 

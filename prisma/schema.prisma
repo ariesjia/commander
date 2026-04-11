@@ -66,6 +66,9 @@ model StudentMaintenanceMathLog {
   durationMs   Int      @default(0)
   generatorId  String
   sessionHash  String?
+  /// 维修完成额外掉落（约 50% 概率抽一件活跃道具）
+  bonusItemId String?
+  bonusItem   Item?    @relation(fields: [bonusItemId], references: [id], onDelete: SetNull)
 
   @@unique([studentId, completedOn])
   @@index([studentId])
@@ -91,6 +94,7 @@ model Item {
   updatedAt   DateTime @updatedAt
 
   studentItems StudentItem[]
+  maintenanceMathBonusDrops StudentMaintenanceMathLog[]
 }
 
 /// 学生持有数量（堆叠）
