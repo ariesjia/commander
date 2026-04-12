@@ -13,6 +13,10 @@ import { api } from "@/lib/api";
 import { useData } from "@/contexts/DataContext";
 import { DRIVING_GUIDE_COPY } from "@/lib/driving-guide/copy";
 import { DRIVING_GUIDE_STEPS_PER_SESSION } from "@/lib/driving-guide/constants";
+import {
+  speakIntroNarration,
+  cancelIntroSpeech,
+} from "@/lib/driving-guide/speech";
 
 type StepChar = { char: string; pinyin: string };
 type Step = { stepIndex: number; word: string; chars: StepChar[] };
@@ -37,6 +41,7 @@ export default function DrivingGuidePage() {
   const [feedback, setFeedback] = useState<{ kind: "ok" | "bad"; text: string } | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [finished, setFinished] = useState(false);
+  const [introPlaying, setIntroPlaying] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -74,9 +79,19 @@ export default function DrivingGuidePage() {
     void load();
   }, [drivingGuide.enabled, load, router]);
 
+  useEffect(() => () => cancelIntroSpeech(), []);
+
   const current = session?.steps[stepIdx];
 
-  const handleStart = () => {
+  const handleStart = async () => {
+    if (introPlaying) return;
+    setIntroPlaying(true);
+    setFeedback(null);
+    try {
+      await speakIntroNarration(DRIVING_GUIDE_COPY.readyIntroNarration);
+    } finally {
+      setIntroPlaying(false);
+    }
     setSessionStarted(true);
     setStepIdx(0);
     setFeedback(null);
@@ -182,10 +197,11 @@ export default function DrivingGuidePage() {
           </p>
           <button
             type="button"
-            onClick={handleStart}
-            className="mt-8 w-full max-w-sm rounded-xl bg-s-primary/90 py-3.5 text-sm font-semibold text-[#0a0f18] shadow-[0_0_24px_rgba(99,102,241,0.2)]"
+            disabled={introPlaying}
+            onClick={() => void handleStart()}
+            className="mt-8 w-full max-w-sm rounded-xl bg-s-primary/90 py-3.5 text-sm font-semibold text-[#0a0f18] shadow-[0_0_24px_rgba(99,102,241,0.2)] disabled:opacity-70"
           >
-            {DRIVING_GUIDE_COPY.readyButton}
+            {introPlaying ? DRIVING_GUIDE_COPY.readyListening : DRIVING_GUIDE_COPY.readyButton}
           </button>
         </div>
       </div>

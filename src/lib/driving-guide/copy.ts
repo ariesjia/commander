@@ -2,9 +2,20 @@
 
 export const DRIVING_GUIDE_COPY = {
   pageTitle: "驾驶指南",
-  readyTitle: "识字校准",
-  readyBody: "按拼音在手写区写出词语。写对会有鼓励，再试一次也没关系。本练习不朗读语音，请专注看拼音与书写。",
+  /**
+   * 准备页：与「每日维修」工单页同构——先说明为何要练、与机甲叙事的关系，再提示点击后朗读。
+   * 不在这里贴逐步操作细则（细则在朗读里）。
+   */
+  readyTitle: "指南已就绪",
+  readyBody:
+    "点击下方按钮开始。首次点击会朗读开场说明：识字手写是驾驶舱出舱前的字形校准，让控制台能辨认你的指令笔迹，与机体同步。接下来请按拼音在感应区书写。",
+  /**
+   * 点击「开始」后朗读（不显示在页面上）；衔接叙事 + 操作提示。
+   */
+  readyIntroNarration:
+    "今日驾驶指南开始。识字校准能让驾驶舱确认你的字形与指令一致。请看拼音，在手写区写出词语。写对会有鼓励，再试一次也没关系。请专注看拼音与书写。",
   readyButton: "开始",
+  readyListening: "聆听说明中…",
   progressLabel: (current: number, total: number) => `第 ${current}/${total} 词`,
   clear: "清除",
   submit: "提交",
