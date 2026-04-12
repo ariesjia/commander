@@ -25,6 +25,7 @@ import {
   randomEnemyDodgeLine,
   randomFinishLoseLine,
   randomFinishWinLine,
+  randomInventoryBattleFlairLine,
   randomPick,
   randomPlayerDodgeLine,
   WIN_PRE_DODGE_TENSION,
@@ -387,7 +388,7 @@ function tryBuildWin(ctx: {
     const itemStep: ServerBattleStep = {
       p: 100,
       e: eAfterOpen,
-      line: `【我方】掷出「${name}」晃了一下对手传感器！`,
+      line: randomInventoryBattleFlairLine(name, "win", random),
       fx: { kind: "item", burst: randomItemBurst(random) },
     };
     const insertAt = 1 + neutralCount + 1 + 1;
@@ -608,7 +609,7 @@ function tryBuildLose(ctx: {
     const itemStep: ServerBattleStep = {
       p: p0,
       e: 100,
-      line: `【我方】把「${name}」甩进对方视野，干扰读数一瞬间！`,
+      line: randomInventoryBattleFlairLine(name, "lose", random),
       fx: { kind: "item", burst: randomItemBurst(random) },
     };
     const insertAt = 1 + neutralCount + 1 + 1;
