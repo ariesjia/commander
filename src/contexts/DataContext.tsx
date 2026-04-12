@@ -34,6 +34,9 @@ interface DataState {
   updateBaseScore: (v: BaseScore) => Promise<void>;
   maintenanceMath: MaintenanceMathStatus;
   updateMaintenanceMathEnabled: (enabled: boolean) => Promise<void>;
+  /** 每日战斗所需当日任务积分门槛（0–10，0 表示不门槛） */
+  dailyBattleMinTaskPoints: number;
+  updateDailyBattleMinTaskPoints: (n: number) => Promise<void>;
 
   addTask: (t: Omit<Task, "id" | "createdAt">) => Promise<void>;
   updateTask: (id: string, t: Partial<Task>) => Promise<void>;
@@ -93,6 +96,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     completedToday: false,
     date: "",
   });
+  const [dailyBattleMinTaskPoints, setDailyBattleMinTaskPoints] = useState(5);
   const [isLoading, setIsLoading] = useState(true);
 
   const refetch = useCallback(async () => {
@@ -113,6 +117,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
             showPinyin?: boolean;
             baseScore?: number;
             maintenanceMath?: MaintenanceMathStatus;
+            dailyBattleMinTaskPoints?: number;
           }>("/api/parent/dashboard"),
           api.get<Array<Task & { status: string; completedAt?: string }>>("/api/parent/tasks"),
           api.get<Reward[]>("/api/parent/rewards"),
@@ -145,6 +150,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         setBaseScore((dashboard.baseScore ?? 1) as BaseScore);
         if (dashboard.maintenanceMath) {
           setMaintenanceMath(dashboard.maintenanceMath);
+        }
+        if (typeof dashboard.dailyBattleMinTaskPoints === "number") {
+          setDailyBattleMinTaskPoints(dashboard.dailyBattleMinTaskPoints);
         }
       } catch {
         // not logged in or error
@@ -293,6 +301,15 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     [refetch],
   );
 
+  const updateDailyBattleMinTaskPoints = useCallback(
+    async (n: number) => {
+      await api.put("/api/parent/settings", { dailyBattleMinTaskPoints: n });
+      setDailyBattleMinTaskPoints(n);
+      await refetch();
+    },
+    [refetch],
+  );
+
   return (
     <DataContext.Provider
       value={{
@@ -314,6 +331,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         updateBaseScore,
         maintenanceMath,
         updateMaintenanceMathEnabled,
+        dailyBattleMinTaskPoints,
+        updateDailyBattleMinTaskPoints,
         addTask,
         updateTask,
         deleteTask,

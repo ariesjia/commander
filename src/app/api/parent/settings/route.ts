@@ -10,13 +10,19 @@ export async function GET(request: Request) {
 
   const parent = await prisma.parent.findUniqueOrThrow({
     where: { id: auth.parentId },
-    select: { showPinyin: true, baseScore: true, maintenanceMathEnabled: true },
+    select: {
+      showPinyin: true,
+      baseScore: true,
+      maintenanceMathEnabled: true,
+      dailyBattleMinTaskPoints: true,
+    },
   });
 
   return NextResponse.json({
     showPinyin: parent.showPinyin,
     baseScore: parent.baseScore as 0.1 | 1 | 10,
     maintenanceMathEnabled: parent.maintenanceMathEnabled,
+    dailyBattleMinTaskPoints: parent.dailyBattleMinTaskPoints,
   });
 }
 
@@ -28,11 +34,13 @@ async function updateSettings(request: Request) {
   const showPinyin = body.showPinyin;
   const baseScore = body.baseScore;
   const maintenanceMathEnabled = body.maintenanceMathEnabled;
+  const dailyBattleMinTaskPoints = body.dailyBattleMinTaskPoints;
 
   const data: {
     showPinyin?: boolean;
     baseScore?: number;
     maintenanceMathEnabled?: boolean;
+    dailyBattleMinTaskPoints?: number;
   } = {};
 
   if (typeof showPinyin === "boolean") {
@@ -51,28 +59,51 @@ async function updateSettings(request: Request) {
     data.baseScore = num;
   }
 
+  if (dailyBattleMinTaskPoints !== undefined) {
+    const n = Number(dailyBattleMinTaskPoints);
+    if (!Number.isInteger(n) || n < 0 || n > 10) {
+      return NextResponse.json(
+        { error: "dailyBattleMinTaskPoints 需为 0～10 的整数" },
+        { status: 400 },
+      );
+    }
+    data.dailyBattleMinTaskPoints = n;
+  }
+
   if (Object.keys(data).length === 0) {
     const parent = await prisma.parent.findUniqueOrThrow({
       where: { id: auth.parentId },
-      select: { showPinyin: true, baseScore: true, maintenanceMathEnabled: true },
+      select: {
+        showPinyin: true,
+        baseScore: true,
+        maintenanceMathEnabled: true,
+        dailyBattleMinTaskPoints: true,
+      },
     });
     return NextResponse.json({
       showPinyin: parent.showPinyin,
       baseScore: parent.baseScore,
       maintenanceMathEnabled: parent.maintenanceMathEnabled,
+      dailyBattleMinTaskPoints: parent.dailyBattleMinTaskPoints,
     });
   }
 
   const updated = await prisma.parent.update({
     where: { id: auth.parentId },
     data,
-    select: { showPinyin: true, baseScore: true, maintenanceMathEnabled: true },
+    select: {
+      showPinyin: true,
+      baseScore: true,
+      maintenanceMathEnabled: true,
+      dailyBattleMinTaskPoints: true,
+    },
   });
 
   return NextResponse.json({
     showPinyin: updated.showPinyin,
     baseScore: updated.baseScore as 0.1 | 1 | 10,
     maintenanceMathEnabled: updated.maintenanceMathEnabled,
+    dailyBattleMinTaskPoints: updated.dailyBattleMinTaskPoints,
   });
 }
 

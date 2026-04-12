@@ -23,6 +23,8 @@ model Parent {
   baseScore    Float    @default(1)    // 基准分：0.1 | 1 | 10，所有积分以1分为单位存储
   /// 学生端「机甲维修」口算小游戏，默认开启
   maintenanceMathEnabled Boolean @default(true)
+  /// 每日战斗：当日 TASK_REWARD 累计需达到该值（0–10，家长设置；0 表示不门槛）
+  dailyBattleMinTaskPoints Int @default(5)
   createdAt    DateTime @default(now())
 
   student Student?

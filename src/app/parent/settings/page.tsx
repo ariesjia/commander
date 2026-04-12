@@ -5,12 +5,19 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useData } from "@/contexts/DataContext";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
-import { User, KeyRound, LogOut, Check, BookOpen, Wrench } from "lucide-react";
+import { User, KeyRound, LogOut, Check, BookOpen, Wrench, Swords } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function SettingsPage() {
   const { user, updateNickname, updatePin, logout } = useAuth();
-  const { showPinyin, updateShowPinyin, maintenanceMath, updateMaintenanceMathEnabled } = useData();
+  const {
+    showPinyin,
+    updateShowPinyin,
+    maintenanceMath,
+    updateMaintenanceMathEnabled,
+    dailyBattleMinTaskPoints,
+    updateDailyBattleMinTaskPoints,
+  } = useData();
   const router = useRouter();
 
   const [nickname, setNickname] = useState(user?.childNickname ?? "");
@@ -20,6 +27,9 @@ export default function SettingsPage() {
   const [pinyinOn, setPinyinOn] = useState(showPinyin);
   const [savingPinyin, setSavingPinyin] = useState(false);
   const [savingMaintenance, setSavingMaintenance] = useState(false);
+  const [battleMinPtsDraft, setBattleMinPtsDraft] = useState(dailyBattleMinTaskPoints);
+  const [savingBattleMin, setSavingBattleMin] = useState(false);
+  const [savedBattleMin, setSavedBattleMin] = useState(false);
   const [savingNickname, setSavingNickname] = useState(false);
   const [savingPin, setSavingPin] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
@@ -31,6 +41,10 @@ export default function SettingsPage() {
   useEffect(() => {
     setPinyinOn(showPinyin);
   }, [showPinyin]);
+
+  useEffect(() => {
+    setBattleMinPtsDraft(dailyBattleMinTaskPoints);
+  }, [dailyBattleMinTaskPoints]);
 
   const handleSaveNickname = async () => {
     if (!nickname.trim()) return;
@@ -84,6 +98,21 @@ export default function SettingsPage() {
       // ignore
     } finally {
       setSavingMaintenance(false);
+    }
+  };
+
+  const handleSaveBattleMinPts = async () => {
+    const n = Math.max(0, Math.min(10, Math.round(Number(battleMinPtsDraft))));
+    setSavingBattleMin(true);
+    try {
+      await updateDailyBattleMinTaskPoints(n);
+      setBattleMinPtsDraft(n);
+      setSavedBattleMin(true);
+      setTimeout(() => setSavedBattleMin(false), 2000);
+    } catch {
+      // ignore
+    } finally {
+      setSavingBattleMin(false);
     }
   };
 
@@ -199,6 +228,43 @@ export default function SettingsPage() {
             />
           </div>
         </button>
+      </div>
+
+      {/* 每日战斗门槛 */}
+      <div className="rounded-xl border border-p-border bg-p-card p-5">
+        <div className="flex items-center gap-2 mb-4">
+          <Swords size={18} className="text-p-accent" />
+          <h2 className="text-base font-medium text-p-text">每日战斗门槛</h2>
+        </div>
+        <p className="text-sm text-p-text-secondary mb-4">
+          孩子当天通过任务获得的积分（家长确认任务后的加分）累计需达到该值，学生端才可发起每日战斗。
+          <span className="font-medium text-p-text"> 填 0 表示不要求任务积分，随时可战。</span>
+          可设 0～10 分。
+        </p>
+        <div className="flex gap-3 items-center flex-wrap">
+          <input
+            type="number"
+            min={0}
+            max={10}
+            step={1}
+            value={battleMinPtsDraft}
+            onChange={(e) => {
+              const raw = e.target.value;
+              if (raw === "") {
+                setBattleMinPtsDraft(0);
+                return;
+              }
+              const v = parseInt(raw, 10);
+              if (Number.isNaN(v)) return;
+              setBattleMinPtsDraft(Math.max(0, Math.min(10, v)));
+            }}
+            className="h-11 w-24 rounded-lg border-2 border-p-border bg-white px-3 text-center text-base font-semibold text-p-text transition-colors focus:border-p-accent focus:outline-none focus:ring-2 focus:ring-p-accent/20"
+          />
+          <span className="text-sm text-p-text-secondary">分</span>
+          <Button onClick={handleSaveBattleMinPts} size="md" loading={savingBattleMin}>
+            {savedBattleMin ? <Check size={16} /> : "保存"}
+          </Button>
+        </div>
       </div>
 
       {/* 基准分 */}

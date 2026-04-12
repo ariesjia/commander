@@ -21,7 +21,12 @@ export async function GET(request: Request) {
   const [parent, student, tasks, taskLogs, exchanges, maintenanceLogToday] = await Promise.all([
     prisma.parent.findUniqueOrThrow({
       where: { id: auth.parentId },
-      select: { showPinyin: true, baseScore: true, maintenanceMathEnabled: true },
+      select: {
+        showPinyin: true,
+        baseScore: true,
+        maintenanceMathEnabled: true,
+        dailyBattleMinTaskPoints: true,
+      },
     }),
     prisma.student.findUniqueOrThrow({
       where: { id: studentId },
@@ -112,6 +117,7 @@ export async function GET(request: Request) {
       date: todayStr,
     },
     showPinyin: parent.showPinyin,
+    dailyBattleMinTaskPoints: parent.dailyBattleMinTaskPoints,
     baseScore: (parent.baseScore ?? 1) as 0.1 | 1 | 10,
     student: {
       nickname: student.nickname,

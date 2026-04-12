@@ -174,9 +174,15 @@ function buildTodayBattleReplay(log: {
   };
 }
 
+function clampDailyBattleMinTaskPoints(n: number): number {
+  if (!Number.isFinite(n)) return battleSettings.minPointsEarnedToday;
+  return Math.max(0, Math.min(10, Math.round(n)));
+}
+
 function statusMessage(
   foughtToday: boolean,
   thresholdMet: boolean,
+  minPointsRequired: number,
 ): { canFight: boolean; reasonCode: BattleReasonCode; message: string } {
   if (foughtToday) {
     return {
@@ -185,11 +191,12 @@ function statusMessage(
       message: "今日已进行过战斗，明天再来吧。",
     };
   }
-  if (!thresholdMet) {
+  const need = clampDailyBattleMinTaskPoints(minPointsRequired);
+  if (!thresholdMet && need > 0) {
     return {
       canFight: false,
       reasonCode: "THRESHOLD_NOT_MET",
-      message: `战胜敌人可以获得积分，道具等奖励，每日新增积分需达到 ${battleSettings.minPointsEarnedToday} 分后才可战斗。`,
+      message: `战胜敌人可以获得积分，道具等奖励，每日新增积分需达到 ${need} 分后才可战斗。`,
     };
   }
   return {
@@ -212,7 +219,11 @@ export async function getBattleStatusForStudent(
   const { start, end } = getChinaDayBounds(todayStr);
   const types = battleSettings.eligiblePointsLogTypesForThreshold as unknown as PointsLogType[];
 
-  const [agg, fought] = await Promise.all([
+  const [studentRow, agg, fought] = await Promise.all([
+    prisma.student.findUnique({
+      where: { id: studentId },
+      select: { parent: { select: { dailyBattleMinTaskPoints: true } } },
+    }),
     prisma.pointsLog.aggregate({
       where: {
         studentId,
@@ -232,10 +243,17 @@ export async function getBattleStatusForStudent(
 
   const taskPointsToday =
     agg._sum.amount == null ? 0 : pointsToNumber(agg._sum.amount);
-  const minPointsRequired = battleSettings.minPointsEarnedToday;
-  const thresholdMet = taskPointsToday >= minPointsRequired;
+  const minPointsRequired = clampDailyBattleMinTaskPoints(
+    studentRow?.parent?.dailyBattleMinTaskPoints ?? battleSettings.minPointsEarnedToday,
+  );
+  const thresholdMet =
+    minPointsRequired === 0 || taskPointsToday >= minPointsRequired;
   const foughtToday = Boolean(fought);
-  const { canFight, reasonCode, message } = statusMessage(foughtToday, thresholdMet);
+  const { canFight, reasonCode, message } = statusMessage(
+    foughtToday,
+    thresholdMet,
+    minPointsRequired,
+  );
   const todayReplay = fought ? buildTodayBattleReplay(fought) : null;
 
   return {
