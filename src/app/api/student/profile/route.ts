@@ -21,17 +21,31 @@ export async function GET() {
   const student = await prisma.student.findUniqueOrThrow({
     where: { id: studentId },
     include: {
-      parent: { select: { showPinyin: true, baseScore: true, maintenanceMathEnabled: true } },
+      parent: {
+        select: {
+          showPinyin: true,
+          baseScore: true,
+          maintenanceMathEnabled: true,
+          drivingGuideEnabled: true,
+        },
+      },
       studentMechas: true,
       primaryMecha: true,
     },
   });
 
-  const maintenanceLogToday = await prisma.studentMaintenanceMathLog.findUnique({
-    where: {
-      studentId_completedOn: { studentId, completedOn },
-    },
-  });
+  const [maintenanceLogToday, drivingGuideLogToday] = await Promise.all([
+    prisma.studentMaintenanceMathLog.findUnique({
+      where: {
+        studentId_completedOn: { studentId, completedOn },
+      },
+    }),
+    prisma.studentDrivingGuideLog.findUnique({
+      where: {
+        studentId_completedOn: { studentId, completedOn },
+      },
+    }),
+  ]);
 
   // primaryMechaId 可能未回填（迁移前领养），有 studentMechas 时用第一个并回填
   let primaryMecha = student.primaryMecha ?? null;
@@ -68,6 +82,11 @@ export async function GET() {
     maintenanceMath: {
       enabled: student.parent.maintenanceMathEnabled,
       completedToday: !!maintenanceLogToday,
+      date: dateKey,
+    },
+    drivingGuide: {
+      enabled: student.parent.drivingGuideEnabled,
+      completedToday: !!drivingGuideLogToday,
       date: dateKey,
     },
     showPinyin: student.parent.showPinyin,

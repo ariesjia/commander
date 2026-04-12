@@ -18,7 +18,8 @@ export async function GET(request: Request) {
   const todayStr = getTodayStr();
   const completedOnMaintenance = chinaDateStrToDbDate(todayStr);
 
-  const [parent, student, tasks, taskLogs, exchanges, maintenanceLogToday] = await Promise.all([
+  const [parent, student, tasks, taskLogs, exchanges, maintenanceLogToday, drivingGuideLogToday] =
+    await Promise.all([
     prisma.parent.findUniqueOrThrow({
       where: { id: auth.parentId },
       select: {
@@ -26,6 +27,7 @@ export async function GET(request: Request) {
         baseScore: true,
         maintenanceMathEnabled: true,
         dailyBattleMinTaskPoints: true,
+        drivingGuideEnabled: true,
       },
     }),
     prisma.student.findUniqueOrThrow({
@@ -42,6 +44,11 @@ export async function GET(request: Request) {
       include: { reward: true },
     }),
     prisma.studentMaintenanceMathLog.findUnique({
+      where: {
+        studentId_completedOn: { studentId, completedOn: completedOnMaintenance },
+      },
+    }),
+    prisma.studentDrivingGuideLog.findUnique({
       where: {
         studentId_completedOn: { studentId, completedOn: completedOnMaintenance },
       },
@@ -114,6 +121,11 @@ export async function GET(request: Request) {
     maintenanceMath: {
       enabled: parent.maintenanceMathEnabled,
       completedToday: !!maintenanceLogToday,
+      date: todayStr,
+    },
+    drivingGuide: {
+      enabled: parent.drivingGuideEnabled,
+      completedToday: !!drivingGuideLogToday,
       date: todayStr,
     },
     showPinyin: parent.showPinyin,

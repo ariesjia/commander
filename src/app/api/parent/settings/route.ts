@@ -15,6 +15,7 @@ export async function GET(request: Request) {
       baseScore: true,
       maintenanceMathEnabled: true,
       dailyBattleMinTaskPoints: true,
+      drivingGuideEnabled: true,
     },
   });
 
@@ -23,6 +24,7 @@ export async function GET(request: Request) {
     baseScore: parent.baseScore as 0.1 | 1 | 10,
     maintenanceMathEnabled: parent.maintenanceMathEnabled,
     dailyBattleMinTaskPoints: parent.dailyBattleMinTaskPoints,
+    drivingGuideEnabled: parent.drivingGuideEnabled,
   });
 }
 
@@ -35,12 +37,14 @@ async function updateSettings(request: Request) {
   const baseScore = body.baseScore;
   const maintenanceMathEnabled = body.maintenanceMathEnabled;
   const dailyBattleMinTaskPoints = body.dailyBattleMinTaskPoints;
+  const drivingGuideEnabled = body.drivingGuideEnabled;
 
   const data: {
     showPinyin?: boolean;
     baseScore?: number;
     maintenanceMathEnabled?: boolean;
     dailyBattleMinTaskPoints?: number;
+    drivingGuideEnabled?: boolean;
   } = {};
 
   if (typeof showPinyin === "boolean") {
@@ -49,6 +53,10 @@ async function updateSettings(request: Request) {
 
   if (typeof maintenanceMathEnabled === "boolean") {
     data.maintenanceMathEnabled = maintenanceMathEnabled;
+  }
+
+  if (typeof drivingGuideEnabled === "boolean") {
+    data.drivingGuideEnabled = drivingGuideEnabled;
   }
 
   if (baseScore !== undefined) {
@@ -78,6 +86,7 @@ async function updateSettings(request: Request) {
         baseScore: true,
         maintenanceMathEnabled: true,
         dailyBattleMinTaskPoints: true,
+        drivingGuideEnabled: true,
       },
     });
     return NextResponse.json({
@@ -85,6 +94,7 @@ async function updateSettings(request: Request) {
       baseScore: parent.baseScore,
       maintenanceMathEnabled: parent.maintenanceMathEnabled,
       dailyBattleMinTaskPoints: parent.dailyBattleMinTaskPoints,
+      drivingGuideEnabled: parent.drivingGuideEnabled,
     });
   }
 
@@ -96,6 +106,7 @@ async function updateSettings(request: Request) {
       baseScore: true,
       maintenanceMathEnabled: true,
       dailyBattleMinTaskPoints: true,
+      drivingGuideEnabled: true,
     },
   });
 
@@ -104,6 +115,7 @@ async function updateSettings(request: Request) {
     baseScore: updated.baseScore as 0.1 | 1 | 10,
     maintenanceMathEnabled: updated.maintenanceMathEnabled,
     dailyBattleMinTaskPoints: updated.dailyBattleMinTaskPoints,
+    drivingGuideEnabled: updated.drivingGuideEnabled,
   });
 }
 

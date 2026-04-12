@@ -9,6 +9,7 @@ import {
   StudentData,
   TaskWithStatus,
   type MaintenanceMathStatus,
+  type DrivingGuideStatus,
 } from "@/types";
 import { api } from "@/lib/api";
 import { useMode } from "@/contexts/ModeContext";
@@ -34,6 +35,8 @@ interface DataState {
   updateBaseScore: (v: BaseScore) => Promise<void>;
   maintenanceMath: MaintenanceMathStatus;
   updateMaintenanceMathEnabled: (enabled: boolean) => Promise<void>;
+  drivingGuide: DrivingGuideStatus;
+  updateDrivingGuideEnabled: (enabled: boolean) => Promise<void>;
   /** 每日战斗所需当日任务积分门槛（0–10，0 表示不门槛） */
   dailyBattleMinTaskPoints: number;
   updateDailyBattleMinTaskPoints: (n: number) => Promise<void>;
@@ -96,6 +99,11 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     completedToday: false,
     date: "",
   });
+  const [drivingGuide, setDrivingGuide] = useState<DrivingGuideStatus>({
+    enabled: true,
+    completedToday: false,
+    date: "",
+  });
   const [dailyBattleMinTaskPoints, setDailyBattleMinTaskPoints] = useState(5);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -117,6 +125,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
             showPinyin?: boolean;
             baseScore?: number;
             maintenanceMath?: MaintenanceMathStatus;
+            drivingGuide?: DrivingGuideStatus;
             dailyBattleMinTaskPoints?: number;
           }>("/api/parent/dashboard"),
           api.get<Array<Task & { status: string; completedAt?: string }>>("/api/parent/tasks"),
@@ -151,6 +160,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         if (dashboard.maintenanceMath) {
           setMaintenanceMath(dashboard.maintenanceMath);
         }
+        if (dashboard.drivingGuide) {
+          setDrivingGuide(dashboard.drivingGuide);
+        }
         if (typeof dashboard.dailyBattleMinTaskPoints === "number") {
           setDailyBattleMinTaskPoints(dashboard.dailyBattleMinTaskPoints);
         }
@@ -170,6 +182,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
               showPinyin?: boolean;
               baseScore?: number;
               maintenanceMath?: MaintenanceMathStatus;
+              drivingGuide?: DrivingGuideStatus;
             }
           >("/api/student/profile"),
           api.get<TaskWithStatus[]>("/api/student/tasks"),
@@ -199,6 +212,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         setBaseScore((profile.baseScore ?? 1) as BaseScore);
         if (profile.maintenanceMath) {
           setMaintenanceMath(profile.maintenanceMath);
+        }
+        if (profile.drivingGuide) {
+          setDrivingGuide(profile.drivingGuide);
         }
         setWeeklyCompletedCount(0);
         setWeeklyTotalCount(0);
@@ -310,6 +326,15 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     [refetch],
   );
 
+  const updateDrivingGuideEnabled = useCallback(
+    async (enabled: boolean) => {
+      await api.put("/api/parent/settings", { drivingGuideEnabled: enabled });
+      setDrivingGuide((prev) => ({ ...prev, enabled }));
+      await refetch();
+    },
+    [refetch],
+  );
+
   return (
     <DataContext.Provider
       value={{
@@ -331,6 +356,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         updateBaseScore,
         maintenanceMath,
         updateMaintenanceMathEnabled,
+        drivingGuide,
+        updateDrivingGuideEnabled,
         dailyBattleMinTaskPoints,
         updateDailyBattleMinTaskPoints,
         addTask,

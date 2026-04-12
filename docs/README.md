@@ -34,6 +34,7 @@
 | [0006-mecha-evolution-video](./stories/0006-mecha-evolution-video.md) | 机甲可选进化/展示视频：库表与 API 字段，学生端白底精致弹层内播放（适配白底素材） |
 | [0007-student-daily-maintenance-math](./stories/0007-student-daily-maintenance-math.md) | 学生每日机甲维修（一年级口算）：维修叙事、出题器抽象、每日一次、无积分；家长可关开（默认开） |
 | [0008-combat-power-system](./stories/0008-combat-power-system.md) | 战力值系统：战力 = **各已领养机甲** `MechaLevel.level` **求和**×系数 + 道具库存贡献（`Item.combatBonus`×数量） |
+| [0009-student-driving-guide-hanzi](./stories/0009-student-driving-guide-hanzi.md) | 学生「驾驶指南」：每回 10 字、逐字拼音、整词手写；无语音；成功鼓励/失败提示；识别方案见 story |
 | [stories/](./stories/) | 开发需求文档：`000x-<name>.md` 格式 |
 
 ---

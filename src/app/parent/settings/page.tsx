@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useData } from "@/contexts/DataContext";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
-import { User, KeyRound, LogOut, Check, BookOpen, Wrench, Swords } from "lucide-react";
+import { User, KeyRound, LogOut, Check, BookOpen, Wrench, Swords, Car } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function SettingsPage() {
@@ -17,6 +17,8 @@ export default function SettingsPage() {
     updateMaintenanceMathEnabled,
     dailyBattleMinTaskPoints,
     updateDailyBattleMinTaskPoints,
+    drivingGuide,
+    updateDrivingGuideEnabled,
   } = useData();
   const router = useRouter();
 
@@ -27,6 +29,7 @@ export default function SettingsPage() {
   const [pinyinOn, setPinyinOn] = useState(showPinyin);
   const [savingPinyin, setSavingPinyin] = useState(false);
   const [savingMaintenance, setSavingMaintenance] = useState(false);
+  const [savingDrivingGuide, setSavingDrivingGuide] = useState(false);
   const [battleMinPtsDraft, setBattleMinPtsDraft] = useState(dailyBattleMinTaskPoints);
   const [savingBattleMin, setSavingBattleMin] = useState(false);
   const [savedBattleMin, setSavedBattleMin] = useState(false);
@@ -98,6 +101,17 @@ export default function SettingsPage() {
       // ignore
     } finally {
       setSavingMaintenance(false);
+    }
+  };
+
+  const handleToggleDrivingGuide = async () => {
+    setSavingDrivingGuide(true);
+    try {
+      await updateDrivingGuideEnabled(!drivingGuide.enabled);
+    } catch {
+      // ignore
+    } finally {
+      setSavingDrivingGuide(false);
     }
   };
 
@@ -224,6 +238,38 @@ export default function SettingsPage() {
             <div
               className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow transition-transform ${
                 maintenanceMath.enabled ? "left-6" : "left-1"
+              }`}
+            />
+          </div>
+        </button>
+      </div>
+
+      {/* 驾驶指南（识字手写） */}
+      <div className="rounded-xl border border-p-border bg-p-card p-5">
+        <div className="flex items-center gap-2 mb-4">
+          <Car size={18} className="text-p-accent" />
+          <h2 className="text-base font-medium text-p-text">驾驶指南</h2>
+        </div>
+        <p className="text-sm text-p-text-secondary mb-4">
+          开启后，孩子可在学生端进行每日识字手写练习（看拼音写词语），不产生积分。关闭后入口隐藏。
+        </p>
+        <button
+          type="button"
+          onClick={handleToggleDrivingGuide}
+          disabled={savingDrivingGuide}
+          className={`flex items-center justify-between w-full rounded-lg border-2 px-4 py-3 transition-colors cursor-pointer ${
+            drivingGuide.enabled ? "border-p-accent bg-p-accent/5" : "border-p-border bg-white hover:bg-gray-50"
+          }`}
+        >
+          <span className="text-sm font-medium text-p-text">{drivingGuide.enabled ? "已开启" : "已关闭"}</span>
+          <div
+            className={`relative h-6 w-11 rounded-full transition-colors ${
+              drivingGuide.enabled ? "bg-p-accent" : "bg-gray-300"
+            }`}
+          >
+            <div
+              className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow transition-transform ${
+                drivingGuide.enabled ? "left-6" : "left-1"
               }`}
             />
           </div>

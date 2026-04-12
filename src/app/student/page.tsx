@@ -13,7 +13,7 @@ import { XuanjiaProgress } from "@/components/mecha/XuanjiaProgress";
 import Link from "next/link";
 import { PinDialog } from "@/components/mode-switch/PinDialog";
 import Image from "next/image";
-import { Coins, Snowflake, Lock, Library, Swords, Package, Wrench } from "lucide-react";
+import { Coins, Snowflake, Lock, Library, Swords, Package, Wrench, BookOpen } from "lucide-react";
 import { MECHA_STAGES } from "@/lib/mecha-config";
 import { toDisplay } from "@/lib/score-display";
 
@@ -31,6 +31,7 @@ export default function StudentHome() {
     refetch,
     baseScore,
     maintenanceMath,
+    drivingGuide,
   } = useData();
   const hasMechas = adoptedMechas.length > 0;
   const { user } = useAuth();
@@ -213,6 +214,22 @@ export default function StudentHome() {
               >
                 <Wrench size={18} strokeWidth={2} />
                 机甲维修
+              </Link>
+            )
+          )}
+          {drivingGuide.enabled && (
+            drivingGuide.completedToday ? (
+              <div className="mt-2 flex w-full min-h-[48px] items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-s-text-secondary/80">
+                <BookOpen size={18} strokeWidth={1.75} />
+                今日驾驶指南已完成
+              </div>
+            ) : (
+              <Link
+                href="/student/driving-guide"
+                className="mt-2 flex w-full min-h-[48px] items-center justify-center gap-2 rounded-xl border border-indigo-500/35 bg-gradient-to-r from-indigo-500/14 to-violet-500/10 px-4 py-3 text-sm font-semibold text-indigo-100/95 transition-colors hover:border-indigo-400/45 hover:bg-indigo-500/18 touch-manipulation active:scale-[0.99]"
+              >
+                <BookOpen size={18} strokeWidth={2} />
+                驾驶指南
               </Link>
             )
           )}

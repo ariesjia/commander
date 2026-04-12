@@ -114,6 +114,13 @@ export interface MaintenanceMathStatus {
   date: string;
 }
 
+/** 与 profile / dashboard 的 drivingGuide 一致 */
+export interface DrivingGuideStatus {
+  enabled: boolean;
+  completedToday: boolean;
+  date: string;
+}
+
 export interface StudentData {
   nickname: string;
   totalPoints: number;

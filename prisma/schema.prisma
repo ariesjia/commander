@@ -25,6 +25,8 @@ model Parent {
   maintenanceMathEnabled Boolean @default(true)
   /// 每日战斗：当日 TASK_REWARD 累计需达到该值（0–10，家长设置；0 表示不门槛）
   dailyBattleMinTaskPoints Int @default(5)
+  /// 学生端「驾驶指南」识字手写练习，默认开启
+  drivingGuideEnabled Boolean @default(true)
   createdAt    DateTime @default(now())
 
   student Student?
@@ -53,6 +55,21 @@ model Student {
   studentBattleLogs StudentBattleLog[]
   studentItems    StudentItem[]
   studentMaintenanceMathLogs StudentMaintenanceMathLog[]
+  studentDrivingGuideLogs    StudentDrivingGuideLog[]
+}
+
+/// 每日「驾驶指南」完成记录，无积分
+model StudentDrivingGuideLog {
+  id           String   @id @default(cuid())
+  studentId    String
+  student      Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  completedOn  DateTime @db.Date
+  completedAt  DateTime @default(now())
+  generatorId  String
+  sessionHash  String?
+
+  @@unique([studentId, completedOn])
+  @@index([studentId])
 }
 
 /// 每日机甲维修（口算）完成记录，无积分
