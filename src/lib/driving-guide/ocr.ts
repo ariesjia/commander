@@ -3,7 +3,7 @@
  */
 
 const DEFAULT_VISION_BASE = "https://api.openai.com/v1";
-const DEFAULT_VISION_MODEL = "gpt-4o-mini";
+const DEFAULT_VISION_MODEL = "gpt-5.4";
 
 export type DrivingGuideVisionResult = {
   /** 模型判断是否与目标词一致 */

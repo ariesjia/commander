@@ -40,6 +40,14 @@ export const FAILURE_HINT_LINES = [
   "笔画可以再清楚一点哦。",
 ] as const;
 
+export const SUBMITTING_VOICE_LINES = [
+  "收到，开始识别你的手写指令。",
+  "很好，正在校准识别，请稍等一下。",
+  "已提交，驾驶舱正在核对字形。",
+  "干得好，AI 正在识别中。",
+  "继续保持，马上给你结果。",
+] as const;
+
 export function randomSuccessLine(): string {
   const i = Math.floor(Math.random() * SUCCESS_ENCOURAGEMENT_LINES.length);
   return SUCCESS_ENCOURAGEMENT_LINES[i]!;
@@ -48,4 +56,9 @@ export function randomSuccessLine(): string {
 export function randomFailureLine(): string {
   const i = Math.floor(Math.random() * FAILURE_HINT_LINES.length);
   return FAILURE_HINT_LINES[i]!;
+}
+
+export function randomSubmittingVoiceLine(): string {
+  const i = Math.floor(Math.random() * SUBMITTING_VOICE_LINES.length);
+  return SUBMITTING_VOICE_LINES[i]!;
 }

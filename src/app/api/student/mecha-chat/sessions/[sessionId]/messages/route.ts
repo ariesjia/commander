@@ -4,8 +4,13 @@ import { prisma } from "@/lib/db";
 import { requireStudent, getStudentId } from "@/lib/api-auth";
 import { loadMechaChatContext } from "@/lib/mecha-chat/context";
 import { buildMechaChatSystemPrompt } from "@/lib/mecha-chat/system-prompt";
-import { completeMechaChat, type ChatMessage } from "@/lib/mecha-chat/openai-chat";
-import { transcribeAudioBytes, MECHA_CHAT_MAX_AUDIO_BYTES } from "@/lib/mecha-chat/transcribe";
+import {
+  completeMechaChat,
+  MECHA_CHAT_VOICE_PLACEHOLDER,
+  mimeTypeToInputAudioFormat,
+  type ChatMessage,
+} from "@/lib/mecha-chat/openai-chat";
+import { MECHA_CHAT_MAX_AUDIO_BYTES } from "@/lib/mecha-chat/config";
 import { parseDataUrlToBuffer } from "@/lib/driving-guide/ocr";
 
 export const runtime = "nodejs";
@@ -85,9 +90,11 @@ export async function POST(req: Request, { params }: RouteParams) {
       ? body.audioMimeType.trim()
       : "audio/webm";
 
-  let userText = textIn;
+  const isVoice = Boolean(!textIn && audioBase64);
+  let userContentForDb = textIn;
+  let audioPayload: { base64: string; format: string } | null = null;
 
-  if (!userText && audioBase64) {
+  if (isVoice) {
     let buf: Buffer;
     try {
       buf = parseDataUrlToBuffer(audioBase64);
@@ -97,26 +104,14 @@ export async function POST(req: Request, { params }: RouteParams) {
     if (buf.length > MECHA_CHAT_MAX_AUDIO_BYTES) {
       return NextResponse.json({ error: "录音过大" }, { status: 400 });
     }
-    try {
-      const ext =
-        audioMimeType.includes("mp4") || audioMimeType.includes("m4a")
-          ? "m4a"
-          : audioMimeType.includes("wav")
-            ? "wav"
-            : "webm";
-      userText = await transcribeAudioBytes(
-        buf,
-        `recording.${ext}`,
-        audioMimeType,
-      );
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : "转写失败";
-      console.error("[mecha-chat] transcribe failed:", e);
-      return NextResponse.json({ error: msg }, { status: 502 });
-    }
+    userContentForDb = MECHA_CHAT_VOICE_PLACEHOLDER;
+    audioPayload = {
+      base64: buf.toString("base64"),
+      format: mimeTypeToInputAudioFormat(audioMimeType),
+    };
   }
 
-  if (!userText) {
+  if (!userContentForDb) {
     return NextResponse.json(
       { error: "请输入文字或发送录音" },
       { status: 400 },
@@ -137,15 +132,17 @@ export async function POST(req: Request, { params }: RouteParams) {
     data: {
       sessionId,
       role: MechaChatRole.USER,
-      content: userText,
+      content: userContentForDb,
     },
   });
 
   const title =
     !session.title
-      ? userText.length > 48
-        ? `${userText.slice(0, 45)}…`
-        : userText
+      ? userContentForDb.length > 48
+        ? `${userContentForDb.slice(0, 45)}…`
+        : userContentForDb === MECHA_CHAT_VOICE_PLACEHOLDER
+          ? "语音"
+          : userContentForDb
       : undefined;
 
   await prisma.mechaChatSession.update({
@@ -168,7 +165,9 @@ export async function POST(req: Request, { params }: RouteParams) {
 
   let assistantText: string;
   try {
-    assistantText = await completeMechaChat(systemPrompt, history);
+    assistantText = await completeMechaChat(systemPrompt, history, {
+      lastUserInputAudio: audioPayload ?? undefined,
+    });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "对话失败";
     console.error("[mecha-chat] chat completion failed:", e);
@@ -197,7 +196,7 @@ export async function POST(req: Request, { params }: RouteParams) {
     userMessage: {
       id: userRow.id,
       role: "USER",
-      content: userText,
+      content: userContentForDb,
     },
     assistantMessage: {
       id: assistantRow.id,

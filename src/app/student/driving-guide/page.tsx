@@ -11,11 +11,17 @@ import {
 } from "@/components/driving-guide/HandwritingCanvas";
 import { api } from "@/lib/api";
 import { useData } from "@/contexts/DataContext";
-import { DRIVING_GUIDE_COPY } from "@/lib/driving-guide/copy";
+import {
+  DRIVING_GUIDE_COPY,
+  randomFailureLine,
+  randomSubmittingVoiceLine,
+  randomSuccessLine,
+} from "@/lib/driving-guide/copy";
 import { DRIVING_GUIDE_STEPS_PER_SESSION } from "@/lib/driving-guide/constants";
 import {
   speakIntroNarration,
   cancelIntroSpeech,
+  speakDrivingGuideLine,
 } from "@/lib/driving-guide/speech";
 
 type StepChar = { char: string; pinyin: string };
@@ -121,11 +127,14 @@ export default function DrivingGuidePage() {
     if (!session || !current) return;
     const dataUrl = canvasRef.current?.toDataURL() ?? "";
     if (!dataUrl || dataUrl.length < 100) {
-      setFeedback({ kind: "bad", text: "请先在手写区按拼音书写。" });
+      const msg = "请先在手写区按拼音书写。";
+      setFeedback({ kind: "bad", text: msg });
+      speakDrivingGuideLine(msg);
       return;
     }
     setSubmitting(true);
     setFeedback(null);
+    speakDrivingGuideLine(randomSubmittingVoiceLine());
     try {
       const res = await api.post<{
         ok: boolean;
@@ -138,20 +147,27 @@ export default function DrivingGuidePage() {
         imageBase64: dataUrl,
       });
       if (res.ok) {
-        setFeedback({ kind: "ok", text: res.encouragement ?? "好！" });
+        const okLine = res.encouragement ?? randomSuccessLine();
+        setFeedback({ kind: "ok", text: okLine });
         canvasRef.current?.clear();
         if (res.finishedSession) {
           setFinished(true);
           setCompletedAt(new Date().toISOString());
+          speakDrivingGuideLine("太棒了，今天的驾驶校准全部完成！");
           await refetch();
         } else {
+          speakDrivingGuideLine(okLine);
           setStepIdx((i) => i + 1);
         }
       } else {
-        setFeedback({ kind: "bad", text: res.hint ?? "再试一次" });
+        const badLine = res.hint ?? randomFailureLine();
+        setFeedback({ kind: "bad", text: badLine });
+        speakDrivingGuideLine(badLine);
       }
     } catch {
-      setFeedback({ kind: "bad", text: "提交失败，请重试。" });
+      const msg = "提交失败，请重试。";
+      setFeedback({ kind: "bad", text: msg });
+      speakDrivingGuideLine(msg);
     } finally {
       setSubmitting(false);
     }
@@ -229,6 +245,18 @@ export default function DrivingGuidePage() {
 
   return (
     <div className="select-none flex flex-col gap-4 pb-6">
+      {sessionStarted && !finished && (
+        <div
+          className="fixed inset-0 z-30 bg-transparent touch-none"
+          onPointerDown={(e) => e.preventDefault()}
+          onPointerMove={(e) => e.preventDefault()}
+          onPointerUp={(e) => e.preventDefault()}
+          onTouchStart={(e) => e.preventDefault()}
+          onTouchMove={(e) => e.preventDefault()}
+          onTouchEnd={(e) => e.preventDefault()}
+        />
+      )}
+
       <StudentPageHeader title={DRIVING_GUIDE_COPY.pageTitle} backHref="/student" />
 
       <p className="text-center text-xs text-indigo-200/70">
@@ -236,7 +264,7 @@ export default function DrivingGuidePage() {
       </p>
 
       {current && (
-        <div className="rounded-2xl border border-indigo-500/20 bg-[#0c1222]/80 p-4">
+        <div className="relative z-40 rounded-2xl border border-indigo-500/20 bg-[#0c1222]/80 p-4">
           <div className="mb-3 flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
             {current.chars.map((c, i) => (
               <span

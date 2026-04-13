@@ -70,3 +70,16 @@ export function cancelIntroSpeech(): void {
     window.speechSynthesis.cancel();
   }
 }
+
+/** 轻量短句播报：用于提交中与结果反馈，不阻塞业务流程。 */
+export function speakDrivingGuideLine(text: string): void {
+  if (!text || typeof window === "undefined" || !window.speechSynthesis) return;
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "zh-CN";
+  u.rate = 1;
+  const voice = pickZhVoice();
+  if (voice) u.voice = voice;
+  // 短提示与其他语音不叠加，先取消旧播报。
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(u);
+}
