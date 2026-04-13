@@ -163,7 +163,7 @@ export default function DrivingGuidePage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col gap-4 pb-6">
+      <div className="select-none flex flex-col gap-4 pb-6">
         <StudentPageHeader title={DRIVING_GUIDE_COPY.pageTitle} backHref="/student" />
         <p className="text-center text-sm text-s-text-secondary">加载中…</p>
       </div>
@@ -172,7 +172,7 @@ export default function DrivingGuidePage() {
 
   if (finished && completedAt) {
     return (
-      <div className="flex flex-col gap-5 pb-6">
+      <div className="select-none flex flex-col gap-5 pb-6">
         <StudentPageHeader title={DRIVING_GUIDE_COPY.pageTitle} backHref="/student" />
         <div className="rounded-2xl border border-indigo-500/25 bg-gradient-to-b from-indigo-500/10 to-transparent px-6 py-10 text-center">
           <BookOpen className="mx-auto mb-3 text-indigo-300" size={40} />
@@ -196,7 +196,7 @@ export default function DrivingGuidePage() {
 
   if (!session) {
     return (
-      <div className="flex flex-col gap-4 pb-6">
+      <div className="select-none flex flex-col gap-4 pb-6">
         <StudentPageHeader title={DRIVING_GUIDE_COPY.pageTitle} backHref="/student" />
         <p className="text-center text-sm text-s-text-secondary">暂时无法加载练习，请稍后再试。</p>
       </div>
@@ -205,7 +205,7 @@ export default function DrivingGuidePage() {
 
   if (!sessionStarted) {
     return (
-      <div className="flex flex-col gap-5 pb-6">
+      <div className="select-none flex flex-col gap-5 pb-6">
         <StudentPageHeader title={DRIVING_GUIDE_COPY.pageTitle} backHref="/student" />
         <div className="rounded-2xl border border-indigo-500/25 bg-gradient-to-b from-indigo-500/10 to-transparent px-6 py-10 text-center">
           <h2 className="font-display text-lg font-semibold text-indigo-100">
@@ -228,7 +228,7 @@ export default function DrivingGuidePage() {
   }
 
   return (
-    <div className="flex flex-col gap-4 pb-6">
+    <div className="select-none flex flex-col gap-4 pb-6">
       <StudentPageHeader title={DRIVING_GUIDE_COPY.pageTitle} backHref="/student" />
 
       <p className="text-center text-xs text-indigo-200/70">
