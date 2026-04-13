@@ -27,6 +27,7 @@ export async function GET() {
           baseScore: true,
           maintenanceMathEnabled: true,
           drivingGuideEnabled: true,
+          mechaChatEnabled: true,
         },
       },
       studentMechas: true,
@@ -88,6 +89,9 @@ export async function GET() {
       enabled: student.parent.drivingGuideEnabled,
       completedToday: !!drivingGuideLogToday,
       date: dateKey,
+    },
+    mechaChat: {
+      enabled: student.parent.mechaChatEnabled,
     },
     showPinyin: student.parent.showPinyin,
     baseScore: (student.parent.baseScore ?? 1) as 0.1 | 1 | 10,

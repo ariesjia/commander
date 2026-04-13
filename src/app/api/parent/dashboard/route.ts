@@ -28,6 +28,7 @@ export async function GET(request: Request) {
         maintenanceMathEnabled: true,
         dailyBattleMinTaskPoints: true,
         drivingGuideEnabled: true,
+        mechaChatEnabled: true,
       },
     }),
     prisma.student.findUniqueOrThrow({
@@ -127,6 +128,9 @@ export async function GET(request: Request) {
       enabled: parent.drivingGuideEnabled,
       completedToday: !!drivingGuideLogToday,
       date: todayStr,
+    },
+    mechaChat: {
+      enabled: parent.mechaChatEnabled,
     },
     showPinyin: parent.showPinyin,
     dailyBattleMinTaskPoints: parent.dailyBattleMinTaskPoints,

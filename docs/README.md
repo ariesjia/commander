@@ -35,6 +35,7 @@
 | [0007-student-daily-maintenance-math](./stories/0007-student-daily-maintenance-math.md) | 学生每日机甲维修（一年级口算）：维修叙事、出题器抽象、每日一次、无积分；家长可关开（默认开） |
 | [0008-combat-power-system](./stories/0008-combat-power-system.md) | 战力值系统：战力 = **各已领养机甲** `MechaLevel.level` **求和**×系数 + 道具库存贡献（`Item.combatBonus`×数量） |
 | [0009-student-driving-guide-hanzi](./stories/0009-student-driving-guide-hanzi.md) | 学生「驾驶指南」：每回 10 字、逐字拼音、整词手写；无语音；成功鼓励/失败提示；识别方案见 story |
+| [0010-student-mecha-companion-chat](./stories/0010-student-mecha-companion-chat.md) | 学生与主机甲 AI 对话：录音输入、TTS 朗读回复、新建会话与历史、世界观+机甲档案系统提示词 |
 | [stories/](./stories/) | 开发需求文档：`000x-<name>.md` 格式 |
 
 ---

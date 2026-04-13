@@ -59,12 +59,14 @@ export const HandwritingCanvas = forwardRef<HandwritingCanvasHandle, Props>(
     };
 
     const onPointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
+      e.preventDefault();
       e.currentTarget.setPointerCapture(e.pointerId);
       drawingRef.current = true;
       lastRef.current = getPos(e);
     };
 
     const onPointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
+      e.preventDefault();
       if (!drawingRef.current) return;
       const canvas = canvasRef.current;
       const ctx = canvas?.getContext("2d");
@@ -107,6 +109,8 @@ export const HandwritingCanvas = forwardRef<HandwritingCanvasHandle, Props>(
         onPointerUp={endStroke}
         onPointerCancel={endStroke}
         onPointerLeave={endStroke}
+        onTouchStart={(e) => e.preventDefault()}
+        onTouchMove={(e) => e.preventDefault()}
         style={{ width: "100%", height: "min(340px, 58vh)" }}
       />
     );

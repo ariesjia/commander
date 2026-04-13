@@ -27,6 +27,8 @@ model Parent {
   dailyBattleMinTaskPoints Int @default(5)
   /// 学生端「驾驶指南」识字手写练习，默认开启
   drivingGuideEnabled Boolean @default(true)
+  /// 学生端「机甲对话」AI 陪伴，默认开启
+  mechaChatEnabled Boolean @default(true)
   createdAt    DateTime @default(now())
 
   student Student?
@@ -56,6 +58,38 @@ model Student {
   studentItems    StudentItem[]
   studentMaintenanceMathLogs StudentMaintenanceMathLog[]
   studentDrivingGuideLogs    StudentDrivingGuideLog[]
+  mechaChatSessions          MechaChatSession[]
+}
+
+enum MechaChatRole {
+  USER
+  ASSISTANT
+}
+
+/// 学生与主机甲的 AI 对话会话
+model MechaChatSession {
+  id        String   @id @default(cuid())
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  mechaSlug String
+  title     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  messages MechaChatMessage[]
+
+  @@index([studentId, updatedAt])
+}
+
+model MechaChatMessage {
+  id        String           @id @default(cuid())
+  sessionId String
+  session   MechaChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  role      MechaChatRole
+  content   String           @db.Text
+  createdAt DateTime         @default(now())
+
+  @@index([sessionId, createdAt])
 }
 
 /// 每日「驾驶指南」完成记录，无积分

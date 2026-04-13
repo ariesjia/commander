@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useData } from "@/contexts/DataContext";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
-import { User, KeyRound, LogOut, Check, BookOpen, Wrench, Swords, Car } from "lucide-react";
+import { User, KeyRound, LogOut, Check, BookOpen, Wrench, Swords, Car, MessageCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function SettingsPage() {
@@ -19,6 +19,8 @@ export default function SettingsPage() {
     updateDailyBattleMinTaskPoints,
     drivingGuide,
     updateDrivingGuideEnabled,
+    mechaChat,
+    updateMechaChatEnabled,
   } = useData();
   const router = useRouter();
 
@@ -30,6 +32,7 @@ export default function SettingsPage() {
   const [savingPinyin, setSavingPinyin] = useState(false);
   const [savingMaintenance, setSavingMaintenance] = useState(false);
   const [savingDrivingGuide, setSavingDrivingGuide] = useState(false);
+  const [savingMechaChat, setSavingMechaChat] = useState(false);
   const [battleMinPtsDraft, setBattleMinPtsDraft] = useState(dailyBattleMinTaskPoints);
   const [savingBattleMin, setSavingBattleMin] = useState(false);
   const [savedBattleMin, setSavedBattleMin] = useState(false);
@@ -112,6 +115,17 @@ export default function SettingsPage() {
       // ignore
     } finally {
       setSavingDrivingGuide(false);
+    }
+  };
+
+  const handleToggleMechaChat = async () => {
+    setSavingMechaChat(true);
+    try {
+      await updateMechaChatEnabled(!mechaChat.enabled);
+    } catch {
+      // ignore
+    } finally {
+      setSavingMechaChat(false);
     }
   };
 
@@ -270,6 +284,38 @@ export default function SettingsPage() {
             <div
               className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow transition-transform ${
                 drivingGuide.enabled ? "left-6" : "left-1"
+              }`}
+            />
+          </div>
+        </button>
+      </div>
+
+      {/* 机甲对话 */}
+      <div className="rounded-xl border border-p-border bg-p-card p-5">
+        <div className="flex items-center gap-2 mb-4">
+          <MessageCircle size={18} className="text-p-accent" />
+          <h2 className="text-base font-medium text-p-text">机甲对话</h2>
+        </div>
+        <p className="text-sm text-p-text-secondary mb-4">
+          开启后，孩子可与当前主机甲进行语音/文字对话（AI 陪伴与鼓励），会产生大模型与语音转写费用。关闭后学生端入口隐藏。
+        </p>
+        <button
+          type="button"
+          onClick={handleToggleMechaChat}
+          disabled={savingMechaChat}
+          className={`flex items-center justify-between w-full rounded-lg border-2 px-4 py-3 transition-colors cursor-pointer ${
+            mechaChat.enabled ? "border-p-accent bg-p-accent/5" : "border-p-border bg-white hover:bg-gray-50"
+          }`}
+        >
+          <span className="text-sm font-medium text-p-text">{mechaChat.enabled ? "已开启" : "已关闭"}</span>
+          <div
+            className={`relative h-6 w-11 rounded-full transition-colors ${
+              mechaChat.enabled ? "bg-p-accent" : "bg-gray-300"
+            }`}
+          >
+            <div
+              className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow transition-transform ${
+                mechaChat.enabled ? "left-6" : "left-1"
               }`}
             />
           </div>

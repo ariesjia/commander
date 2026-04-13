@@ -81,6 +81,25 @@ export default function DrivingGuidePage() {
 
   useEffect(() => () => cancelIntroSpeech(), []);
 
+  useEffect(() => {
+    if (!sessionStarted || finished) return;
+    const { body, documentElement } = document;
+    const prevBodyOverflow = body.style.overflow;
+    const prevBodyOverscroll = body.style.overscrollBehavior;
+    const prevHtmlOverscroll = documentElement.style.overscrollBehavior;
+
+    // 手写阶段禁用页面级滚动和下拉刷新，避免书写时误触发。
+    body.style.overflow = "hidden";
+    body.style.overscrollBehavior = "none";
+    documentElement.style.overscrollBehavior = "none";
+
+    return () => {
+      body.style.overflow = prevBodyOverflow;
+      body.style.overscrollBehavior = prevBodyOverscroll;
+      documentElement.style.overscrollBehavior = prevHtmlOverscroll;
+    };
+  }, [sessionStarted, finished]);
+
   const current = session?.steps[stepIdx];
 
   const handleStart = async () => {

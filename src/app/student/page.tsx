@@ -13,7 +13,7 @@ import { XuanjiaProgress } from "@/components/mecha/XuanjiaProgress";
 import Link from "next/link";
 import { PinDialog } from "@/components/mode-switch/PinDialog";
 import Image from "next/image";
-import { Coins, Snowflake, Lock, Library, Swords, Package, Wrench, BookOpen } from "lucide-react";
+import { Coins, Snowflake, Lock, Library, Swords, Package, Wrench, BookOpen, MessageCircle } from "lucide-react";
 import { MECHA_STAGES } from "@/lib/mecha-config";
 import { toDisplay } from "@/lib/score-display";
 
@@ -32,6 +32,7 @@ export default function StudentHome() {
     baseScore,
     maintenanceMath,
     drivingGuide,
+    mechaChat,
   } = useData();
   const hasMechas = adoptedMechas.length > 0;
   const { user } = useAuth();
@@ -233,6 +234,15 @@ export default function StudentHome() {
               </Link>
             )
           )}
+          {/* {mechaChat.enabled && hasMechas && (
+            <Link
+              href="/student/mecha-chat"
+              className="mt-2 flex w-full min-h-[48px] items-center justify-center gap-2 rounded-xl border border-cyan-500/35 bg-gradient-to-r from-cyan-500/12 to-sky-500/10 px-4 py-3 text-sm font-semibold text-cyan-100/95 transition-colors hover:border-cyan-400/50 hover:bg-cyan-500/16 touch-manipulation active:scale-[0.99]"
+            >
+              <MessageCircle size={18} strokeWidth={2} />
+              机甲对话
+            </Link>
+          )} */}
         </section>
       )}
 

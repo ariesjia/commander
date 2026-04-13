@@ -121,6 +121,11 @@ export interface DrivingGuideStatus {
   date: string;
 }
 
+/** 与 profile / dashboard 的 mechaChat 一致（家长开关） */
+export interface MechaChatStatus {
+  enabled: boolean;
+}
+
 export interface StudentData {
   nickname: string;
   totalPoints: number;

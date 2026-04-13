@@ -10,6 +10,7 @@ import {
   TaskWithStatus,
   type MaintenanceMathStatus,
   type DrivingGuideStatus,
+  type MechaChatStatus,
 } from "@/types";
 import { api } from "@/lib/api";
 import { useMode } from "@/contexts/ModeContext";
@@ -37,6 +38,8 @@ interface DataState {
   updateMaintenanceMathEnabled: (enabled: boolean) => Promise<void>;
   drivingGuide: DrivingGuideStatus;
   updateDrivingGuideEnabled: (enabled: boolean) => Promise<void>;
+  mechaChat: MechaChatStatus;
+  updateMechaChatEnabled: (enabled: boolean) => Promise<void>;
   /** 每日战斗所需当日任务积分门槛（0–10，0 表示不门槛） */
   dailyBattleMinTaskPoints: number;
   updateDailyBattleMinTaskPoints: (n: number) => Promise<void>;
@@ -104,6 +107,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     completedToday: false,
     date: "",
   });
+  const [mechaChat, setMechaChat] = useState<MechaChatStatus>({ enabled: true });
   const [dailyBattleMinTaskPoints, setDailyBattleMinTaskPoints] = useState(5);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -126,6 +130,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
             baseScore?: number;
             maintenanceMath?: MaintenanceMathStatus;
             drivingGuide?: DrivingGuideStatus;
+            mechaChat?: MechaChatStatus;
             dailyBattleMinTaskPoints?: number;
           }>("/api/parent/dashboard"),
           api.get<Array<Task & { status: string; completedAt?: string }>>("/api/parent/tasks"),
@@ -163,6 +168,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         if (dashboard.drivingGuide) {
           setDrivingGuide(dashboard.drivingGuide);
         }
+        if (dashboard.mechaChat) {
+          setMechaChat(dashboard.mechaChat);
+        }
         if (typeof dashboard.dailyBattleMinTaskPoints === "number") {
           setDailyBattleMinTaskPoints(dashboard.dailyBattleMinTaskPoints);
         }
@@ -183,6 +191,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
               baseScore?: number;
               maintenanceMath?: MaintenanceMathStatus;
               drivingGuide?: DrivingGuideStatus;
+              mechaChat?: MechaChatStatus;
             }
           >("/api/student/profile"),
           api.get<TaskWithStatus[]>("/api/student/tasks"),
@@ -215,6 +224,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         }
         if (profile.drivingGuide) {
           setDrivingGuide(profile.drivingGuide);
+        }
+        if (profile.mechaChat) {
+          setMechaChat(profile.mechaChat);
         }
         setWeeklyCompletedCount(0);
         setWeeklyTotalCount(0);
@@ -335,6 +347,15 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     [refetch],
   );
 
+  const updateMechaChatEnabled = useCallback(
+    async (enabled: boolean) => {
+      await api.put("/api/parent/settings", { mechaChatEnabled: enabled });
+      setMechaChat((prev) => ({ ...prev, enabled }));
+      await refetch();
+    },
+    [refetch],
+  );
+
   return (
     <DataContext.Provider
       value={{
@@ -358,6 +379,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         updateMaintenanceMathEnabled,
         drivingGuide,
         updateDrivingGuideEnabled,
+        mechaChat,
+        updateMechaChatEnabled,
         dailyBattleMinTaskPoints,
         updateDailyBattleMinTaskPoints,
         addTask,
