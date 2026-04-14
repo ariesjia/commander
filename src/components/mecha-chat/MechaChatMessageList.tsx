@@ -7,6 +7,7 @@ export type ChatBubble = {
   role: "USER" | "ASSISTANT";
   content: string;
   createdAt?: string;
+  pending?: boolean;
 };
 
 type Props = {
@@ -43,11 +44,13 @@ export function MechaChatMessageList({
               className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
                 isUser
                   ? "bg-cyan-500/25 text-cyan-50"
-                  : "border border-cyan-500/25 bg-[#0a1628]/90 text-cyan-50/95"
+                  : m.pending
+                    ? "border border-cyan-500/30 bg-[#0a1628]/75 text-cyan-200/90"
+                    : "border border-cyan-500/25 bg-[#0a1628]/90 text-cyan-50/95"
               }`}
             >
               <p className="whitespace-pre-wrap break-words">{m.content}</p>
-              {!isUser && (
+              {!isUser && !m.pending && (
                 <button
                   type="button"
                   onClick={() => onSpeak(m.id, m.content)}

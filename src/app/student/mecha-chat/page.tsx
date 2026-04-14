@@ -148,28 +148,55 @@ export default function MechaChatPage() {
   const sendPayload = useCallback(
     async (body: { text?: string; audioBase64?: string; audioMimeType?: string }) => {
       if (!editableSessionId) return;
+      const localId = `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      const localAssistantId = `${localId}-assistant`;
+      const isVoice = !body.text && !!body.audioBase64;
+      const optimisticUserText = body.text?.trim() || "语音识别中…";
       setSending(true);
       setError(null);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: localId,
+          role: "USER" as const,
+          content: optimisticUserText,
+          pending: isVoice,
+        },
+        {
+          id: localAssistantId,
+          role: "ASSISTANT" as const,
+          content: "识别与思考中…",
+          pending: true,
+        },
+      ]);
       try {
         const res = await api.post<{
           userMessage: { id: string; content: string };
           assistantMessage: { id: string; content: string; createdAt: string };
         }>(`/api/student/mecha-chat/sessions/${editableSessionId}/messages`, body);
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: res.userMessage.id,
-            role: "USER" as const,
-            content: res.userMessage.content,
-          },
-          {
-            id: res.assistantMessage.id,
-            role: "ASSISTANT" as const,
-            content: res.assistantMessage.content,
-          },
-        ]);
+        setMessages((prev) =>
+          prev.map((m) => {
+            if (m.id === localId) {
+              return {
+                id: res.userMessage.id,
+                role: "USER" as const,
+                content: res.userMessage.content,
+              };
+            }
+            if (m.id === localAssistantId) {
+              return {
+                id: res.assistantMessage.id,
+                role: "ASSISTANT" as const,
+                content: res.assistantMessage.content,
+                createdAt: res.assistantMessage.createdAt,
+              };
+            }
+            return m;
+          }),
+        );
         await refreshSessionList();
       } catch (e: unknown) {
+        setMessages((prev) => prev.filter((m) => m.id !== localId && m.id !== localAssistantId));
         const err = e as Error & { message?: string };
         setError(err.message ?? "发送失败");
       } finally {

@@ -31,66 +31,15 @@ type ApiChatMessage = {
   content: string | ApiContentPart[];
 };
 
-export type CompleteMechaChatOptions = {
-  /**
-   * 本轮 user 为语音：把原始音频作为 input_audio 发给 chat/completions（不经 Whisper）。
-   * history 中对应 user 行为占位文案 {@link MECHA_CHAT_VOICE_PLACEHOLDER}。
-   */
-  lastUserInputAudio?: { base64: string; format: string };
+type ChatCompletionResponse = {
+  choices?: Array<{ message?: { content?: unknown } }>;
 };
 
-/**
- * 非流式 chat completions；history 不含 system，由调用方单独传入 system。
- * 语音轮次需在 options 中传入 lastUserInputAudio，且需使用支持 input_audio 的模型（如 gpt-audio 等，依供应商文档）。
- */
-export async function completeMechaChat(
-  systemPrompt: string,
-  history: ChatMessage[],
-  options?: CompleteMechaChatOptions,
-): Promise<string> {
+async function callChatCompletions(messages: ApiChatMessage[]): Promise<ChatCompletionResponse> {
   const { apiKey, baseUrl, chatModel } = resolveMechaChatOpenAI();
   if (!apiKey) {
     throw new Error("缺少 OPENAI_API_KEY 或 MECHA_CHAT_API_KEY");
   }
-
-  const trimmed = history.filter((m) => m.role !== "system").slice(-MAX_HISTORY_MESSAGES);
-
-  const toApiRole = (r: ChatMessage["role"]): "user" | "assistant" =>
-    r === "USER" || r === "user" ? "user" : "assistant";
-
-  const voiceHint =
-    "学生发来一段语音，请听懂内容后，以主机甲同伴的身份自然回复；若听不清可礼貌请对方再说一次。";
-
-  const mapped: ApiChatMessage[] = trimmed.map((m, idx) => {
-    const isLast = idx === trimmed.length - 1;
-    const isUser = toApiRole(m.role) === "user";
-    if (
-      options?.lastUserInputAudio &&
-      isLast &&
-      isUser &&
-      m.content === MECHA_CHAT_VOICE_PLACEHOLDER
-    ) {
-      return {
-        role: "user",
-        content: [
-          { type: "text", text: voiceHint },
-          {
-            type: "input_audio",
-            input_audio: {
-              data: options.lastUserInputAudio.base64,
-              format: options.lastUserInputAudio.format,
-            },
-          },
-        ],
-      };
-    }
-    return {
-      role: toApiRole(m.role),
-      content: m.content,
-    };
-  });
-
-  const messages: ApiChatMessage[] = [{ role: "system", content: systemPrompt }, ...mapped];
 
   const body: Record<string, unknown> = {
     model: chatModel,
@@ -114,13 +63,16 @@ export async function completeMechaChat(
     throw new Error(`对话 API 错误 ${res.status}: ${raw.slice(0, 500)}`);
   }
 
-  let outer: unknown;
+  let outer: ChatCompletionResponse;
   try {
-    outer = JSON.parse(raw) as Record<string, unknown>;
+    outer = JSON.parse(raw) as ChatCompletionResponse;
   } catch {
     throw new Error("对话 API 返回非 JSON");
   }
+  return outer;
+}
 
+function extractTextFromCompletion(outer: ChatCompletionResponse): string {
   const choices = (outer as { choices?: unknown }).choices;
   const first =
     Array.isArray(choices) && choices[0] && typeof choices[0] === "object"
@@ -140,6 +92,50 @@ export async function completeMechaChat(
       })
       .join("");
   }
-
   return text.trim();
+}
+
+/** 语音直传模型，返回识别文本（不走 Whisper 接口）。 */
+export async function transcribeMechaChatAudio(
+  audio: { base64: string; format: string },
+): Promise<string> {
+  const messages: ApiChatMessage[] = [
+    {
+      role: "system",
+      content:
+        "你是语音识别助手。请将用户语音内容转写为简体中文文本，只输出转写结果，不要解释，不要加前缀。",
+    },
+    {
+      role: "user",
+      content: [
+        { type: "text", text: "请转写这段语音。" },
+        {
+          type: "input_audio",
+          input_audio: { data: audio.base64, format: audio.format },
+        },
+      ],
+    },
+  ];
+  const outer = await callChatCompletions(messages);
+  return extractTextFromCompletion(outer);
+}
+
+/** 非流式 chat completions；history 不含 system，由调用方单独传入 system。 */
+export async function completeMechaChat(
+  systemPrompt: string,
+  history: ChatMessage[],
+): Promise<string> {
+  const trimmed = history.filter((m) => m.role !== "system").slice(-MAX_HISTORY_MESSAGES);
+  const toApiRole = (r: ChatMessage["role"]): "user" | "assistant" =>
+    r === "USER" || r === "user" ? "user" : "assistant";
+  const messages: ApiChatMessage[] = [
+    { role: "system", content: systemPrompt },
+    ...trimmed.map((m) => ({
+      role: toApiRole(m.role),
+      content: m.content,
+    })),
+  ];
+
+  const outer = await callChatCompletions(messages);
+  return extractTextFromCompletion(outer);
 }

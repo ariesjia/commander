@@ -20,7 +20,9 @@ export function resolveMechaChatOpenAI(): MechaChatOpenAIConfig {
     process.env.OPENAI_BASE_URL?.trim() ||
     DEFAULT_OPENAI_BASE
   ).replace(/\/$/, "");
-  const chatModel = process.env.MECHA_CHAT_MODEL?.trim() || "gpt-4o-mini";
+  const chatModel =
+    process.env.MECHA_CHAT_MODEL?.trim() ||
+    "gpt-4o-mini";
   return { apiKey, baseUrl, chatModel };
 }
 

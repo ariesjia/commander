@@ -8,6 +8,7 @@ import {
   completeMechaChat,
   MECHA_CHAT_VOICE_PLACEHOLDER,
   mimeTypeToInputAudioFormat,
+  transcribeMechaChatAudio,
   type ChatMessage,
 } from "@/lib/mecha-chat/openai-chat";
 import { MECHA_CHAT_MAX_AUDIO_BYTES } from "@/lib/mecha-chat/config";
@@ -153,6 +154,22 @@ export async function POST(req: Request, { params }: RouteParams) {
     },
   });
 
+  if (audioPayload) {
+    try {
+      const recognized = (await transcribeMechaChatAudio(audioPayload)).trim();
+      if (recognized) {
+        userContentForDb = recognized;
+        await prisma.mechaChatMessage.update({
+          where: { id: userRow.id },
+          data: { content: recognized },
+        });
+      }
+    } catch (e) {
+      console.error("[mecha-chat] audio recognition failed:", e);
+      // 保留占位文案，不阻断整体对话流程
+    }
+  }
+
   const dbMessages = await prisma.mechaChatMessage.findMany({
     where: { sessionId },
     orderBy: { createdAt: "asc" },
@@ -165,9 +182,7 @@ export async function POST(req: Request, { params }: RouteParams) {
 
   let assistantText: string;
   try {
-    assistantText = await completeMechaChat(systemPrompt, history, {
-      lastUserInputAudio: audioPayload ?? undefined,
-    });
+    assistantText = await completeMechaChat(systemPrompt, history);
   } catch (e) {
     const msg = e instanceof Error ? e.message : "对话失败";
     console.error("[mecha-chat] chat completion failed:", e);
