@@ -4,7 +4,7 @@ import { requireStudent, getStudentId } from "@/lib/api-auth";
 import { getTodayStr } from "@/lib/utils";
 import { chinaDateStrToDbDate } from "@/lib/battle-server";
 import {
-  generateDrivingGuideSession,
+  buildDrivingGuideSessionForStudent,
   sessionHash,
 } from "@/lib/driving-guide/session";
 import {
@@ -67,7 +67,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "请提交手写图片" }, { status: 400 });
   }
 
-  const spec = generateDrivingGuideSession({ studentId, dateKey });
+  const spec = buildDrivingGuideSessionForStudent({
+    studentId,
+    dateKey,
+    drivingGuideWordList: student.drivingGuideWordList,
+  });
   const expectedHash = sessionHash(spec);
   if (sessionHashIn !== expectedHash) {
     return NextResponse.json(

@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { User, KeyRound, LogOut, Check, BookOpen, Wrench, Swords, Car, MessageCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { api } from "@/lib/api";
 
 export default function SettingsPage() {
   const { user, updateNickname, updatePin, logout } = useAuth();
@@ -39,6 +40,11 @@ export default function SettingsPage() {
   const [savingNickname, setSavingNickname] = useState(false);
   const [savingPin, setSavingPin] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [drivingGuideWordsText, setDrivingGuideWordsText] = useState("");
+  const [loadingDrivingGuideWords, setLoadingDrivingGuideWords] = useState(true);
+  const [savingDrivingGuideWords, setSavingDrivingGuideWords] = useState(false);
+  const [drivingGuideWordsError, setDrivingGuideWordsError] = useState<string | null>(null);
+  const [savedDrivingGuideWords, setSavedDrivingGuideWords] = useState(false);
 
   useEffect(() => {
     setNickname(user?.childNickname ?? "");
@@ -51,6 +57,28 @@ export default function SettingsPage() {
   useEffect(() => {
     setBattleMinPtsDraft(dailyBattleMinTaskPoints);
   }, [dailyBattleMinTaskPoints]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoadingDrivingGuideWords(true);
+      setDrivingGuideWordsError(null);
+      try {
+        const data = await api.get<{ words: string[]; usingDefault: boolean }>(
+          "/api/parent/student/driving-guide-words",
+        );
+        if (cancelled) return;
+        setDrivingGuideWordsText(data.words.length ? data.words.join("\n") : "");
+      } catch {
+        if (!cancelled) setDrivingGuideWordsError("词表加载失败");
+      } finally {
+        if (!cancelled) setLoadingDrivingGuideWords(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleSaveNickname = async () => {
     if (!nickname.trim()) return;
@@ -115,6 +143,25 @@ export default function SettingsPage() {
       // ignore
     } finally {
       setSavingDrivingGuide(false);
+    }
+  };
+
+  const handleSaveDrivingGuideWords = async () => {
+    setSavingDrivingGuideWords(true);
+    setDrivingGuideWordsError(null);
+    setSavedDrivingGuideWords(false);
+    try {
+      const data = await api.put<{ words: string[]; usingDefault: boolean }>(
+        "/api/parent/student/driving-guide-words",
+        { text: drivingGuideWordsText },
+      );
+      setDrivingGuideWordsText(data.words.length ? data.words.join("\n") : "");
+      setSavedDrivingGuideWords(true);
+      setTimeout(() => setSavedDrivingGuideWords(false), 2000);
+    } catch (e) {
+      setDrivingGuideWordsError(e instanceof Error ? e.message : "保存失败");
+    } finally {
+      setSavingDrivingGuideWords(false);
     }
   };
 
@@ -288,6 +335,36 @@ export default function SettingsPage() {
             />
           </div>
         </button>
+        <div className="mt-5 pt-5 border-t border-p-border">
+          <p className="text-sm text-p-text-secondary mb-2">
+            自定义词语池（可选）：每行或逗号分隔<strong className="text-p-text font-medium">两字中文词</strong>
+            ，至少 5 个不重复。留空并保存则使用系统默认词库。关闭上方开关时仍可编辑，孩子端仅在开启时可练习。
+          </p>
+          <textarea
+            value={drivingGuideWordsText}
+            onChange={(e) => setDrivingGuideWordsText(e.target.value)}
+            disabled={loadingDrivingGuideWords || savingDrivingGuideWords}
+            placeholder={"例如：\n讲话\n土地\n故乡"}
+            rows={6}
+            className="w-full rounded-lg border-2 border-p-border bg-white px-3 py-2 text-sm text-p-text placeholder:text-p-text-secondary/60 focus:border-p-accent focus:outline-none focus:ring-2 focus:ring-p-accent/20 disabled:opacity-60"
+          />
+          {drivingGuideWordsError ? (
+            <p className="text-sm text-red-600 mt-2">{drivingGuideWordsError}</p>
+          ) : null}
+          <div className="flex gap-3 mt-3 items-center flex-wrap">
+            <Button
+              onClick={handleSaveDrivingGuideWords}
+              size="md"
+              loading={savingDrivingGuideWords}
+              disabled={loadingDrivingGuideWords}
+            >
+              {savedDrivingGuideWords ? <Check size={16} /> : "保存词表"}
+            </Button>
+            {loadingDrivingGuideWords ? (
+              <span className="text-sm text-p-text-secondary">加载中…</span>
+            ) : null}
+          </div>
+        </div>
       </div>
 
       {/* 机甲对话 */}

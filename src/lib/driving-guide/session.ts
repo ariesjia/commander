@@ -1,13 +1,13 @@
 import { pinyin } from "pinyin-pro";
 import {
-  DRIVING_GUIDE_WORDS,
-  type DrivingGuideWord,
-} from "@/config/driving-guide-words";
-import {
   DRIVING_GUIDE_GENERATOR_ID,
   DRIVING_GUIDE_GENERATOR_VERSION,
   DRIVING_GUIDE_STEPS_PER_SESSION,
 } from "@/lib/driving-guide/constants";
+import {
+  drivingGuideWordPoolFingerprint,
+  resolveDrivingGuideWordPool,
+} from "@/lib/driving-guide/word-pool";
 
 export type DrivingGuideCharHint = { char: string; pinyin: string };
 
@@ -59,16 +59,20 @@ function buildStepPublic(word: string, stepIndex: number): DrivingGuideStepPubli
 }
 
 /**
- * 从词库确定性抽取 5 个不重复两字词（10 字）
+ * 从词库确定性抽取 5 个不重复两字词（10 字）。
+ * `wordPool` 长度须 ≥ `DRIVING_GUIDE_STEPS_PER_SESSION`（由 `resolveDrivingGuideWordPool` 保证）。
  */
 export function generateDrivingGuideSession(input: {
   studentId: string;
   dateKey: string;
+  wordPool: readonly string[];
+  /** 含默认/自定义与词表内容摘要，见 `drivingGuideWordPoolFingerprint` */
+  poolFingerprint: string;
 }): DrivingGuideSessionSpec {
-  const seedStr = `${input.studentId}:${input.dateKey}:${DRIVING_GUIDE_GENERATOR_ID}:${DRIVING_GUIDE_GENERATOR_VERSION}`;
+  const seedStr = `${input.studentId}:${input.dateKey}:${DRIVING_GUIDE_GENERATOR_ID}:${DRIVING_GUIDE_GENERATOR_VERSION}:${input.poolFingerprint}`;
   const rand = mulberry32(hash32(seedStr));
 
-  const pool = [...DRIVING_GUIDE_WORDS] as DrivingGuideWord[];
+  const pool = [...input.wordPool];
   const indices = pool.map((_, i) => i);
   for (let i = indices.length - 1; i > 0; i--) {
     const j = Math.floor(rand() * (i + 1));
@@ -96,4 +100,20 @@ export function sessionHash(spec: DrivingGuideSessionSpec): string {
 
 export function specToPublicSteps(spec: DrivingGuideSessionSpec): DrivingGuideStepPublic[] {
   return spec.steps.map((s, i) => buildStepPublic(s.word, i));
+}
+
+/** 与 GET session / POST step 共用：同一 Json 字段 → 同一 spec */
+export function buildDrivingGuideSessionForStudent(input: {
+  studentId: string;
+  dateKey: string;
+  drivingGuideWordList: unknown;
+}): DrivingGuideSessionSpec {
+  const { pool, source } = resolveDrivingGuideWordPool(input.drivingGuideWordList);
+  const poolFingerprint = drivingGuideWordPoolFingerprint(pool, source);
+  return generateDrivingGuideSession({
+    studentId: input.studentId,
+    dateKey: input.dateKey,
+    wordPool: pool,
+    poolFingerprint,
+  });
 }

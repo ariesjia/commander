@@ -59,6 +59,8 @@ model Student {
   studentMaintenanceMathLogs StudentMaintenanceMathLog[]
   studentDrivingGuideLogs    StudentDrivingGuideLog[]
   mechaChatSessions          MechaChatSession[]
+  /// 驾驶指南自定义词语池（JSON string[]）；null 或空数组表示使用代码默认词库
+  drivingGuideWordList Json?
 }
 
 enum MechaChatRole {

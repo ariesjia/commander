@@ -4,7 +4,7 @@ import { requireStudent, getStudentId } from "@/lib/api-auth";
 import { getTodayStr } from "@/lib/utils";
 import { chinaDateStrToDbDate } from "@/lib/battle-server";
 import {
-  generateDrivingGuideSession,
+  buildDrivingGuideSessionForStudent,
   sessionHash,
   specToPublicSteps,
 } from "@/lib/driving-guide/session";
@@ -47,7 +47,11 @@ export async function GET() {
     });
   }
 
-  const spec = generateDrivingGuideSession({ studentId, dateKey });
+  const spec = buildDrivingGuideSessionForStudent({
+    studentId,
+    dateKey,
+    drivingGuideWordList: student.drivingGuideWordList,
+  });
   const hash = sessionHash(spec);
 
   return NextResponse.json({
