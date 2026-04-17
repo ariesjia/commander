@@ -213,6 +213,7 @@ export const MECHA_SEED_DATA: MechaConfig[] = [
     name: "方舟",
     description: "后勤补给型载具，擅长弹药补给与战场维修",
     intro: "方舟，后勤补给型载具，携带大量弹药、能源与维修物资，可向前线友军远程投送补给，并部署小型维修机器人进行战场抢修，是持续作战的保障单位。负责弹药补给、能源投送、战场维修、物资空投。它在历练中不断觉醒，解锁更强形态、补给投送舱与续航之力，每一次蜕变都让后勤之力更强。",
+    evolutionVideoUrl: "/mecha/ark/animation.mp4",
     sortOrder: 10,
     levels: [
       { level: 0, name: "量产型", threshold: 0, imageUrl: "/mecha/ark/level-0.png", description: "基础弹药补给能力，可执行物资空投任务。" },
