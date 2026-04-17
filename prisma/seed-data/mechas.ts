@@ -140,6 +140,7 @@ export const MECHA_SEED_DATA: MechaConfig[] = [
     name: "空境",
     description: "空中全域载具机甲，擅长高空穿梭与快速部署",
     intro: "空境，空中全域载具机甲，擅长高空穿梭与快速部署，可跨越地形实现全员机动转移。负责空中运输、全域支援、高空侦查。它在历练中不断觉醒，解锁更强形态、天境引擎与跃迁之力，每一次蜕变都让穿梭之力更强。",
+    evolutionVideoUrl: "/mecha/aether/animation.mp4",
     sortOrder: 6,
     levels: [
       { level: 0, name: "量产型", threshold: 0, imageUrl: "/mecha/aether/level-0.png", description: "基础高空穿梭能力，可执行空中运输任务。" },
