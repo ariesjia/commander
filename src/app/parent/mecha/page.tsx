@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { AnimatePresence } from "framer-motion";
 import { api } from "@/lib/api";
 import { useData } from "@/contexts/DataContext";
-import { Bot, X } from "lucide-react";
+import { Bot, Clapperboard, X } from "lucide-react";
 import { toDisplay } from "@/lib/score-display";
 import { MechaSkillList } from "@/components/mecha/MechaSkillList";
+import { MechaEvolutionVideoModal } from "@/components/mecha/MechaEvolutionVideoModal";
 
 interface MechaLevel {
   level: number;
@@ -33,6 +35,7 @@ interface ParentMechaItem {
   skills: MechaSkillItem[];
   ownedCount: number;
   points: number;
+  evolutionVideoUrl: string | null;
 }
 
 function getCurrentLevel(levels: MechaLevel[], points: number): MechaLevel | null {
@@ -54,6 +57,8 @@ function MechaDetailModal({
   baseScore: import("@/lib/score-display").BaseScore;
   onClose: () => void;
 }) {
+  const [showVideoModal, setShowVideoModal] = useState(false);
+  const videoUrl = mecha.evolutionVideoUrl?.trim() ?? "";
   const currentLevel = getCurrentLevel(mecha.levels, mecha.points);
   const currentIdx = mecha.levels.findIndex((l) => l === currentLevel);
   const currentLevelRef = useRef<HTMLDivElement>(null);
@@ -130,6 +135,17 @@ function MechaDetailModal({
                   <p className="text-lg font-semibold text-p-text">{mecha.points}</p>
                 </div>
               </div>
+
+              {videoUrl ? (
+                <button
+                  type="button"
+                  onClick={() => setShowVideoModal(true)}
+                  className="mb-4 flex w-full items-center justify-center gap-2 rounded-xl border border-p-accent/35 bg-p-accent/8 px-4 py-3 text-sm font-medium text-p-text transition-colors hover:bg-p-accent/15"
+                >
+                  <Clapperboard size={18} className="text-p-accent shrink-0" aria-hidden />
+                  进化影像
+                </button>
+              ) : null}
 
               {/* 当前等级与进度 */}
               {currentLevel && (
@@ -211,6 +227,17 @@ function MechaDetailModal({
           </div>
         </div>
       </div>
+
+      <AnimatePresence>
+        {showVideoModal && videoUrl ? (
+          <MechaEvolutionVideoModal
+            key="parent-mecha-evolution-video"
+            videoUrl={videoUrl}
+            title={mecha.name}
+            onClose={() => setShowVideoModal(false)}
+          />
+        ) : null}
+      </AnimatePresence>
     </div>
   );
 }

@@ -59,6 +59,7 @@ export async function GET() {
       })),
       ownedCount: ownedBySlug[m.slug]?.count ?? 0,
       points: ownedBySlug[m.slug]?.points ?? 0,
+      evolutionVideoUrl: m.evolutionVideoUrl ?? null,
     }))
   );
 }
