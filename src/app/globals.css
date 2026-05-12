@@ -221,11 +221,93 @@ body:has(.theme-student) {
   animation: glow-breathe 3s ease-in-out infinite;
 }
 
+/** 大屏机甲背后径向光晕呼吸（仅大屏页使用） */
+@keyframes big-screen-mecha-glow-breathe {
+
+  0%,
+  100% {
+    opacity: 0.38;
+    transform: scale(0.93);
+  }
+
+  50% {
+    opacity: 0.9;
+    transform: scale(1.06);
+  }
+}
+
+@keyframes big-screen-mecha-glow-breathe-soft {
+
+  0%,
+  100% {
+    opacity: 0.22;
+    transform: scale(1.04);
+  }
+
+  50% {
+    opacity: 0.58;
+    transform: scale(0.91);
+  }
+}
+
+.animate-big-screen-mecha-glow-breathe {
+  animation: big-screen-mecha-glow-breathe 4.2s ease-in-out infinite;
+  will-change: opacity, transform;
+}
+
+.animate-big-screen-mecha-glow-breathe-soft {
+  animation: big-screen-mecha-glow-breathe-soft 5.6s ease-in-out infinite;
+  animation-delay: -2.5s;
+  will-change: opacity, transform;
+}
+
+/** 大屏机甲表面斜向掠过高光（周期性一闪而过） */
+@keyframes big-screen-mecha-shine-sweep {
+
+  0%,
+  80%,
+  100% {
+    transform: translate3d(-160%, 0, 0) skewX(-24deg);
+    opacity: 0;
+  }
+
+  82% {
+    opacity: 0.92;
+  }
+
+  88% {
+    transform: translate3d(200%, 0, 0) skewX(-24deg);
+    opacity: 0.5;
+  }
+
+  92% {
+    opacity: 0;
+  }
+}
+
+.animate-big-screen-mecha-shine-sweep {
+  animation: big-screen-mecha-shine-sweep 9s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
 @media (prefers-reduced-motion: reduce) {
 
   .animate-energy-pulse,
-  .animate-glow-breathe {
+  .animate-glow-breathe,
+  .animate-big-screen-mecha-glow-breathe,
+  .animate-big-screen-mecha-glow-breathe-soft,
+  .animate-big-screen-mecha-shine-sweep {
     animation: none;
+  }
+
+  .animate-big-screen-mecha-glow-breathe,
+  .animate-big-screen-mecha-glow-breathe-soft {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+
+  .animate-big-screen-mecha-shine-sweep {
+    opacity: 0;
   }
 }
 

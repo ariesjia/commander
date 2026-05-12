@@ -21,7 +21,8 @@ import { cn } from "@/lib/utils";
 
 type BigScreenPayload = {
   nickname: string;
-  totalPoints: number;
+  /** 可用积分，与学生首页「可用积分」一致 */
+  balance: number;
   baseScore: BaseScore;
   todayNet: number;
   yesterdayNet: number;
@@ -38,6 +39,25 @@ function formatSignedDb(dbNet: number, baseScore: BaseScore): string {
   if (disp === 0) return "0";
   const sign = disp > 0 ? "+" : "";
   return `${sign}${disp}`;
+}
+
+/** 激励用语：幅度（始终为正数字符串） */
+function formatMagnitudeDb(dbNet: number, baseScore: BaseScore): string {
+  return String(Math.abs(toDisplay(dbNet, baseScore)));
+}
+
+/** 昨日无流水时，按今日净变化给一句鼓励 */
+function cheerWhenNoYesterdayLogs(todayNet: number): string {
+  if (todayNet > 0) return "今天开张加分啦，超棒的！";
+  if (todayNet < 0) return "有点小波折没关系，下次一定能行～";
+  return "今天去完成几个任务，机甲为你加油！";
+}
+
+/** 昨日有流水时，在「比昨天多/少/持平」下再补一句 */
+function cheerVersusYesterday(delta: number): string {
+  if (delta > 0) return "太帅了，继续保持！";
+  if (delta < 0) return "别灰心，调整好节奏再来～";
+  return "稳扎稳打，也很厉害！";
 }
 
 export default function StudentBigScreenPage() {
@@ -114,7 +134,7 @@ export default function StudentBigScreenPage() {
           </button>
           <span className="hidden text-xs text-s-text-secondary sm:inline-flex sm:items-center sm:gap-1">
             <MonitorSmartphone size={14} className="opacity-70" />
-            约 45 秒自动更新
+            约 45 秒刷新
           </span>
         </div>
       </div>
@@ -147,38 +167,17 @@ export default function StudentBigScreenPage() {
           {/* 左侧：得分 */}
           <section className="flex flex-[1_1_42%] flex-col justify-center gap-4 lg:gap-6">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-s-primary/60">累计得分</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-s-primary/60">可用积分</p>
               <p
                 className="font-display font-bold tracking-tight text-s-text neon-text mt-2"
                 style={{ fontSize: "clamp(2.25rem, 7vw + 1rem, 6rem)", lineHeight: 1.05 }}
               >
-                {toDisplay(data.totalPoints, data.baseScore)}
+                {toDisplay(data.balance, data.baseScore)}
               </p>
-              <p className="mt-2 text-xs text-s-text-secondary">与家长端「累计积分」口径一致</p>
-            </div>
-
-            <div className="grid gap-3 rounded-2xl border border-white/8 bg-black/25 p-4 sm:p-6">
-              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/5 pb-3">
-                <span className="text-sm text-s-text-secondary">今日流水净变化</span>
-                <span
-                  className={cn(
-                    "font-display text-lg font-bold tabular-nums sm:text-xl",
-                    data.todayNet >= 0 ? "text-emerald-300" : "text-rose-300",
-                  )}
-                >
-                  {formatSignedDb(data.todayNet, data.baseScore)}
-                </span>
-              </div>
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="text-sm text-s-text-secondary">昨日流水净变化</span>
-                <span className="font-display text-lg font-bold tabular-nums text-s-text sm:text-xl">
-                  {formatSignedDb(data.yesterdayNet, data.baseScore)}
-                </span>
-              </div>
             </div>
 
             {/* 较昨日 */}
-            <div className="flex flex-wrap items-start gap-3 rounded-2xl border border-cyan-500/25 bg-gradient-to-br from-cyan-500/10 via-transparent to-violet-500/10 p-4 sm:p-5">
+            <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-cyan-500/25 bg-gradient-to-br from-cyan-500/10 via-transparent to-violet-500/10 p-4 sm:p-5">
               {data.deltaVsYesterday > 0 ? (
                 <TrendingUp className="mt-0.5 h-10 w-10 shrink-0 text-emerald-400" aria-hidden />
               ) : data.deltaVsYesterday < 0 ? (
@@ -187,57 +186,103 @@ export default function StudentBigScreenPage() {
                 <RotateCcw className="mt-0.5 h-10 w-10 shrink-0 text-s-text-secondary/70" aria-hidden />
               )}
               <div className="min-w-0 flex-1">
-                <p className="font-display text-base font-semibold text-cyan-100 sm:text-lg">较昨日</p>
+                
                 {data.yesterdayLogCount === 0 ? (
-                  <p className="mt-2 text-sm leading-relaxed text-s-text-secondary">
-                    昨日暂无影响累计分的积分流水。今日净变化{" "}
-                    <span className="font-semibold text-s-text">
-                      {formatSignedDb(data.todayNet, data.baseScore)}
-                    </span>
-                    ，继续加油～
-                  </p>
+                  <div className="mt-2 space-y-1.5">
+                    <p className="text-sm text-s-text-secondary">
+                      昨日无流水 · 今日{" "}
+                      <span className="font-semibold text-s-text">
+                        {formatSignedDb(data.todayNet, data.baseScore)}
+                      </span>
+                    </p>
+                    <p className="text-sm font-medium leading-snug text-cyan-200/90">
+                      {cheerWhenNoYesterdayLogs(data.todayNet)}
+                    </p>
+                  </div>
                 ) : (
-                  <p className="mt-2 text-sm leading-relaxed text-s-text-secondary">
-                    今日相对昨日的流水进度差：
-                    <span
-                      className={cn(
-                        "ml-1 font-display text-lg font-bold tabular-nums",
-                        data.deltaVsYesterday > 0 && "text-emerald-300",
-                        data.deltaVsYesterday < 0 && "text-rose-300",
-                        data.deltaVsYesterday === 0 && "text-s-text",
+                  <div className="mt-2 space-y-2">
+                    <p className="flex flex-wrap items-baseline gap-x-2 text-sm text-s-text-secondary">
+                      <span>
+                        今日{" "}
+                        <span className="font-display font-semibold tabular-nums text-s-text">
+                          {formatSignedDb(data.todayNet, data.baseScore)}
+                        </span>
+                      </span>
+                      <span className="text-s-text-secondary/35" aria-hidden>
+                        ·
+                      </span>
+                      <span>
+                        昨日{" "}
+                        <span className="font-display font-semibold tabular-nums text-s-text">
+                          {formatSignedDb(data.yesterdayNet, data.baseScore)}
+                        </span>
+                      </span>
+                    </p>
+                    <p className="font-display text-lg font-bold tabular-nums sm:text-xl">
+                      {data.deltaVsYesterday > 0 && (
+                        <span className="text-emerald-300">
+                          比昨天多 {formatMagnitudeDb(data.deltaVsYesterday, data.baseScore)}
+                        </span>
                       )}
-                    >
-                      {formatSignedDb(data.deltaVsYesterday, data.baseScore)}
-                    </span>
-                  </p>
+                      {data.deltaVsYesterday < 0 && (
+                        <span className="text-rose-300">
+                          比昨天少 {formatMagnitudeDb(data.deltaVsYesterday, data.baseScore)}
+                        </span>
+                      )}
+                      {data.deltaVsYesterday === 0 && (
+                        <span className="text-s-text-secondary">和昨天一样棒</span>
+                      )}
+                    </p>
+                    <p className="text-sm font-medium leading-snug text-cyan-200/88">
+                      {cheerVersusYesterday(data.deltaVsYesterday)}
+                    </p>
+                  </div>
                 )}
-                <p className="mt-3 text-[11px] leading-snug text-s-text-secondary/80">
-                  统计上海时区「今天 / 昨天」自然日的影响累计分的流水之和（不含兑换）。
-                  · {data.todayChina}
-                </p>
               </div>
             </div>
           </section>
 
           {/* 右侧：机甲 */}
           <section className="relative flex flex-[1_1_58%] min-h-[40vh] flex-col items-center justify-center lg:min-h-[min(70vh,50rem)]">
-            <div className="absolute inset-0 -z-[1] rounded-3xl bg-[radial-gradient(ellipse_at_50%_80%,rgba(34,211,238,0.12),transparent_55%)]" />
+            <div className="pointer-events-none absolute inset-0 -z-[1] overflow-hidden rounded-3xl" aria-hidden>
+              <div className="absolute inset-0 rounded-3xl bg-[radial-gradient(ellipse_at_50%_82%,rgba(34,211,238,0.1),transparent_58%)]" />
+              <div className="absolute left-1/2 top-[58%] -translate-x-1/2 -translate-y-1/2">
+                <div className="relative h-[min(92vw,28rem)] w-[min(112vw,38rem)] md:h-[min(40rem,85vh)] md:w-[min(48rem,92vw)]">
+                  <div
+                    className="animate-big-screen-mecha-glow-breathe absolute inset-0 rounded-[50%] bg-[radial-gradient(ellipse_at_center,rgba(0,212,255,0.48)_0%,rgba(139,92,246,0.2)_42%,transparent_72%)] blur-[38px]"
+                  />
+                  <div
+                    className="animate-big-screen-mecha-glow-breathe-soft absolute inset-0 rounded-[50%] bg-[radial-gradient(ellipse_at_center,rgba(34,211,238,0.28)_0%,rgba(236,72,153,0.08)_45%,transparent_62%)] blur-[28px]"
+                  />
+                </div>
+              </div>
+            </div>
             <p className="mb-4 text-center font-display text-xs font-semibold uppercase tracking-[0.35em] text-s-primary/55">
               {data.nickname} · 当前机体
             </p>
-            <div className="flex min-h-[min(52vh,28rem)] w-full flex-1 items-end justify-center px-2 lg:min-h-[min(64vh,40rem)]">
-              {data.primarySlug ? (
-                <XuanjiaViewer
-                  slug={data.primarySlug}
-                  mechaPoints={data.primaryMechaPoints}
-                  className="max-h-[min(72vh,48rem)] w-full max-w-[min(92vw,36rem)]"
+            <div className="relative flex min-h-[min(52vh,28rem)] w-full flex-1 items-end justify-center overflow-hidden rounded-2xl px-2 lg:min-h-[min(64vh,40rem)]">
+              <div
+                className="pointer-events-none absolute inset-0 z-[3] overflow-hidden rounded-2xl"
+                aria-hidden
+              >
+                <div
+                  className="animate-big-screen-mecha-shine-sweep absolute left-0 top-[6%] h-[88%] w-[min(42vw,14rem)] bg-[linear-gradient(100deg,transparent_0%,transparent_36%,rgba(236,254,255,0.85)_49.5%,rgba(165,243,252,0.35)_50.5%,transparent_64%,transparent_100%)] mix-blend-soft-light"
                 />
-              ) : (
-                <MechaViewer
-                  stage={data.mechaStage}
-                  className="aspect-[2/3] h-[min(72vh,48rem)] w-auto max-w-full"
-                />
-              )}
+              </div>
+              <div className="relative z-[1] flex w-full items-end justify-center">
+                {data.primarySlug ? (
+                  <XuanjiaViewer
+                    slug={data.primarySlug}
+                    mechaPoints={data.primaryMechaPoints}
+                    className="max-h-[min(72vh,48rem)] w-full max-w-[min(92vw,36rem)]"
+                  />
+                ) : (
+                  <MechaViewer
+                    stage={data.mechaStage}
+                    className="aspect-[2/3] h-[min(72vh,48rem)] w-auto max-w-full"
+                  />
+                )}
+              </div>
             </div>
           </section>
         </div>

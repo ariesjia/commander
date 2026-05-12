@@ -29,6 +29,37 @@ import { toDisplay } from "@/lib/score-display";
 
 import { useMecha, getLevelFromMecha } from "@/hooks/useMecha";
 
+/** 右上角：大屏入口（锁左侧） */
+function StudentHomeTopActions({
+  onLockClick,
+  topClass = "top-4",
+}: {
+  onLockClick: () => void;
+  topClass?: string;
+}) {
+  const router = useRouter();
+  return (
+    <div className={`absolute right-0 ${topClass} flex items-center gap-0.5`}>
+      <button
+        type="button"
+        onClick={() => router.push("/student/big-screen")}
+        className="flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-xl text-s-text-secondary/30 hover:text-s-primary/85 hover:bg-white/5 transition-all cursor-pointer touch-manipulation"
+        aria-label="大屏模式"
+      >
+        <MonitorSmartphone size={20} strokeWidth={1.75} />
+      </button>
+      <button
+        type="button"
+        onClick={onLockClick}
+        className="flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-xl text-s-text-secondary/30 hover:text-s-text-secondary/60 hover:bg-white/5 transition-all cursor-pointer touch-manipulation"
+        aria-label="切回家长模式"
+      >
+        <Lock size={20} />
+      </button>
+    </div>
+  );
+}
+
 export default function StudentHome() {
   const {
     student,
@@ -75,13 +106,7 @@ export default function StudentHome() {
       <div className="flex flex-col min-h-[70vh]">
         <div className="relative flex justify-center pt-4 w-full shrink-0">
           <Image src="/logo.svg" alt="" width={40} height={40} className="opacity-90" />
-          <button
-            onClick={() => setPinOpen(true)}
-            className="absolute right-0 top-4 flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-xl text-s-text-secondary/30 hover:text-s-text-secondary/60 hover:bg-white/5 transition-all cursor-pointer touch-manipulation"
-            aria-label="切回家长模式"
-          >
-            <Lock size={20} />
-          </button>
+          <StudentHomeTopActions onLockClick={() => setPinOpen(true)} />
         </div>
         <div className="flex flex-1 flex-col items-center justify-center gap-3">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-s-primary border-t-transparent" />
@@ -98,13 +123,7 @@ export default function StudentHome() {
       <div className="flex flex-col min-h-[70vh]">
         <div className="relative flex justify-center pt-4">
           <Image src="/logo.svg" alt="" width={40} height={40} className="opacity-90" />
-          <button
-            onClick={() => setPinOpen(true)}
-            className="absolute right-0 top-4 flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-xl text-s-text-secondary/30 hover:text-s-text-secondary/60 hover:bg-white/5 transition-all cursor-pointer touch-manipulation"
-            aria-label="切回家长模式"
-          >
-            <Lock size={20} />
-          </button>
+          <StudentHomeTopActions onLockClick={() => setPinOpen(true)} />
         </div>
         <div className="mt-10 md:mt-14">
           <AdoptionFlow onComplete={refetch} />
@@ -117,7 +136,7 @@ export default function StudentHome() {
   return (
     <div className="flex flex-col gap-5 pt-2 pb-6">
       {/* 顶栏：居中信息与锁，避免左右绝对定位抢空间 */}
-      <div className="relative flex flex-col items-center text-center px-11">
+      <div className="relative flex flex-col items-center text-center pl-11 pr-[6.25rem] sm:pr-[6.5rem]">
         <Image src="/logo.svg" alt="" width={40} height={40} className="mb-2 opacity-90" />
         <p className="font-display text-sm text-s-primary neon-text tracking-wider">
           MotiMech · {user?.childNickname ?? "---"}
@@ -127,14 +146,7 @@ export default function StudentHome() {
           <p className="text-sm text-s-text-secondary mt-1 max-w-md">{levelInfo.description}</p>
         )}
 
-        <button
-          type="button"
-          onClick={() => setPinOpen(true)}
-          className="absolute right-0 top-0 flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-xl text-s-text-secondary/30 hover:text-s-text-secondary/60 hover:bg-white/5 transition-all cursor-pointer touch-manipulation"
-          aria-label="切回家长模式"
-        >
-          <Lock size={20} />
-        </button>
+        <StudentHomeTopActions topClass="top-0" onLockClick={() => setPinOpen(true)} />
 
         <div className="relative mt-1 flex justify-center">
           {primarySlug ? (
@@ -211,13 +223,6 @@ export default function StudentHome() {
           >
             <Swords size={18} strokeWidth={2} />
             每日战斗
-          </Link>
-          <Link
-            href="/student/big-screen"
-            className="mt-2 flex w-full min-h-[48px] items-center justify-center gap-2 rounded-xl border border-slate-400/35 bg-gradient-to-r from-slate-500/18 to-zinc-500/10 px-4 py-3 text-sm font-semibold text-slate-100/95 shadow-[0_0_18px_rgba(148,163,184,0.12)] transition-colors hover:border-slate-300/50 hover:bg-slate-500/22 touch-manipulation active:scale-[0.99]"
-          >
-            <MonitorSmartphone size={18} strokeWidth={2} />
-            大屏模式
           </Link>
           {maintenanceMath.enabled && (
             maintenanceMath.completedToday ? (

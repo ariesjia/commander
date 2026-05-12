@@ -1,6 +1,6 @@
 # 学生端「大屏专注模式」展示页
 
-> 概述：为学生提供一条独立路由的大屏/电视友好界面——左侧突出「当前累计得分」及与昨日（自然日）对比的增减；右侧展示当前主机甲立绘/机体，全屏自适应不同宽高比与字号，隐藏底部主导航以减少干扰。
+> 概述：为学生提供一条独立路由的大屏/电视友好界面——左侧突出「当前可用积分」及与昨日（自然日）对比的增减；右侧展示当前主机甲立绘/机体，全屏自适应不同宽高比与字号，隐藏底部主导航以减少干扰。
 
 ---
 
@@ -18,7 +18,7 @@
 
 - [ ] 学生登录后可通过固定路径（建议 `/student/big-screen`）进入大屏页；未登录访问应被重定向到登录（与现有学生路由一致）。
 - [ ] 布局在 **横屏宽屏**（如 16:9、21:9）下为 **左右分栏**：左侧为得分区，右侧为机甲展示区；在 **竖屏 / 窄屏** 下自动切换为 **上下堆叠**（先得分后机甲，或产品定序），关键数字与机体不被裁切。
-- [ ] 左侧主数字展示 **当前累计积分** `Student.totalPoints`（经 `toDisplay(..., baseScore)` 与家长端「累计积分」口径一致）；辅以家长 `baseScore` 配置。
+- [ ] 左侧主数字展示 **当前可用积分** `Student.balance`（经 `toDisplay(..., baseScore)` 与学生首页「可用积分」一致）；辅以家长 `baseScore` 配置。
 - [ ] 左侧展示 **与「昨日」对比的增减**，口径明确为：在 **Asia/Shanghai 自然日** 下，对 **影响累计分的积分流水** 求和得到「昨日净变化」「今日截至目前净变化」，并展示 **今日净变化 − 昨日净变化**（或等价的「较昨日」一句文案 + 绿/红箭头）；若昨日无流水则显示中性文案（如「昨日无积分变化」）。
 - [ ] 影响累计分的流水类型与 `Student.totalPoints` 写入路径一致：`TASK_REWARD`、`TASK_REWARD_UNDO`、`TASK_PENALTY`、`TASK_PENALTY_UNDO`、`BATTLE_REWARD`；**不包含** `EXCHANGE_COST` / `EXCHANGE_REFUND`（二者主要影响可用/冻结积分，见 `prisma/schema.prisma` 与兑换相关 API）。
 - [ ] 右侧展示 **当前主机甲**（`Student.primaryMecha` / `adoptedMechaIds[0]` 与 `src/app/student/page.tsx` 一致）：有 slug 时用 `XuanjiaViewer`（或等价立绘），无领养时用 `MechaViewer` 的阶段机体；尺寸随容器 `object-contain`，最小字号/触控区符合 PRD 响应式可读性。
@@ -36,7 +36,7 @@
 | `src/app/student/big-screen/page.tsx` | 新增 | 大屏 UI：响应式左右/上下布局、`toDisplay`、对比文案、机甲区复用 `XuanjiaViewer` / `MechaViewer` |
 | `src/app/student/big-screen/layout.tsx` | 新增（可选） | 若需单独 metadata / 主题变量，可放此；否则可省略由 page 承担 |
 | `src/app/student/layout.tsx` | 修改 | 当 `pathname` 为 `/student/big-screen`（或前缀匹配）时 **不渲染** `StudentNav`，并调整 `main` 底部 padding（避免为大屏预留 Tab 安全区） |
-| `src/app/api/student/big-screen/route.ts` | 新增 | `GET`：`requireStudent` 后返回聚合字段：`totalPoints`、`baseScore`、`yesterdayNet`、`todayNet`、`deltaVsYesterday`、`primarySlug`、`primaryMechaPoints`、`nickname` 等；内部复用 `getTodayStr` / `toChinaDateStr`（`src/lib/utils.ts`）与 `pointsToNumber` |
+| `src/app/api/student/big-screen/route.ts` | 新增 | `GET`：`requireStudent` 后返回聚合字段：`balance`（可用积分）、`baseScore`、`yesterdayNet`、`todayNet`、`deltaVsYesterday`、`primarySlug`、`primaryMechaPoints`、`nickname` 等；内部复用 `getTodayStr` / `toChinaDateStr`（`src/lib/utils.ts`）与 `pointsToNumber` |
 | `src/lib/student-points-daily-net.ts`（名称可调整） | 新增 | 封装按学生 ID + 上海日历日聚合 `PointsLog` 的查询（可两次 `aggregate` 或单次 raw query），类型集合为上述枚举子集 |
 | `src/contexts/DataContext.tsx` | 可选修改 | 若希望与首页共用拉取逻辑，可将大屏所需字段并入 `profile`；否则大屏页独立 `fetch` 即可，避免拖慢全局首屏 |
 | `src/components/student/StudentNav.tsx` 或学生首页 | 可选修改 | 增加「大屏模式」入口（如图标或设置内链接），避免用户只能靠手输 URL |

@@ -48,13 +48,13 @@ export async function GET() {
   ]);
 
   const baseScore = (student.parent.baseScore ?? 1) as 0.1 | 1 | 10;
-  const totalPointsDb = pointsToNumber(student.totalPoints);
+  const balanceDb = pointsToNumber(student.balance);
   /** 与学生 profile 一致：阶段由主机甲机甲分推导 */
   const mechaStage = getCurrentStage(primaryMechaPoints);
 
   return NextResponse.json({
     nickname: student.nickname,
-    totalPoints: totalPointsDb,
+    balance: balanceDb,
     baseScore,
     todayNet,
     yesterdayNet,
