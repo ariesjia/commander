@@ -60,16 +60,10 @@ export async function GET() {
     config: { ...DEFAULT_MAINTENANCE_GENERATOR_CONFIG },
   });
 
-  const publicQuestions = spec.questions.map((q) =>
-    q.kind === "binary"
-      ? { kind: "binary" as const, id: q.id, a: q.a, op: q.op, b: q.b }
-      : { kind: "chain" as const, id: q.id, nums: q.nums, ops: q.ops },
-  );
-
   return NextResponse.json({
     status: "active" as const,
     dateKey,
-    questions: publicQuestions,
+    questions: spec.questions,
     meta: spec.meta,
     sessionHash: sessionHash(spec),
   });

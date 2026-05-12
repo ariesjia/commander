@@ -8,6 +8,7 @@ import {
   MAINTENANCE_BONUS_ITEM_PROBABILITY,
 } from "@/config/maintenance-math";
 import { chinaDateStrToDbDate } from "@/lib/battle-server";
+import type { MaintenanceAnswer } from "@/lib/maintenance-math";
 
 /** 单次维修合理上限（毫秒），防止异常值 */
 const MAX_MAINTENANCE_DURATION_MS = 24 * 60 * 60 * 1000;
@@ -55,8 +56,19 @@ export async function POST(request: Request) {
   }
   const durationMs = Math.max(0, Math.min(Math.round(durationMsRaw), MAX_MAINTENANCE_DURATION_MS));
 
-  if (!Array.isArray(answers) || answers.some((x) => typeof x !== "number" || !Number.isFinite(x))) {
-    return NextResponse.json({ error: "answers 需为数字数组", code: "INVALID_BODY" }, { status: 400 });
+  if (
+    !Array.isArray(answers) ||
+    answers.some(
+      (x) =>
+        !(
+          (typeof x === "number" && Number.isFinite(x)) ||
+          x === "<" ||
+          x === "=" ||
+          x === ">"
+        ),
+    )
+  ) {
+    return NextResponse.json({ error: "answers 需为数字或比较符数组", code: "INVALID_BODY" }, { status: 400 });
   }
 
   const spec = generateGrade1Session({
@@ -74,7 +86,7 @@ export async function POST(request: Request) {
 
   for (let i = 0; i < spec.questions.length; i++) {
     const q = spec.questions[i]!;
-    const got = answers[i]!;
+    const got = answers[i]! as MaintenanceAnswer;
     const exp = expectedAnswer(q);
     if (got !== exp) {
       return NextResponse.json(

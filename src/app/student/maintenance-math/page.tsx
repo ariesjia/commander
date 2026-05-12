@@ -11,7 +11,7 @@ import { MAINTENANCE_COPY } from "@/lib/maintenance-math/copy";
 import { expectedAnswer } from "@/lib/maintenance-math/answers";
 import { buildArithmeticSpeech } from "@/lib/maintenance-math/chinese-speech";
 import { useReadAloud } from "@/hooks/useReadAloud";
-import type { MaintenanceQuestion } from "@/lib/maintenance-math/types";
+import type { CompareSymbol, MaintenanceAnswer, MaintenanceExpression, MaintenanceQuestion } from "@/lib/maintenance-math/types";
 
 type SessionActive = {
   status: "active";
@@ -35,6 +35,95 @@ type SessionCompleted = {
   bonusReward: MaintenanceBonusReward | null;
 };
 
+function renderExpression(expr: MaintenanceExpression) {
+  if (expr.kind === "value") return <span>{expr.value}</span>;
+  return (
+    <>
+      <span>{expr.a}</span>
+      <span className="text-cyan-300/90">{expr.op}</span>
+      <span>{expr.b}</span>
+    </>
+  );
+}
+
+function questionLayoutClass(q: MaintenanceQuestion): string {
+  if (q.kind === "wordProblem") {
+    return "mt-6 rounded-2xl border border-white/10 bg-black/20 px-4 py-5 text-left text-lg font-medium leading-relaxed text-s-text";
+  }
+  if (q.kind === "chain" || q.kind === "pattern" || q.kind === "compare") {
+    return "mt-6 flex flex-wrap items-center justify-center gap-x-2 gap-y-2 px-1 font-display text-2xl font-bold tabular-nums text-s-text sm:text-3xl";
+  }
+  return "mt-6 flex items-center justify-center gap-3 font-display text-4xl font-bold tabular-nums text-s-text";
+}
+
+function renderQuestion(q: MaintenanceQuestion, input: string) {
+  const answerSlot = <span className="min-w-[3ch] text-center text-s-primary">{input || "·"}</span>;
+  switch (q.kind) {
+    case "binary":
+      return (
+        <>
+          <span>{q.a}</span>
+          <span className="text-cyan-300/90">{q.op}</span>
+          <span>{q.b}</span>
+          <span className="text-s-text-secondary">=</span>
+          {answerSlot}
+        </>
+      );
+    case "chain":
+      return (
+        <>
+          {q.nums.map((num, i) => (
+            <Fragment key={`expr-${q.id}-${i}`}>
+              <span>{num}</span>
+              {i < q.ops.length && <span className="text-cyan-300/90">{q.ops[i]}</span>}
+            </Fragment>
+          ))}
+          <span className="text-s-text-secondary">=</span>
+          {answerSlot}
+        </>
+      );
+    case "compare":
+      return (
+        <>
+          {renderExpression(q.left)}
+          <span className="text-s-text-secondary">{input || "○"}</span>
+          {renderExpression(q.right)}
+        </>
+      );
+    case "missing":
+      return (
+        <>
+          <span>{q.a}</span>
+          <span className="text-cyan-300/90">{q.op}</span>
+          {answerSlot}
+          <span className="text-s-text-secondary">=</span>
+          <span>{q.result}</span>
+        </>
+      );
+    case "wordProblem":
+      return (
+        <div className="flex flex-col gap-4">
+          <p>{q.text}</p>
+          <p className="text-center font-display text-3xl font-bold tabular-nums">
+            <span className="text-s-text-secondary">读数 = </span>
+            {answerSlot}
+          </p>
+        </div>
+      );
+    case "pattern":
+      return (
+        <>
+          {q.sequence.map((num, i) => (
+            <Fragment key={`pattern-${q.id}-${i}`}>
+              {i > 0 && <span className="text-s-text-secondary">，</span>}
+              {num == null ? answerSlot : <span>{num}</span>}
+            </Fragment>
+          ))}
+        </>
+      );
+  }
+}
+
 export default function MaintenanceMathPage() {
   const router = useRouter();
   const { refetch, maintenanceMath } = useData();
@@ -42,7 +131,7 @@ export default function MaintenanceMathPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [session, setSession] = useState<SessionActive | SessionCompleted | null>(null);
   const [step, setStep] = useState(0);
-  const [answers, setAnswers] = useState<number[]>([]);
+  const [answers, setAnswers] = useState<MaintenanceAnswer[]>([]);
   const [input, setInput] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [localErr, setLocalErr] = useState<string | null>(null);
@@ -155,7 +244,7 @@ export default function MaintenanceMathPage() {
     setInput((prev) => prev.slice(0, -1));
   };
 
-  const submitAll = async (finalAnswers: number[]) => {
+  const submitAll = async (finalAnswers: MaintenanceAnswer[]) => {
     if (!active) return;
     setSubmitting(true);
     setLocalErr(null);
@@ -199,13 +288,23 @@ export default function MaintenanceMathPage() {
 
   const confirmStep = () => {
     if (!active || !current) return;
-    const n = parseInt(input, 10);
-    if (input === "" || Number.isNaN(n)) {
-      setLocalErr("请输入读数");
-      return;
-    }
     const exp = expectedAnswer(current);
-    if (n !== exp) {
+    let got: MaintenanceAnswer;
+    if (current.kind === "compare") {
+      if (input !== "<" && input !== "=" && input !== ">") {
+        setLocalErr("请选择比较符号");
+        return;
+      }
+      got = input as CompareSymbol;
+    } else {
+      const n = parseInt(input, 10);
+      if (input === "" || Number.isNaN(n)) {
+        setLocalErr("请输入读数");
+        return;
+      }
+      got = n;
+    }
+    if (got !== exp) {
       setLocalErr("再算一算哦");
       setCombo(0);
       setComboBurstVisible(false);
@@ -228,7 +327,7 @@ export default function MaintenanceMathPage() {
       }, 1400);
     }
     const next = [...answers];
-    next[step] = n;
+    next[step] = got;
     setAnswers(next);
     setInput("");
     if (step + 1 >= total) {
@@ -364,53 +463,49 @@ export default function MaintenanceMathPage() {
         </AnimatePresence>
         <p className="text-center text-xs text-cyan-200/70">{MAINTENANCE_COPY.stepLabel(step + 1, total)}</p>
         <p className="mt-4 text-center text-sm text-s-text-secondary">{MAINTENANCE_COPY.instruction}</p>
-        <div
-          className={
-            q.kind === "binary"
-              ? "mt-6 flex items-center justify-center gap-3 font-display text-4xl font-bold tabular-nums text-s-text"
-              : "mt-6 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 px-1 font-display text-2xl font-bold tabular-nums text-s-text sm:text-3xl"
-          }
-        >
-          {q.kind === "binary" ? (
-            <>
-              <span>{q.a}</span>
-              <span className="text-cyan-300/90">{q.op}</span>
-              <span>{q.b}</span>
-              <span className="text-s-text-secondary">=</span>
-              <span className="min-w-[3ch] text-right text-s-primary">{input || "·"}</span>
-            </>
-          ) : (
-            <>
-              {q.nums.map((num, i) => (
-                <Fragment key={`expr-${q.id}-${i}`}>
-                  <span>{num}</span>
-                  {i < q.ops.length && <span className="text-cyan-300/90">{q.ops[i]}</span>}
-                </Fragment>
-              ))}
-              <span className="text-s-text-secondary">=</span>
-              <span className="min-w-[3ch] text-right text-s-primary">{input || "·"}</span>
-            </>
-          )}
-        </div>
+        <div className={questionLayoutClass(q)}>{renderQuestion(q, input)}</div>
         {localErr && <p className="mt-3 text-center text-sm text-amber-300/90">{localErr}</p>}
       </div>
 
-      <div className="grid grid-cols-3 gap-2 max-w-sm mx-auto w-full">
-        {["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "⌫"].map((key, i) => (
-          <button
-            key={`k-${i}`}
-            type="button"
-            disabled={submitting}
-            onClick={() => {
-              if (key === "⌫") backspace();
-              else if (key) appendDigit(key);
-            }}
-            className="min-h-[52px] rounded-xl border border-white/10 bg-black/25 text-lg font-semibold text-s-text hover:bg-white/5 active:scale-[0.98] touch-manipulation disabled:opacity-50"
-          >
-            {key === "" ? <span className="text-transparent">.</span> : key}
-          </button>
-        ))}
-      </div>
+      {q.kind === "compare" ? (
+        <div className="grid grid-cols-3 gap-2 max-w-sm mx-auto w-full">
+          {(["<", "=", ">"] as const).map((key) => (
+            <button
+              key={key}
+              type="button"
+              disabled={submitting}
+              onClick={() => {
+                setInput(key);
+                setLocalErr(null);
+              }}
+              className={`min-h-[56px] rounded-xl border text-2xl font-semibold touch-manipulation disabled:opacity-50 ${
+                input === key
+                  ? "border-cyan-300 bg-cyan-300/20 text-cyan-100"
+                  : "border-white/10 bg-black/25 text-s-text hover:bg-white/5 active:scale-[0.98]"
+              }`}
+            >
+              {key}
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-3 gap-2 max-w-sm mx-auto w-full">
+          {["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "⌫"].map((key, i) => (
+            <button
+              key={`k-${i}`}
+              type="button"
+              disabled={submitting}
+              onClick={() => {
+                if (key === "⌫") backspace();
+                else if (key) appendDigit(key);
+              }}
+              className="min-h-[52px] rounded-xl border border-white/10 bg-black/25 text-lg font-semibold text-s-text hover:bg-white/5 active:scale-[0.98] touch-manipulation disabled:opacity-50"
+            >
+              {key === "" ? <span className="text-transparent">.</span> : key}
+            </button>
+          ))}
+        </div>
+      )}
 
       <button
         type="button"
