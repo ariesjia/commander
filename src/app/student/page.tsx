@@ -13,7 +13,17 @@ import { XuanjiaProgress } from "@/components/mecha/XuanjiaProgress";
 import Link from "next/link";
 import { PinDialog } from "@/components/mode-switch/PinDialog";
 import Image from "next/image";
-import { Coins, Snowflake, Lock, Library, Swords, Package, Wrench, BookOpen, MessageCircle } from "lucide-react";
+import {
+  Coins,
+  Snowflake,
+  Lock,
+  Library,
+  Swords,
+  Package,
+  Wrench,
+  BookOpen,
+  MonitorSmartphone,
+} from "lucide-react";
 import { MECHA_STAGES } from "@/lib/mecha-config";
 import { toDisplay } from "@/lib/score-display";
 
@@ -201,6 +211,13 @@ export default function StudentHome() {
           >
             <Swords size={18} strokeWidth={2} />
             每日战斗
+          </Link>
+          <Link
+            href="/student/big-screen"
+            className="mt-2 flex w-full min-h-[48px] items-center justify-center gap-2 rounded-xl border border-slate-400/35 bg-gradient-to-r from-slate-500/18 to-zinc-500/10 px-4 py-3 text-sm font-semibold text-slate-100/95 shadow-[0_0_18px_rgba(148,163,184,0.12)] transition-colors hover:border-slate-300/50 hover:bg-slate-500/22 touch-manipulation active:scale-[0.99]"
+          >
+            <MonitorSmartphone size={18} strokeWidth={2} />
+            大屏模式
           </Link>
           {maintenanceMath.enabled && (
             maintenanceMath.completedToday ? (
