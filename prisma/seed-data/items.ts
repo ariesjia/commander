@@ -145,4 +145,148 @@ export const ITEM_SEED_DATA: ItemSeedRow[] = [
     kind: "DISPLAY",
     sortOrder: 16,
   },
+  {
+    slug: "segmented-ion-heavy-blaster",
+    name: "分段离子爆裂重炮",
+    description:
+      "重型手持能量枪械，粗壮炮身外侧露出分段护甲与连续离子导轨，枪口六角能量窗呈高亮冷色。上位机体主射或破门火力点射用，瞬时峰值高但更吃散热与储能调度。",
+    imageUrl: "/item/0017.png",
+    kind: "DISPLAY",
+    sortOrder: 17,
+  },
+  {
+    slug: "amethyst-ion-edge-cleaver",
+    name: "紫晶离子阔刃斩刀",
+    description:
+      "单刃阔背的近战能量刀，护手中央嵌有紫晶稳态约束核，刀刃可见沿脊线贯通的电离辉光与分层镀层交界。贴身缠斗中能撕裂复合装甲接缝，护手与弧形护指兼顾格挡与被缴械抗性。",
+    imageUrl: "/item/0018.png",
+    kind: "DISPLAY",
+    sortOrder: 18,
+  },
+  {
+    slug: "hex-vector-ion-chest-matrix",
+    name: "六角矢量离子矩阵胸模组",
+    description:
+      "盾形前倾胸甲模组，正中六角骨架锁合三角离子阵列，双侧竖缝与下腹短条为链路状态与安全泄压提示。常与神经链路联动做功率分配与中弹区强化，高光时刻适合作为机体「第二心脏」挂载。",
+    imageUrl: "/item/0019.png",
+    kind: "DISPLAY",
+    sortOrder: 19,
+  },
+  {
+    slug: "cube-scout-microbot-pod",
+    name: "立方侦察微机灵匣",
+    description:
+      "圆角方块机体带主视觉球与下放双柱状传感，顶端短天线与条状指示便于悬停自检。巷道、舱室拐角与低空慢速巡逻都好用，可把实时画面回传链路并做局部电子嗅探。",
+    imageUrl: "/item/0020.png",
+    kind: "DISPLAY",
+    sortOrder: 20,
+  },
+  {
+    slug: "multispectrum-tactical-optics",
+    name: "多光谱战术观测镜",
+    description:
+      "双筒硬壳镜体与高桥连接，目镜端暖橙色辉光为多谱段传感工作态示意，侧条纹与小块灯带回传对焦与供电余量。烟尘、暗夜与混杂电磁环境里仍能抓热轮廓与远端信标闪光，轻装侦察小队标配背负件。",
+    imageUrl: "/item/0021.png",
+    kind: "DISPLAY",
+    sortOrder: 21,
+  },
+  {
+    slug: "kinetic-talon-strike-vambrace",
+    name: "动能利爪突袭臂铠",
+    description:
+      "右臂一体式近战义装，手背六角能量核与分段关节板支撑高频振动爪刃，前臂还有次级指示条。短时爆发可作破甲撕开或压制抓握目标，耗能集中在爪尖与阻尼关节，需注意冷却窗口。",
+    imageUrl: "/item/0022.png",
+    kind: "DISPLAY",
+    sortOrder: 22,
+  },
+  {
+    slug: "fusion-stack-tactical-haversack",
+    name: "叠层融合战术背架",
+    description:
+      "硬壳战术背包双肩厚垫，中段竖列分段萤绿指示灯像叠层反应堆余量标尺，四角与侧兜还有斜向条状状态灯。可穿戴式移动供能或小队物资中继，在低照度舱段一眼可读剩余出力与闭锁告警。",
+    imageUrl: "/item/0023.png",
+    kind: "DISPLAY",
+    sortOrder: 23,
+  },
+  {
+    slug: "quad-recon-strider-drone",
+    name: "四足广域侦察爬虫",
+    description:
+      "宽扁主机身配四枚多关节节肢爪足，前额矩形传感窗内叠放大小绿色光学孔，后侧小翼片加强姿态稳定与轻度防护。低矮贴地翻越障碍顺滑，适合做前线缓速扫街、雷区先导或残骸结构探勘。",
+    imageUrl: "/item/0024.png",
+    kind: "DISPLAY",
+    sortOrder: 24,
+  },
+  {
+    slug: "cryo-lattice-sniper-platform",
+    name: "晶格寒潮远程狙击模组",
+    description:
+      "全长精度步枪造型，六角晶格半透明枪管与同色一体化瞄具像永不融化的寒潮结晶，通体冷色系强调低温聚焦链路。远端单发或短点可对脆弱节点做脆化破甲打击，在连续射击后需顾及结晶腔体结霜复位时间。",
+    imageUrl: "/item/0025.png",
+    kind: "DISPLAY",
+    sortOrder: 25,
+  },
+  {
+    slug: "twin-pod-missile-support-rig",
+    name: "双荚八联导弹支援机",
+    description:
+      "轻型步行火力平台带透明座舱，双肩各四枚待发导弹红白对比醒目，下方支撑荚壳前段为透明传感罩。小队级曲射压制与工事撕开口子都合适，展开部署后需注意导弹装填与安全射界遮蔽。",
+    imageUrl: "/item/0026.png",
+    kind: "DISPLAY",
+    sortOrder: 26,
+  },
+  {
+    slug: "grapple-fist-assault-bracer",
+    name: "钩拳一体突击腕甲",
+    description:
+      "前臂护甲集成液压拳峰与后侧三爪锚钩，绕腕粗缆与高亮矩形屏显示张力与距离快照。强攻可用拳面冲撞破障，撤离或立体机动可抛锚拖拽，线缆回收注意别缠进关节传动。",
+    imageUrl: "/item/0027.png",
+    kind: "DISPLAY",
+    sortOrder: 27,
+  },
+  {
+    slug: "biometric-display-tactical-shell",
+    name: "生体读数战术外骨骼胸甲",
+    description:
+      "多层拼接胸腹护板与侧系带，左胸小型蓝光屏可读电量或装甲残余（按机型映射），下腹分段铰链让步态俯仰更舒适。通勤巡逻与近战混编都适合，可把生理与结构告警推到 HUD 上做一线决策。",
+    imageUrl: "/item/0028.png",
+    kind: "DISPLAY",
+    sortOrder: 28,
+  },
+  {
+    slug: "twin-headed-plasma-greataxe",
+    name: "双头热能等离子巨斧",
+    description:
+      "长柄双刃战斧：斧耳为强磁约束的红色等离子刃面，中段圆柱能量舱带横向赤纹条纹，缠绕防滑握柄与尾端同色指示点。抡砍适合破盾与工事，高热刃面在连续斩击后要等约束环回稳再走下一波硬碰硬。",
+    imageUrl: "/item/0029.png",
+    kind: "DISPLAY",
+    sortOrder: 29,
+  },
+  {
+    slug: "aero-spherical-scout-pod",
+    name: "悬浮式球形侦察荚",
+    description:
+      "金属球体外壳带赤道缝线与侧伸稳定翼片，大额主镜与微调传感器灯形成轻量低空悬停阵列。静默接近目标建筑群做光学接力，机翼形态降低侧风漂移，适合做伴随无人机群里的「眼睛」节点。",
+    imageUrl: "/item/0030.png",
+    kind: "DISPLAY",
+    sortOrder: 30,
+  },
+  {
+    slug: "track-mount-core-driller",
+    name: "履带式深层钻掘机",
+    description:
+      "前锥大直径螺旋钻头、侧置宽履带与高亮黄色阵列灯组成工程型小型载具轮廓，后部电机壳与顶部散热格栅提示持续钻进散热需求。塌方疏通、巷道掘进与小规模矿芯取样都能上，履带接地压强低适合碎岩坡面驻车。",
+    imageUrl: "/item/0031.png",
+    kind: "DISPLAY",
+    sortOrder: 31,
+  },
+  {
+    slug: "dual-layer-holo-navigator",
+    name: "双层全息航线终端",
+    description:
+      "加固合金边框平板，亮青主屏叠全球栅格与高亮航线层，上浮透明副层显示局域等高或建筑平面图。离线缓存航迹与工事图层，可把战术标绘分享给班组，适合做机动指挥与空投落点校对。",
+    imageUrl: "/item/0032.png",
+    kind: "DISPLAY",
+    sortOrder: 32,
+  },
 ];
