@@ -2,12 +2,9 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireStudent, getStudentId } from "@/lib/api-auth";
 import { getCurrentStage } from "@/lib/mecha-config";
-import { addCalendarDaysChina, getTodayStr } from "@/lib/utils";
+import { getTodayStr } from "@/lib/utils";
 import { pointsToNumber } from "@/lib/points-number";
-import {
-  countStudentTotalPointsLogsInChinaDay,
-  getStudentTodayYesterdayTotalPointsNetDb,
-} from "@/lib/student-points-daily-net";
+import { getStudentTotalPointsDailyNetDb } from "@/lib/student-points-daily-net";
 
 export async function GET() {
   const auth = await requireStudent();
@@ -41,11 +38,7 @@ export async function GET() {
   const primaryMechaPoints = pointsToNumber(primaryMecha?.points);
 
   const todayStr = getTodayStr();
-  const yesterdayChinaStr = addCalendarDaysChina(todayStr, -1);
-  const [{ todayNet, yesterdayNet }, yesterdayLogCount] = await Promise.all([
-    getStudentTodayYesterdayTotalPointsNetDb(prisma, studentId, todayStr),
-    countStudentTotalPointsLogsInChinaDay(prisma, studentId, yesterdayChinaStr),
-  ]);
+  const todayNet = await getStudentTotalPointsDailyNetDb(prisma, studentId, todayStr);
 
   const baseScore = (student.parent.baseScore ?? 1) as 0.1 | 1 | 10;
   const balanceDb = pointsToNumber(student.balance);
@@ -57,9 +50,6 @@ export async function GET() {
     balance: balanceDb,
     baseScore,
     todayNet,
-    yesterdayNet,
-    deltaVsYesterday: todayNet - yesterdayNet,
-    yesterdayLogCount,
     primarySlug,
     primaryMechaPoints,
     mechaStage,

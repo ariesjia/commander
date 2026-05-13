@@ -25,9 +25,6 @@ type BigScreenPayload = {
   balance: number;
   baseScore: BaseScore;
   todayNet: number;
-  yesterdayNet: number;
-  deltaVsYesterday: number;
-  yesterdayLogCount: number;
   primarySlug: string | null;
   primaryMechaPoints: number;
   mechaStage: number;
@@ -41,23 +38,11 @@ function formatSignedDb(dbNet: number, baseScore: BaseScore): string {
   return `${sign}${disp}`;
 }
 
-/** 激励用语：幅度（始终为正数字符串） */
-function formatMagnitudeDb(dbNet: number, baseScore: BaseScore): string {
-  return String(Math.abs(toDisplay(dbNet, baseScore)));
-}
-
-/** 昨日无流水时，按今日净变化给一句鼓励 */
-function cheerWhenNoYesterdayLogs(todayNet: number): string {
+/** 按今日可用积分净变化给一句鼓励 */
+function cheerTodayChange(todayNet: number): string {
   if (todayNet > 0) return "今天开张加分啦，超棒的！";
   if (todayNet < 0) return "有点小波折没关系，下次一定能行～";
   return "今天去完成几个任务，机甲为你加油！";
-}
-
-/** 昨日有流水时，在「比昨天多/少/持平」下再补一句 */
-function cheerVersusYesterday(delta: number): string {
-  if (delta > 0) return "太帅了，继续保持！";
-  if (delta < 0) return "别灰心，调整好节奏再来～";
-  return "稳扎稳打，也很厉害！";
 }
 
 export default function StudentBigScreenPage() {
@@ -176,68 +161,31 @@ export default function StudentBigScreenPage() {
               </p>
             </div>
 
-            {/* 较昨日 */}
+            {/* 今日变化 */}
             <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-cyan-500/25 bg-gradient-to-br from-cyan-500/10 via-transparent to-violet-500/10 p-4 sm:p-5">
-              {data.deltaVsYesterday > 0 ? (
+              {data.todayNet > 0 ? (
                 <TrendingUp className="mt-0.5 h-10 w-10 shrink-0 text-emerald-400" aria-hidden />
-              ) : data.deltaVsYesterday < 0 ? (
+              ) : data.todayNet < 0 ? (
                 <TrendingDown className="mt-0.5 h-10 w-10 shrink-0 text-rose-400" aria-hidden />
               ) : (
                 <RotateCcw className="mt-0.5 h-10 w-10 shrink-0 text-s-text-secondary/70" aria-hidden />
               )}
               <div className="min-w-0 flex-1">
-                
-                {data.yesterdayLogCount === 0 ? (
-                  <div className="mt-2 space-y-1.5">
-                    <p className="text-sm text-s-text-secondary">
-                      昨日无流水 · 今日{" "}
-                      <span className="font-semibold text-s-text">
+                <div className="mt-2 space-y-2">
+                  <p className="text-sm text-s-text-secondary">今日可用积分变化</p>
+                  <p className="font-display text-lg font-bold tabular-nums sm:text-xl">
+                    {data.todayNet === 0 ? (
+                      <span className="text-s-text-secondary">今天可用积分无变化</span>
+                    ) : (
+                      <span className={data.todayNet > 0 ? "text-emerald-300" : "text-rose-300"}>
                         {formatSignedDb(data.todayNet, data.baseScore)}
                       </span>
-                    </p>
-                    <p className="text-sm font-medium leading-snug text-cyan-200/90">
-                      {cheerWhenNoYesterdayLogs(data.todayNet)}
-                    </p>
-                  </div>
-                ) : (
-                  <div className="mt-2 space-y-2">
-                    <p className="flex flex-wrap items-baseline gap-x-2 text-sm text-s-text-secondary">
-                      <span>
-                        今日{" "}
-                        <span className="font-display font-semibold tabular-nums text-s-text">
-                          {formatSignedDb(data.todayNet, data.baseScore)}
-                        </span>
-                      </span>
-                      <span className="text-s-text-secondary/35" aria-hidden>
-                        ·
-                      </span>
-                      <span>
-                        昨日{" "}
-                        <span className="font-display font-semibold tabular-nums text-s-text">
-                          {formatSignedDb(data.yesterdayNet, data.baseScore)}
-                        </span>
-                      </span>
-                    </p>
-                    <p className="font-display text-lg font-bold tabular-nums sm:text-xl">
-                      {data.deltaVsYesterday > 0 && (
-                        <span className="text-emerald-300">
-                          比昨天多 {formatMagnitudeDb(data.deltaVsYesterday, data.baseScore)}
-                        </span>
-                      )}
-                      {data.deltaVsYesterday < 0 && (
-                        <span className="text-rose-300">
-                          比昨天少 {formatMagnitudeDb(data.deltaVsYesterday, data.baseScore)}
-                        </span>
-                      )}
-                      {data.deltaVsYesterday === 0 && (
-                        <span className="text-s-text-secondary">和昨天一样棒</span>
-                      )}
-                    </p>
-                    <p className="text-sm font-medium leading-snug text-cyan-200/88">
-                      {cheerVersusYesterday(data.deltaVsYesterday)}
-                    </p>
-                  </div>
-                )}
+                    )}
+                  </p>
+                  <p className="text-sm font-medium leading-snug text-cyan-200/88">
+                    {cheerTodayChange(data.todayNet)}
+                  </p>
+                </div>
               </div>
             </div>
           </section>
